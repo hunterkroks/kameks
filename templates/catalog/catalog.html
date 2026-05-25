@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if current_category %}{{ current_category.name }} — {% endif %}
+  {% if current_brand %}{{ current_brand.name }} — {% endif %}
+  Каталог запчастей | КАМЭКС
+{% endblock %}
+
+{% block meta_description %}
+  Каталог запасных частей для КАМАЗ, МАЗ, Урал. Поиск по артикулу, OEM-номеру. Наличие на складе, доставка по России.
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .filter-panel {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  .filter-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+    margin-bottom: 10px;
+  }
+  .filter-group { margin-bottom: 22px; }
+  .filter-group:last-child { margin-bottom: 0; }
+
+  .filter-check .form-check-label {
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .filter-check .form-check-input {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-border);
+  }
+  .filter-check .form-check-input:checked {
+    background-color: var(--color-accent-blue);
+    border-color: var(--color-accent-blue);
+  }
+
+  .sort-bar {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+  }
+
+  .search-input-catalog {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    width: 100%;
+  }
+  .search-input-catalog:focus {
+    outline: none;
+    border-color: var(--color-accent-blue);
+    box-shadow: 0 0 0 3px rgba(46,134,222,0.2);
+  }
+  .search-input-catalog::placeholder { color: var(--color-text-muted); }
+
+  .search-suggest-wrap { position: relative; flex: 1; }
+  .search-suggest-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-accent-blue);
+    border-radius: var(--radius-sm);
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .suggest-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:hover { background: rgba(46,134,222,0.12); }
+  .suggest-name { font-size: 0.88rem; color: var(--color-text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .suggest-sku { font-size: 0.75rem; color: var(--color-text-muted); white-space: nowrap; }
+
+  .breadcrumb-kameks .breadcrumb-item a {
+    color: var(--color-accent-blue);
+    text-decoration: none;
+  }
+  .breadcrumb-kameks .breadcrumb-item.active { color: var(--color-text-muted); }
+  .breadcrumb-kameks .breadcrumb-item + .breadcrumb-item::before { color: var(--color-border); }
+
+  .price-range-inputs { display: flex; gap: 8px; align-items: center; }
+  .price-range-inputs input {
+    width: 80px;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  .price-range-inputs span { color: var(--color-text-muted); font-size: 0.85rem; }
+
+  .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .filter-tag {
+    background: rgba(46,134,222,0.15);
+    border: 1px solid rgba(46,134,222,0.4);
+    color: var(--color-accent-light);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid rgba(46,134,222,0.4);
+  }
+  .filter-tag:hover { background: rgba(192,57,43,0.15); border-color: var(--color-accent-red); color: var(--color-accent-red); }
+
+  .products-empty {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--color-text-muted);
+  }
+  .products-empty i { font-size: 4rem; margin-bottom: 16px; display: block; }
+
+  @media (max-width: 991px) {
+    .filter-panel { position: static; max-height: none; margin-bottom: 20px; }
+    #filterSidebar { display: none; }
+    #filterSidebar.show { display: block; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Шапка каталога -->
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:18px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb breadcrumb-kameks mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalog:catalog' %}">Каталог</a></li>
+        {% for brand in current_brands %}
+        <li class="breadcrumb-item {% if forloop.last and not current_categories %}active{% endif %}">{{ brand.name }}</li>
+        {% endfor %}
+        {% for cat in current_categories %}
+        <li class="breadcrumb-item active">{{ cat.name }}</li>
+        {% endfor %}
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Строка поиска -->
+  <form method="GET" action="{% url 'catalog:catalog' %}" class="mb-4" id="search-form">
+    {% for s in brand_slugs %}<input type="hidden" name="brand" value="{{ s }}">{% endfor %}
+    {% for s in category_slugs %}<input type="hidden" name="category" value="{{ s }}">{% endfor %}
+    {% if current_sort and current_sort != 'popular' %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+    <div class="d-flex gap-2">
+      <div class="search-suggest-wrap">
+        <input type="text" name="q" id="catalog-search-input" value="{{ search_q }}"
+               placeholder="Поиск по артикулу или названию..." class="search-input-catalog"
+               autocomplete="off">
+        <div class="search-suggest-list" id="suggest-list" style="display:none;"></div>
+      </div>
+      <button type="submit" class="btn-kameks-primary" style="white-space:nowrap;padding:10px 20px;">
+        <i class="bi bi-search me-1"></i>Найти
+      </button>
+    </div>
+  </form>
+
+  <!-- Активные фильтры -->
+  {% if search_q or brand_slugs or category_slugs %}
+  <div class="active-filters">
+    <span style="font-size:0.8rem;color:var(--color-text-muted);margin-right:4px;">Фильтры:</span>
+    {% if search_q %}
+    <span class="filter-tag" onclick="removeParam('q', '{{ search_q }}')">
+      «{{ search_q }}» <i class="bi bi-x"></i>
+    </span>
+    {% endif %}
+    {% for brand in current_brands %}
+    <span class="filter-tag" onclick="removeParam('brand', '{{ brand.slug }}')">
+      {{ brand.name }} <i class="bi bi-x"></i>
+    </span>
+    {% endfor %}
+    {% for cat in current_categories %}
+    <span class="filter-tag" onclick="removeParam('category', '{{ cat.slug }}')">
+      {{ cat.name }} <i class="bi bi-x"></i>
+    </span>
+    {% endfor %}
+    <a href="{% url 'catalog:catalog' %}{% if search_q %}?q={{ search_q }}{% endif %}"
+       class="filter-tag" style="background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.3);color:#e74c3c;">
+      Сбросить всё <i class="bi bi-x-circle"></i>
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- ============================================
+         ЛЕВАЯ КОЛОНКА — ФИЛЬТРЫ
+         ============================================ -->
+    <div class="col-lg-3">
+
+      <!-- Кнопка фильтров на мобиле -->
+      <div class="d-lg-none mb-3">
+        <button class="btn-kameks-outline w-100" onclick="document.getElementById('filterSidebar').classList.toggle('show')">
+          <i class="bi bi-funnel me-2"></i>Фильтры
+          {% if brand_slugs or category_slugs %}<span class="badge bg-primary ms-1">{{ brand_slugs|length|add:category_slugs|length }}</span>{% endif %}
+        </button>
+      </div>
+
+      <div id="filterSidebar" class="d-lg-block">
+        <form method="GET" action="{% url 'catalog:catalog' %}" id="filter-form">
+          {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+          {% if current_sort and current_sort != '-created_at' %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+
+          <div class="filter-panel">
+
+            <!-- Марка автомобиля — множественный выбор -->
+            <div class="filter-group">
+              <div class="filter-title"><i class="bi bi-truck me-1"></i>Марка автомобиля</div>
+              {% for brand in brands %}
+              <div class="form-check filter-check mb-1">
+                <input class="form-check-input" type="checkbox" name="brand" id="brand_{{ brand.slug }}"
+                       value="{{ brand.slug }}" {% if brand.slug in brand_slugs %}checked{% endif %}>
+                <label class="form-check-label" for="brand_{{ brand.slug }}">{{ brand.name }}</label>
+              </div>
+              {% empty %}
+              <div style="font-size:0.82rem;color:var(--color-text-muted);">Нет марок</div>
+              {% endfor %}
+            </div>
+
+            <!-- Категория — множественный выбор -->
+            <div class="filter-group">
+              <div class="filter-title"><i class="bi bi-grid me-1"></i>Категория</div>
+              {% for cat in categories %}
+              <div class="form-check filter-check mb-1">
+                <input class="form-check-input" type="checkbox" name="category" id="cat_{{ cat.slug }}"
+                       value="{{ cat.slug }}" {% if cat.slug in category_slugs %}checked{% endif %}>
+                <label class="form-check-label" for="cat_{{ cat.slug }}">{{ cat.name }}</label>
+              </div>
+              {% empty %}
+              <div style="font-size:0.82rem;color:var(--color-text-muted);">Нет категорий</div>
+              {% endfor %}
+            </div>
+
+            <!-- Цена -->
+            <div class="filter-group">
+              <div class="filter-title"><i class="bi bi-cash me-1"></i>Цена, ₽</div>
+              <div class="price-range-inputs">
+                <input type="number" name="min_price" placeholder="от" value="{{ request.GET.min_price }}">
+                <span>—</span>
+                <input type="number" name="max_price" placeholder="до" value="{{ request.GET.max_price }}">
+              </div>
+            </div>
+
+            <!-- Наличие -->
+            <div class="filter-group">
+              <div class="filter-title"><i class="bi bi-box-seam me-1"></i>Наличие</div>
+              <div class="form-check filter-check">
+                <input class="form-check-input" type="checkbox" name="in_stock" id="in_stock"
+                       {% if request.GET.in_stock %}checked{% endif %}>
+                <label class="form-check-label" for="in_stock">Только в наличии</label>
+              </div>
+            </div>
+
+            <!-- Тип запчасти -->
+            <div class="filter-group">
+              <div class="filter-title"><i class="bi bi-patch-check me-1"></i>Тип запчасти</div>
+              <div class="form-check filter-check mb-1">
+                <input class="form-check-input" type="radio" name="original" id="orig_all" value=""
+                       {% if not request.GET.original %}checked{% endif %}>
+                <label class="form-check-label" for="orig_all">Все</label>
+              </div>
+              <div class="form-check filter-check mb-1">
+                <input class="form-check-input" type="radio" name="original" id="orig_yes" value="1"
+                       {% if request.GET.original == '1' %}checked{% endif %}>
+                <label class="form-check-label" for="orig_yes">Оригинальные</label>
+              </div>
+              <div class="form-check filter-check">
+                <input class="form-check-input" type="radio" name="original" id="orig_no" value="0"
+                       {% if request.GET.original == '0' %}checked{% endif %}>
+                <label class="form-check-label" for="orig_no">Аналоги</label>
+              </div>
+            </div>
+
+            <!-- Кнопки -->
+            <button type="submit" class="btn-kameks-primary w-100 mb-2" style="padding:9px;">
+              <i class="bi bi-funnel me-1"></i>Применить
+            </button>
+            <a href="{% url 'catalog:catalog' %}{% if search_q %}?q={{ search_q }}{% endif %}"
+               class="btn-kameks-outline w-100 text-decoration-none text-center d-block" style="padding:8px;">
+              Сбросить фильтры
+            </a>
+
+          </div><!-- /.filter-panel -->
+        </form>
+      </div>
+
+    </div><!-- /col-lg-3 -->
+
+    <!-- ============================================
+         ПРАВАЯ КОЛОНКА — ТОВАРЫ
+         ============================================ -->
+    <div class="col-lg-9">
+
+      <!-- Сортировка и счётчик -->
+      <div class="sort-bar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div style="font-size:0.88rem;color:var(--color-text-muted);">
+          Найдено: <strong style="color:var(--color-white);">{{ products.paginator.count }}</strong> товаров
+          {% if current_categories %}
+            в {% for cat in current_categories %}«{{ cat.name }}»{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% endif %}
+          {% if current_brands %}
+            марки {% for brand in current_brands %}{{ brand.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size:0.82rem;color:var(--color-text-muted);">Сортировка:</span>
+          <select class="form-select form-select-sm"
+                  style="width:auto;background:var(--color-bg-primary);color:var(--color-text-primary);border-color:var(--color-border);"
+                  onchange="sortCatalog(this.value)">
+            <option value="popular" {% if current_sort == 'popular' or not current_sort %}selected{% endif %}>Популярные</option>
+            <option value="price"   {% if current_sort == 'price' %}selected{% endif %}>Сначала дешевле</option>
+            <option value="-price"  {% if current_sort == '-price' %}selected{% endif %}>Сначала дороже</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Сетка товаров -->
+      {% if products %}
+      <div class="row g-3">
+        {% for product in products %}
+        <div class="col-6 col-md-4 col-xl-3 fade-in-up">
+          {% include 'includes/product_card.html' with product=product %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Пагинация -->
+      {% if products.has_other_pages %}
+      <nav class="mt-4" aria-label="Страницы каталога">
+        <ul class="pagination justify-content-center flex-wrap gap-1">
+
+          {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="goToPage({{ products.previous_page_number }}); return false;">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for num in products.paginator.page_range %}
+            {% if products.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="goToPage({{ num }}); return false;">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="goToPage({{ products.next_page_number }}); return false;">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="products-empty">
+        <i class="bi bi-search"></i>
+        <h4 style="color:var(--color-text-secondary);">Товары не найдены</h4>
+        <p>Попробуйте изменить параметры фильтра или воспользуйтесь поиском</p>
+        <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none mt-2">
+          Сбросить все фильтры
+        </a>
+      </div>
+      {% endif %}
+
+    </div><!-- /col-lg-9 -->
+  </div><!-- /row -->
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sortCatalog(value) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', value);
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
+}
+
+function goToPage(num) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', num);
+  window.location.href = url.toString();
+}
+
+function removeParam(key, value) {
+  const url = new URL(window.location.href);
+  if (key === 'q') {
+    url.searchParams.delete('q');
+  } else {
+    const values = url.searchParams.getAll(key).filter(v => v !== value);
+    url.searchParams.delete(key);
+    values.forEach(v => url.searchParams.append(key, v));
+  }
+  url.searchParams.delete('page');
+  window.location.href = url.toString();
+}
+
+// ---- Live search suggest ----
+(function() {
+  const input = document.getElementById('catalog-search-input');
+  const list  = document.getElementById('suggest-list');
+  if (!input || !list) return;
+
+  let timer = null;
+
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    const q = this.value.trim();
+    if (q.length < 2) { list.style.display = 'none'; list.innerHTML = ''; return; }
+    timer = setTimeout(() => {
+      fetch(`{% url 'catalog:search_suggest' %}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.results.length) { list.style.display = 'none'; return; }
+          list.innerHTML = data.results.map(item => `
+            <div class="suggest-item" onclick="window.location='/catalog/${item.slug}/'">
+              <span class="suggest-name">${item.name}</span>
+              <span class="suggest-sku">${item.sku}</span>
+            </div>`).join('');
+          list.style.display = 'block';
+        });
+    }, 250);
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!list.contains(e.target) && e.target !== input) {
+      list.style.display = 'none';
+    }
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') list.style.display = 'none';
+  });
+})();
+</script>
+{% endblock %}

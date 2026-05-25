@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\Projects\\\\kameks\" | Where-Object { $_.Name -notlike \"venv\" -and $_.Name -notlike \".git\" } | Select-Object Name, Attributes)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Projects\\\\kameks\\\\apps\")",
+      "PowerShell(New-Item -ItemType File -Force \"c:\\\\Projects\\\\kameks\\\\apps\\\\__init__.py\")"
+    ]
+  }
+}

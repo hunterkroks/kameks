@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Заказ #{{ order.pk }} | КАМЭКС{% endblock %}
+
+{% block content %}
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}#orders" style="color:var(--color-accent-blue);">Личный кабинет</a></li>
+        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">Заказ #{{ order.pk }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <h4 style="font-weight:700;margin:0;">Заказ <span style="color:var(--color-accent-blue);">#{{ order.pk }}</span></h4>
+    <a href="{% url 'accounts:profile' %}#orders" class="btn-kameks-outline text-decoration-none" style="font-size:0.85rem;padding:8px 18px;">
+      <i class="bi bi-arrow-left me-1"></i>К списку заказов
+    </a>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Левая: информация о заказе -->
+    <div class="col-lg-4">
+
+      <!-- Статус -->
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:12px;font-weight:600;">Статус заказа</div>
+        {% if order.status == 'new' %}
+          <span style="background:rgba(46,134,222,0.15);color:var(--color-accent-blue);padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-clock me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% elif order.status == 'confirmed' %}
+          <span style="background:rgba(230,126,34,0.15);color:var(--color-accent-orange);padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-check-circle me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% elif order.status == 'shipped' %}
+          <span style="background:rgba(142,68,173,0.15);color:#8e44ad;padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-truck me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% elif order.status == 'delivered' %}
+          <span style="background:rgba(39,174,96,0.15);color:#27ae60;padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-bag-check me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% elif order.status == 'cancelled' %}
+          <span style="background:rgba(192,57,43,0.15);color:#e74c3c;padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-x-circle me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% endif %}
+
+        <div style="margin-top:14px;font-size:0.85rem;color:var(--color-text-muted);">
+          <i class="bi bi-calendar3 me-1"></i>{{ order.created_at|date:"d.m.Y в H:i" }}
+        </div>
+      </div>
+
+      <!-- Контакты -->
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:12px;font-weight:600;">Получатель</div>
+        <div style="font-size:0.9rem;">
+          <div style="font-weight:600;color:var(--color-white);margin-bottom:4px;">{{ order.first_name }} {{ order.last_name }}</div>
+          {% if order.company %}
+          <div style="color:var(--color-text-muted);margin-bottom:4px;font-size:0.85rem;">{{ order.company }}</div>
+          {% endif %}
+          <div style="color:var(--color-text-secondary);margin-bottom:4px;">
+            <i class="bi bi-telephone me-1"></i>{{ order.phone }}
+          </div>
+          <div style="color:var(--color-text-secondary);">
+            <i class="bi bi-envelope me-1"></i>{{ order.email }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Доставка и оплата -->
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:12px;font-weight:600;">Доставка и оплата</div>
+        <div style="font-size:0.88rem;">
+          <div style="margin-bottom:8px;">
+            <span style="color:var(--color-text-muted);">Доставка:</span>
+            <span style="font-weight:600;margin-left:6px;">{{ order.get_delivery_type_display }}</span>
+          </div>
+          {% if order.delivery_city or order.delivery_address %}
+          <div style="margin-bottom:8px;color:var(--color-text-secondary);">
+            <i class="bi bi-geo-alt me-1"></i>
+            {% if order.delivery_city %}{{ order.delivery_city }}{% endif %}
+            {% if order.delivery_address %}, {{ order.delivery_address }}{% endif %}
+          </div>
+          {% endif %}
+          <div>
+            <span style="color:var(--color-text-muted);">Оплата:</span>
+            <span style="font-weight:600;margin-left:6px;">{{ order.get_payment_type_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if order.comment %}
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:10px;font-weight:600;">Комментарий</div>
+        <div style="font-size:0.88rem;color:var(--color-text-secondary);">{{ order.comment }}</div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Правая: состав заказа -->
+    <div class="col-lg-8">
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:16px;font-weight:600;">
+          Состав заказа — {{ order.items.count }} поз.
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for item in order.items.all %}
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:var(--color-bg-primary);border:1px solid var(--color-border);border-radius:var(--radius-sm);">
+
+            <!-- Фото -->
+            <div style="flex-shrink:0;width:60px;height:60px;background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              {% with img=item.product.get_main_image %}
+                {% if img %}
+                  <img src="{{ img.image.url }}" alt="{{ item.product.name }}" style="width:100%;height:100%;object-fit:contain;">
+                {% else %}
+                  <i class="bi bi-box" style="font-size:1.4rem;color:var(--color-text-muted);"></i>
+                {% endif %}
+              {% endwith %}
+            </div>
+
+            <!-- Инфо -->
+            <div style="flex:1;min-width:0;">
+              <a href="{{ item.product.get_absolute_url }}" style="color:var(--color-white);font-weight:600;font-size:0.9rem;text-decoration:none;display:block;margin-bottom:4px;line-height:1.3;"
+                 onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-white)'">
+                {{ item.product.name }}
+              </a>
+              <div style="font-size:0.78rem;color:var(--color-text-muted);">Арт.: {{ item.product.sku }}</div>
+              {% if item.product.category %}
+              <div style="font-size:0.78rem;color:var(--color-text-muted);">{{ item.product.category.name }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Цена × кол-во = итого -->
+            <div style="flex-shrink:0;text-align:right;">
+              <div style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:4px;">{{ item.price|floatformat:0 }} ₽ × {{ item.quantity }} шт.</div>
+              <div style="font-weight:700;color:var(--color-accent-orange);font-size:1rem;">{{ item.get_cost|floatformat:0 }} ₽</div>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Итого -->
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;align-items:center;gap:16px;">
+          <span style="color:var(--color-text-muted);font-size:0.9rem;">Итого по заказу:</span>
+          <span style="font-size:1.4rem;font-weight:700;color:var(--color-accent-orange);">{{ order.total_price|floatformat:0 }} ₽</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

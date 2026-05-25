@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}О компании | КАМЭКС{% endblock %}
+
+{% block content %}
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
+        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">О компании</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-5 align-items-center mb-5">
+    <div class="col-lg-6">
+      <h1 style="font-size:2.2rem;font-weight:800;margin-bottom:16px;">
+        ООО «ПКФ <span style="color:var(--color-accent-orange);">КАМЭКС</span>»
+      </h1>
+      <p style="color:var(--color-text-secondary);line-height:1.8;font-size:1rem;">
+        Компания КАМЭКС основана в 1999 году и за более чем 25 лет стала одним из ведущих поставщиков
+        запасных частей для грузовых автомобилей и спецтехники в России. Мы специализируемся на поставках
+        оригинальных и сертифицированных аналоговых запчастей для КАМАЗ, МАЗ, Урал, ГАЗ и других марок.
+      </p>
+      <p style="color:var(--color-text-secondary);line-height:1.8;font-size:1rem;">
+        Наш склад в Санкт-Петербурге располагает более чем 50 000 позиций. Мы работаем как с крупными
+        транспортными предприятиями, так и с частными клиентами, обеспечивая быструю доставку по всей России.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <div class="row g-3">
+        {% for stat in "1234" %}
+        <div class="col-6">
+          <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;text-align:center;">
+            <div style="font-size:2rem;font-weight:800;color:var(--color-accent-blue);">
+              {% cycle '25+' '50 000+' '12 000+' '99%' %}
+            </div>
+            <div style="font-size:0.82rem;color:var(--color-text-muted);margin-top:4px;">
+              {% cycle 'лет на рынке' 'позиций на складе' 'выполненных заказов' 'гарантия подлинности' %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Преимущества -->
+  <h2 style="font-size:1.6rem;font-weight:700;margin-bottom:24px;text-align:center;">Почему нам доверяют</h2>
+  <div class="row g-4 mb-5">
+    {% for item in "1234" %}
+    <div class="col-md-6 col-lg-3">
+      <div class="advantage-card">
+        <div class="advantage-icon">
+          <i class="bi {% cycle 'bi-building' 'bi-patch-check' 'bi-truck' 'bi-headset' %}"></i>
+        </div>
+        <h5>{% cycle 'Официальный дилер' 'Гарантия качества' 'Быстрая доставка' 'Техническая поддержка' %}</h5>
+        <p>{% cycle 'Прямые договоры с заводами-производителями. Исключены подделки и пересортица.' 'На все запчасти — гарантия 12 месяцев. Возврат и обмен без вопросов.' 'Отправляем заказы транспортными компаниями и курьером по всей России от 1 дня.' 'Поможем подобрать деталь по артикулу, OEM-номеру или VIN вашего автомобиля.' %}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Реквизиты -->
+  <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:28px;">
+    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:18px;">Реквизиты компании</h3>
+    <div class="row g-3" style="font-size:0.9rem;">
+      <div class="col-md-6">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:8px 0;color:var(--color-text-muted);width:50%;">Полное наименование</td>
+            <td style="padding:8px 0;">ООО «ПКФ КАМЭКС»</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:8px 0;color:var(--color-text-muted);">ИНН</td>
+            <td style="padding:8px 0;">7800000000</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:8px 0;color:var(--color-text-muted);">КПП</td>
+            <td style="padding:8px 0;">780001001</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--color-text-muted);">ОГРН</td>
+            <td style="padding:8px 0;">1234567890123</td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:8px 0;color:var(--color-text-muted);width:50%;">Юридический адрес</td>
+            <td style="padding:8px 0;">190000, г. Санкт-Петербург, ул. Промышленная, д. 1</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:8px 0;color:var(--color-text-muted);">Расчётный счёт</td>
+            <td style="padding:8px 0;">40702810000000000000</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:var(--color-text-muted);">Банк</td>
+            <td style="padding:8px 0;">ПАО Сбербанк, г. Санкт-Петербург</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

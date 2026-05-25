@@ -1,0 +1,75 @@
+{% load static %}
+<div class="product-card">
+  <!-- Фото -->
+  <div class="product-img-wrapper">
+    {% with product.get_main_image as img %}
+      {% if img %}
+        <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+      {% elif product.category.image %}
+        <img src="{{ product.category.image.url }}" alt="{{ product.category.name }}"
+             loading="lazy" style="opacity:0.55;filter:grayscale(20%);">
+      {% else %}
+        <div class="d-flex align-items-center justify-content-center h-100"
+             style="color:var(--color-text-muted);font-size:2.5rem;">
+          <i class="bi bi-image"></i>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Бейдж -->
+    {% if badge_type == 'bestseller' or product.is_bestseller %}
+    <span class="product-badge badge-bestseller">ХИТ</span>
+    {% elif badge_type == 'new' or product.is_new %}
+    <span class="product-badge badge-new">НОВИНКА</span>
+    {% endif %}
+    {% if product.discount_percent %}
+    <span class="product-badge badge-sale" style="top:auto;bottom:10px;">−{{ product.discount_percent }}%</span>
+    {% endif %}
+  </div>
+
+  <!-- Тело карточки -->
+  <div class="product-body">
+    <div class="product-sku">Арт.: {{ product.sku }}</div>
+    <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+      <div class="product-name">{{ product.name }}</div>
+    </a>
+    {% with product.brands.first as brand %}
+    {% if brand %}
+    <div class="product-brand"><i class="bi bi-truck me-1"></i>{{ brand.name }}</div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Цена -->
+    <div class="d-flex align-items-baseline mt-auto">
+      <span class="product-price">{{ product.current_price|floatformat:0 }} ₽</span>
+      {% if product.discount_price %}
+      <span class="product-price-old">{{ product.price|floatformat:0 }} ₽</span>
+      {% endif %}
+    </div>
+
+    <!-- Наличие -->
+    <div class="mt-1 mb-2" style="font-size:0.75rem;">
+      {% if product.in_stock %}
+        <span style="color:#27ae60;"><i class="bi bi-check-circle-fill me-1"></i>В наличии ({{ product.stock }} шт.)</span>
+      {% else %}
+        <span style="color:var(--color-accent-red);"><i class="bi bi-x-circle me-1"></i>Под заказ</span>
+      {% endif %}
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="product-actions">
+      <button class="btn-add-to-cart" data-product-id="{{ product.id }}">
+        <i class="bi bi-cart-plus me-1"></i>В корзину
+      </button>
+      {% if user.is_authenticated %}
+      <button class="btn-favorite" title="В избранное" onclick="toggleFavorite(this, {{ product.id }})">
+        <i class="bi bi-heart"></i>
+      </button>
+      {% else %}
+      <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn-favorite" title="Войдите, чтобы добавить в избранное">
+        <i class="bi bi-heart"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

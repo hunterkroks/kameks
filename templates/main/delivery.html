@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Доставка и оплата | КАМЭКС{% endblock %}
+
+{% block content %}
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
+        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">Доставка и оплата</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5">
+  <h1 style="font-size:2rem;font-weight:800;margin-bottom:8px;">Доставка и оплата</h1>
+  <div class="section-divider" style="margin:0 0 36px;"></div>
+
+  <div class="row g-4 mb-5">
+
+    <!-- Доставка -->
+    <div class="col-lg-6">
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:28px;height:100%;">
+        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:20px;">
+          <i class="bi bi-truck me-2" style="color:var(--color-accent-blue);"></i>Способы доставки
+        </h3>
+
+        <div style="border-bottom:1px solid var(--color-border);padding-bottom:16px;margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:6px;">Самовывоз</div>
+          <div style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;">
+            г. Санкт-Петербург, ул. Промышленная, д. 1<br>
+            Пн–Пт: 9:00–18:00, Сб: 10:00–15:00<br>
+            <span style="color:#27ae60;font-weight:500;">Бесплатно</span>
+          </div>
+        </div>
+
+        <div style="border-bottom:1px solid var(--color-border);padding-bottom:16px;margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:6px;">Транспортные компании</div>
+          <div style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;">
+            СДЭК, ПЭК, Деловые линии, Байкал-Сервис и др.<br>
+            Доставка по всей России от 1 рабочего дня.<br>
+            Стоимость рассчитывается по тарифам ТК.
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:600;margin-bottom:6px;">Курьером по Санкт-Петербургу</div>
+          <div style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;">
+            Доставка в день заказа или на следующий день.<br>
+            Стоимость от 500 ₽, при заказе от 10 000 ₽ — бесплатно.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Оплата -->
+    <div class="col-lg-6">
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:28px;height:100%;">
+        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:20px;">
+          <i class="bi bi-credit-card me-2" style="color:var(--color-accent-blue);"></i>Способы оплаты
+        </h3>
+
+        {% for item in "1234" %}
+        <div style="display:flex;gap:14px;align-items:flex-start;{% if not forloop.last %}margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--color-border);{% endif %}">
+          <div style="width:38px;height:38px;background:rgba(46,134,222,0.12);border:1px solid rgba(46,134,222,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi {% cycle 'bi-credit-card-2-front' 'bi-cash-coin' 'bi-file-text' 'bi-handshake' %}" style="color:var(--color-accent-blue);font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:3px;">{% cycle 'Банковская карта онлайн' 'Наличные при получении' 'Счёт для юридических лиц' 'Оплата по договору' %}</div>
+            <div style="font-size:0.82rem;color:var(--color-text-secondary);line-height:1.6;">{% cycle 'Visa, MasterCard, МИР. Оплата на сайте при оформлении. SSL-шифрование.' 'При самовывозе или доставке курьером. Проверьте товар перед оплатой.' 'Выставляем счёт с реквизитами. Работаем с НДС и без НДС.' 'Для постоянных клиентов — отсрочка платежа до 30 дней по договору.' %}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Гарантия и возврат -->
+  <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:28px;">
+    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:20px;">
+      <i class="bi bi-shield-check me-2" style="color:#27ae60;"></i>Гарантия и возврат
+    </h3>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div style="font-weight:600;margin-bottom:6px;color:var(--color-white);">Гарантийный срок</div>
+        <p style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;margin:0;">
+          На все запасные части предоставляется гарантия 12 месяцев с момента продажи. На оригинальные запчасти — гарантия производителя.
+        </p>
+      </div>
+      <div class="col-md-4">
+        <div style="font-weight:600;margin-bottom:6px;color:var(--color-white);">Возврат товара</div>
+        <p style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;margin:0;">
+          Возврат надлежащего качества в течение 14 дней. Товар должен быть в заводской упаковке, без следов установки и эксплуатации.
+        </p>
+      </div>
+      <div class="col-md-4">
+        <div style="font-weight:600;margin-bottom:6px;color:var(--color-white);">Гарантийный случай</div>
+        <p style="font-size:0.88rem;color:var(--color-text-secondary);line-height:1.7;margin:0;">
+          При обнаружении брака — замена или возврат средств. Свяжитесь с менеджером по телефону или email с описанием ситуации.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

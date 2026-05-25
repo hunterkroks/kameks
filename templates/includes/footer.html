@@ -1,0 +1,99 @@
+{% load static %}
+<footer class="footer-kameks">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Логотип и описание -->
+      <div class="col-lg-3 col-md-6">
+        <div class="footer-brand mb-3">
+          <a href="{% url 'main:index' %}" style="text-decoration:none;">
+            <span style="font-size:1.5rem;font-weight:800;color:#fff;">КАМ<span style="color:var(--color-accent-orange);">ЭКС</span></span>
+          </a>
+        </div>
+        <p style="font-size:0.85rem;line-height:1.7;">
+          ООО «ПКФ КАМЭКС» — поставщик оригинальных и аналоговых запасных частей для грузовых автомобилей и спецтехники.
+        </p>
+        <!-- Соцсети: реальных ссылок нет, показываем кнопки без действия -->
+        <div class="mt-3 d-flex gap-2">
+          <span class="navbar-icon-btn" title="Telegram (скоро)" style="border:1px solid var(--color-border);border-radius:6px;cursor:default;opacity:0.5;">
+            <i class="bi bi-telegram"></i>
+          </span>
+          <span class="navbar-icon-btn" title="WhatsApp (скоро)" style="border:1px solid var(--color-border);border-radius:6px;cursor:default;opacity:0.5;">
+            <i class="bi bi-whatsapp"></i>
+          </span>
+          <span class="navbar-icon-btn" title="ВКонтакте (скоро)" style="border:1px solid var(--color-border);border-radius:6px;cursor:default;opacity:0.5;">
+            <i class="bi bi-vk"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Каталог -->
+      <div class="col-lg-2 col-md-6">
+        <h5>Каталог</h5>
+        <ul>
+          <li><a href="{% url 'catalog:catalog' %}?q=двигатель">Двигатель и детали</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?q=трансмиссия">Трансмиссия</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?q=ходовая">Ходовая часть</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?q=тормоз">Тормозная система</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?q=кабина">Кабина и кузов</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?q=электрика">Электрооборудование</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">Все категории →</a></li>
+        </ul>
+      </div>
+
+      <!-- Информация -->
+      <div class="col-lg-2 col-md-6">
+        <h5>Информация</h5>
+        <ul>
+          <li><a href="{% url 'main:about' %}">О компании</a></li>
+          <li><a href="{% url 'main:delivery' %}">Доставка и оплата</a></li>
+          <li><a href="{% url 'main:delivery' %}#warranty">Гарантия качества</a></li>
+          <li><a href="{% url 'main:delivery' %}#warranty">Возврат товара</a></li>
+          <li><a href="{% url 'main:about' %}">Сертификаты</a></li>
+          <li><a href="{% url 'main:contacts' %}">Политика конфиденциальности</a></li>
+        </ul>
+      </div>
+
+      <!-- Контакты -->
+      <div class="col-lg-3 col-md-6">
+        <h5>Контакты</h5>
+        <ul>
+          <li>
+            <i class="bi bi-geo-alt-fill me-2" style="color:var(--color-accent-blue);"></i>
+            г. Санкт-Петербург, ул. Промышленная, д. 1
+          </li>
+          <li class="mt-2">
+            <i class="bi bi-telephone-fill me-2" style="color:var(--color-accent-blue);"></i>
+            <a href="tel:+78001234567">+7 (800) 123-45-67</a>
+          </li>
+          <li class="mt-2">
+            <i class="bi bi-envelope-fill me-2" style="color:var(--color-accent-blue);"></i>
+            <a href="mailto:info@kameks.ru">info@kameks.ru</a>
+          </li>
+          <li class="mt-2">
+            <i class="bi bi-clock-fill me-2" style="color:var(--color-accent-blue);"></i>
+            Пн–Пт: 9:00–18:00 (МСК)
+          </li>
+        </ul>
+      </div>
+
+      <!-- CTA -->
+      <div class="col-lg-2 col-12">
+        <h5>Заказать звонок</h5>
+        <p style="font-size:0.82rem;">Оставьте номер — перезвоним в течение 10 минут</p>
+        <a href="{% url 'main:contacts' %}#callback" class="btn-kameks-primary d-inline-block text-decoration-none"
+           style="font-size:0.85rem;padding:10px 18px;width:100%;text-align:center;">
+          <i class="bi bi-telephone me-1"></i>Перезвоните мне
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Нижняя строка -->
+    <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+      <span>© 2024 ООО «ПКФ КАМЭКС». Все права защищены.</span>
+      <span>ИНН: 7800000000 | ОГРН: 1234567890123</span>
+      <span>Разработка: дипломная работа БГТУ «ВОЕНМЕХ»</span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Личный кабинет | КАМЭКС{% endblock %}
+
+{% block content %}
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
+        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">Личный кабинет</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- Левая: навигация и аватар -->
+    <div class="col-lg-3">
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;text-align:center;margin-bottom:16px;">
+        <div style="width:72px;height:72px;background:var(--color-accent-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;color:#fff;font-weight:700;">
+          {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        </div>
+        <div style="font-weight:700;">{{ user.get_full_name|default:user.username }}</div>
+        <div style="font-size:0.8rem;color:var(--color-text-muted);">{{ user.email }}</div>
+      </div>
+
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+        <a href="{% url 'accounts:profile' %}" style="display:block;padding:12px 18px;font-size:0.9rem;color:var(--color-white);background:rgba(46,134,222,0.12);border-left:3px solid var(--color-accent-blue);text-decoration:none;">
+          <i class="bi bi-person me-2"></i>Мой профиль
+        </a>
+        <a href="#orders" style="display:block;padding:12px 18px;font-size:0.9rem;color:var(--color-text-secondary);border-bottom:1px solid var(--color-border);text-decoration:none;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color=''">
+          <i class="bi bi-bag me-2"></i>Мои заказы
+        </a>
+        <a href="{% url 'accounts:logout' %}" style="display:block;padding:12px 18px;font-size:0.9rem;color:#e74c3c;text-decoration:none;">
+          <i class="bi bi-box-arrow-right me-2"></i>Выйти
+        </a>
+      </div>
+    </div>
+
+    <!-- Правая: контент -->
+    <div class="col-lg-9">
+
+      <!-- Редактирование профиля -->
+      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;margin-bottom:24px;">
+        <h5 style="font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
+          <i class="bi bi-person-gear me-2" style="color:var(--color-accent-blue);"></i>Данные профиля
+        </h5>
+
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Телефон</label>
+              {{ form.phone }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Название компании</label>
+              {{ form.company_name }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">ИНН</label>
+              {{ form.inn }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Адрес доставки (по умолчанию)</label>
+              {{ form.address }}
+            </div>
+          </div>
+          <button type="submit" class="btn-kameks-primary mt-3" style="padding:10px 24px;">
+            <i class="bi bi-check2 me-1"></i>Сохранить изменения
+          </button>
+        </form>
+      </div>
+
+      <!-- История заказов -->
+      <div id="orders" style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;">
+        <h5 style="font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
+          <i class="bi bi-bag me-2" style="color:var(--color-accent-blue);"></i>История заказов
+        </h5>
+
+        {% if orders %}
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--color-border);color:var(--color-text-muted);">
+                <th style="padding:10px 0;font-weight:600;">№</th>
+                <th style="padding:10px 0;font-weight:600;">Дата</th>
+                <th style="padding:10px 0;font-weight:600;">Позиций</th>
+                <th style="padding:10px 0;font-weight:600;">Сумма</th>
+                <th style="padding:10px 0;font-weight:600;">Статус</th>
+                <th style="padding:10px 0;font-weight:600;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr style="border-bottom:1px solid var(--color-border);">
+                <td style="padding:12px 0;color:var(--color-accent-blue);font-weight:600;">#{{ order.pk }}</td>
+                <td style="padding:12px 0;color:var(--color-text-secondary);">{{ order.created_at|date:"d.m.Y" }}</td>
+                <td style="padding:12px 0;color:var(--color-text-secondary);">{{ order.items.count }} поз.</td>
+                <td style="padding:12px 0;font-weight:700;color:var(--color-accent-orange);">{{ order.total_price|floatformat:0 }} ₽</td>
+                <td style="padding:12px 0;">
+                  {% if order.status == 'new' %}
+                  <span style="background:rgba(46,134,222,0.15);color:var(--color-accent-blue);padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
+                  {% elif order.status == 'confirmed' %}
+                  <span style="background:rgba(230,126,34,0.15);color:var(--color-accent-orange);padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
+                  {% elif order.status == 'shipped' %}
+                  <span style="background:rgba(142,68,173,0.15);color:#8e44ad;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
+                  {% elif order.status == 'delivered' %}
+                  <span style="background:rgba(39,174,96,0.15);color:#27ae60;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
+                  {% elif order.status == 'cancelled' %}
+                  <span style="background:rgba(192,57,43,0.15);color:#e74c3c;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
+                  {% endif %}
+                </td>
+                <td style="padding:12px 0;padding-left:12px;">
+                  <a href="{% url 'orders:detail' order.pk %}" style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;color:var(--color-accent-blue);text-decoration:none;border:1px solid rgba(46,134,222,0.35);padding:4px 12px;border-radius:4px;white-space:nowrap;"
+                     onmouseover="this.style.background='rgba(46,134,222,0.1)'" onmouseout="this.style.background='transparent'">
+                    <i class="bi bi-eye"></i> Состав
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:40px 0;color:var(--color-text-muted);">
+          <i class="bi bi-bag-x" style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
+          <p>У вас ещё нет заказов</p>
+          <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none" style="font-size:0.88rem;">Перейти в каталог</a>
+        </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
