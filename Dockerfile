@@ -21,4 +21,6 @@ EXPOSE 8000
 
 EXPOSE 8000
 
+RUN python manage.py collectstatic --noinput --clear
+
 CMD sh -c "gunicorn kameks.wsgi:application --bind 0.0.0.0:\${PORT:-8000} --workers 3 --timeout 120"
