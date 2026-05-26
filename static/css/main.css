@@ -266,10 +266,12 @@ h1, h2, h3, h4, h5, h6 {
 .section-title {
   font-size: clamp(1.5rem, 3vw, 2.2rem);
   font-weight: 800;
-  color: var(--color-white);
+  color: var(--color-text-primary);
   text-align: center;
   margin-bottom: 0;
 }
+/* CTA-секция всегда тёмная — текст всегда белый */
+.cta-section { color: #fff; }
 
 .section-subtitle {
   color: var(--color-text-secondary);
@@ -600,3 +602,122 @@ h1, h2, h3, h4, h5, h6 {
   .trust-item .trust-number { font-size: 1.7rem; }
   .topbar { display: none; }
 }
+
+/* ======================================================
+   СВЕТЛАЯ ТЕМА — [data-theme="light"]
+   Оверрайды хардкодных rgba и специфичных стилей.
+   Всё, что использует CSS-переменные, подхватывается
+   автоматически через variables.css.
+   ====================================================== */
+
+/* Плавный переход при смене темы */
+html { transition: background-color 0.2s ease; }
+
+/* Кнопки */
+[data-theme="light"] .btn-kameks-primary {
+  background: linear-gradient(135deg, #c0392b, #922b21);
+  box-shadow: 0 4px 15px rgba(192,57,43,0.3);
+}
+[data-theme="light"] .btn-kameks-primary:hover {
+  background: linear-gradient(135deg, #922b21, #c0392b);
+  box-shadow: 0 6px 20px rgba(192,57,43,0.45);
+}
+[data-theme="light"] .btn-kameks-outline {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+[data-theme="light"] .btn-kameks-outline:hover {
+  background: #c0392b;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(192,57,43,0.35);
+}
+
+/* Карточки категорий и марок: ховер → красный фон */
+[data-theme="light"] .category-card:hover,
+[data-theme="light"] .brand-card:hover {
+  background: #c0392b;
+}
+
+/* Иконка в карточке категории */
+[data-theme="light"] .advantage-card .advantage-icon {
+  background: rgba(192,57,43,0.08);
+  border-color: rgba(192,57,43,0.25);
+}
+
+/* Dropdown меню в навбаре */
+[data-theme="light"] .dropdown-menu {
+  background: #ffffff !important;
+  border-color: #e0e0e5 !important;
+}
+[data-theme="light"] .dropdown-item { color: #111111 !important; }
+[data-theme="light"] .dropdown-item:hover {
+  background: rgba(192,57,43,0.08) !important;
+  color: #c0392b !important;
+}
+[data-theme="light"] .dropdown-divider { border-color: #e0e0e5 !important; }
+
+/* Иконки-кнопки в навбаре */
+[data-theme="light"] .navbar-icon-btn:hover {
+  color: #c0392b;
+  background: rgba(192,57,43,0.08);
+}
+
+/* Фильтры каталога (хардкод rgba(46,134,222) → красный) */
+[data-theme="light"] .filter-tag {
+  background: rgba(192,57,43,0.08);
+  border-color: rgba(192,57,43,0.3);
+  color: #c0392b;
+}
+[data-theme="light"] .suggest-item:hover { background: rgba(192,57,43,0.08); }
+
+/* CTA-баннер (хардкод #1b4f72 в градиенте) */
+[data-theme="light"] .cta-section {
+  background: linear-gradient(135deg, #7b1a1a 0%, #c0392b 100%);
+}
+
+/* Пагинация */
+[data-theme="light"] .pagination .page-link {
+  background-color: #ffffff;
+  border-color: #e0e0e5;
+  color: #444444;
+}
+[data-theme="light"] .pagination .page-link:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
+
+/* Формы */
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select {
+  background-color: #ffffff !important;
+  border-color: #e0e0e5;
+  color: #111111;
+}
+[data-theme="light"] .form-control:focus,
+[data-theme="light"] .form-select:focus {
+  border-color: #c0392b !important;
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.15) !important;
+}
+[data-theme="light"] .form-check-input:checked {
+  background-color: #c0392b;
+  border-color: #c0392b;
+}
+
+/* Footer — всегда тёмный, переопределяем border и muted */
+[data-theme="light"] .footer-kameks {
+  --color-border: rgba(255,255,255,0.12);
+  --color-text-muted: #999999;
+}
+
+/* Карточка цены на странице товара */
+[data-theme="light"] .product-price-block { background: #f4f5f7; }
+
+/* Спецификации */
+[data-theme="light"] .spec-table tr { border-bottom-color: #e0e0e5; }
+[data-theme="light"] .spec-table td:first-child { color: #888888; }
+
+/* Таблицы Bootstrap */
+[data-theme="light"] .table { color: #111111; }
+[data-theme="light"] .table-bordered td,
+[data-theme="light"] .table-bordered th { border-color: #e0e0e5; }

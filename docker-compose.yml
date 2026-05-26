@@ -20,6 +20,7 @@ services:
     restart: unless-stopped
     command: >
       sh -c "python manage.py migrate --settings=kameks.settings.production &&
+             python manage.py populate_catalog --settings=kameks.settings.production &&
              python manage.py collectstatic --noinput --settings=kameks.settings.production &&
              gunicorn kameks.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     volumes:

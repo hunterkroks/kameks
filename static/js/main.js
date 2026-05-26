@@ -1,5 +1,33 @@
 /* KAMEKS — Основной JS */
 
+/* --- Переключатель темы --- */
+(function () {
+  const THEME_KEY = 'kameks-theme';
+  const html = document.documentElement;
+
+  function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    const icon = document.getElementById('theme-toggle-icon');
+    const btn  = document.getElementById('theme-toggle');
+    if (icon) icon.className = theme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+    if (btn)  btn.title      = theme === 'light' ? 'Тёмная тема'    : 'Светлая тема';
+  }
+
+  // Синхронизируем иконку с текущей темой
+  applyTheme(html.getAttribute('data-theme') || 'dark');
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        const current = html.getAttribute('data-theme') || 'dark';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    }
+  });
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
 
   // --- Sticky navbar ---

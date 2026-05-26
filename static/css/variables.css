@@ -1,5 +1,11 @@
+/* ======================================================
+   КАМЭКС — CSS-переменные
+   Тёмная тема: :root (по умолчанию)
+   Светлая тема: [data-theme="light"]
+   ====================================================== */
+
+/* === ТЁМНАЯ ТЕМА === */
 :root {
-  /* Цветовая схема */
   --color-bg-primary:    #0d1b2a;
   --color-bg-secondary:  #1a2b3c;
   --color-bg-dark:       #070e16;
@@ -17,19 +23,38 @@
   --color-text-muted:    #5a7a96;
   --color-white:         #ffffff;
 
-  /* Шрифты */
   --font-main:    'Inter', 'Segoe UI', Arial, sans-serif;
   --font-heading: 'Inter', 'Segoe UI', Arial, sans-serif;
 
-  /* Тени */
   --shadow-card:  0 4px 24px rgba(0,0,0,0.35);
   --shadow-hover: 0 8px 32px rgba(46,134,222,0.25);
 
-  /* Радиус */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  /* Переходы */
   --transition: 0.25s ease;
+}
+
+/* === СВЕТЛАЯ ТЕМА (красный · чёрный · белый) === */
+[data-theme="light"] {
+  --color-bg-primary:    #ffffff;
+  --color-bg-secondary:  #f4f5f7;
+  --color-bg-dark:       #111111;   /* navbar/footer — всегда тёмные */
+  --color-bg-card:       #ffffff;
+  --color-border:        #e0e0e5;
+
+  --color-accent-blue:   #c0392b;   /* синий → красный */
+  --color-accent-light:  #e74c3c;
+  --color-accent-orange: #c0392b;   /* оранжевый → красный */
+  --color-accent-red:    #c0392b;
+  /* --color-accent-gold: #f39c12 — не меняем, нужен для звёзд */
+
+  --color-text-primary:  #111111;
+  --color-text-secondary:#444444;
+  --color-text-muted:    #888888;
+  --color-white:         #ffffff;
+
+  --shadow-card:  0 2px 16px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 28px rgba(192,57,43,0.18);
 }

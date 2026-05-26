@@ -48,12 +48,18 @@
         </li>
       </ul>
 
-      <!-- Иконки: поиск, избранное, корзина, личный кабинет -->
+      <!-- Иконки: поиск, тема, корзина, личный кабинет -->
       <div class="d-flex align-items-center gap-2">
         <!-- Поиск -->
         <a href="{% url 'catalog:catalog' %}" class="navbar-icon-btn" title="Поиск">
           <i class="bi bi-search"></i>
         </a>
+
+        <!-- Переключатель темы -->
+        <button class="navbar-icon-btn" id="theme-toggle" title="Светлая тема" type="button"
+                style="font-size:1.1rem;">
+          <i class="bi bi-sun-fill" id="theme-toggle-icon"></i>
+        </button>
 
         <!-- Корзина -->
         <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" title="Корзина">
