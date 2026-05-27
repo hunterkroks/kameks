@@ -42,6 +42,12 @@
 
   <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Состояние корзины для JS -->
+  <script>
+  window.KAMEKS_CART = {
+    {% for prod_id, item in cart.cart.items %}"{{ prod_id }}": {{ item.quantity }}{% if not forloop.last %},{% endif %}{% endfor %}
+  };
+  </script>
   <!-- Основной JS -->
   <script src="{% static 'js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}

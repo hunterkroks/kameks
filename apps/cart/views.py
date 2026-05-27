@@ -19,7 +19,8 @@ def cart_add(request, product_id):
     cart.add(product=product, quantity=quantity, override_quantity=bool(override))
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'cart_total': len(cart), 'success': True})
+        item_quantity = cart.cart.get(str(product_id), {}).get('quantity', 0)
+        return JsonResponse({'cart_total': len(cart), 'success': True, 'item_quantity': item_quantity})
     return redirect('cart:detail')
 
 
@@ -28,4 +29,6 @@ def cart_remove(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'cart_total': len(cart), 'item_quantity': 0})
     return redirect('cart:detail')

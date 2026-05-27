@@ -81,31 +81,104 @@ document.addEventListener('DOMContentLoaded', function () {
     counters.forEach(el => counterObserver.observe(el));
   }
 
-  // --- AJAX: добавление в корзину ---
-  document.querySelectorAll('.btn-add-to-cart[data-product-id]').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      const productId = this.dataset.productId;
-      const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+  // --- Корзина: счётчик в карточках товаров ---
+  function getCsrf() {
+    return document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+  }
 
-      fetch(`/cart/add/${productId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'quantity=1',
-      })
-        .then(r => r.json())
+  function updateCartBadges(total) {
+    document.querySelectorAll('.cart-badge').forEach(el => {
+      el.textContent = total;
+      el.style.display = total > 0 ? '' : 'none';
+    });
+    if (total > 0 && !document.querySelector('.cart-badge')) {
+      document.querySelectorAll('a.navbar-icon-btn').forEach(link => {
+        if (link.href && link.href.includes('/cart/')) {
+          const badge = document.createElement('span');
+          badge.className = 'cart-badge';
+          badge.textContent = total;
+          link.appendChild(badge);
+        }
+      });
+    }
+  }
+
+  function setWidgetQty(widget, qty) {
+    const addBtn  = widget.querySelector('.btn-cart-add');
+    const counter = widget.querySelector('.cart-counter');
+    const qtyEl   = widget.querySelector('.cart-counter-qty');
+    if (qty <= 0) {
+      addBtn.style.display  = '';
+      counter.style.display = 'none';
+    } else {
+      addBtn.style.display  = 'none';
+      counter.style.display = '';
+      qtyEl.textContent = qty;
+    }
+  }
+
+  function cartPost(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCsrf(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    }).then(r => r.json());
+  }
+
+  const cartItems = window.KAMEKS_CART || {};
+  document.querySelectorAll('.cart-widget[data-product-id]').forEach(widget => {
+    const pid = widget.dataset.productId;
+    const savedQty = parseInt(cartItems[pid] || 0, 10);
+    if (savedQty > 0) setWidgetQty(widget, savedQty);
+
+    widget.querySelector('.btn-cart-add').addEventListener('click', function () {
+      cartPost(`/cart/add/${pid}/`, 'quantity=1')
         .then(data => {
           if (data.success) {
-            const badge = document.querySelector('.cart-badge');
-            if (badge) badge.textContent = data.cart_total;
+            setWidgetQty(widget, data.item_quantity);
+            updateCartBadges(data.cart_total);
             showToast('Товар добавлен в корзину');
           }
         })
         .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+    });
+
+    widget.querySelector('.cart-counter-plus').addEventListener('click', function () {
+      cartPost(`/cart/add/${pid}/`, 'quantity=1')
+        .then(data => {
+          if (data.success) {
+            setWidgetQty(widget, data.item_quantity);
+            updateCartBadges(data.cart_total);
+          }
+        })
+        .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+    });
+
+    widget.querySelector('.cart-counter-minus').addEventListener('click', function () {
+      const current = parseInt(widget.querySelector('.cart-counter-qty').textContent, 10);
+      if (current <= 1) {
+        cartPost(`/cart/remove/${pid}/`, '')
+          .then(data => {
+            if (data.success) {
+              setWidgetQty(widget, 0);
+              updateCartBadges(data.cart_total);
+            }
+          })
+          .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+      } else {
+        cartPost(`/cart/add/${pid}/`, `quantity=${current - 1}&override=true`)
+          .then(data => {
+            if (data.success) {
+              setWidgetQty(widget, data.item_quantity);
+              updateCartBadges(data.cart_total);
+            }
+          })
+          .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+      }
     });
   });
 

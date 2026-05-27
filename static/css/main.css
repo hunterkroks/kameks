@@ -387,6 +387,11 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   margin-top: 12px;
 }
+.cart-widget {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
 .btn-add-to-cart {
   flex: 1;
   background: var(--color-accent-blue);
@@ -400,6 +405,43 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
 }
 .btn-add-to-cart:hover { background: var(--color-accent-light); color: #fff; }
+
+.cart-counter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-accent-blue);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  gap: 2px;
+}
+.cart-counter-btn {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition: background var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cart-counter-btn:hover { background: rgba(255,255,255,0.3); }
+.cart-counter-qty {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
 
 .btn-favorite {
   background: transparent;
