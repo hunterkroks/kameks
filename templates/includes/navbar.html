@@ -23,6 +23,25 @@
       КАМ<span>ЭКС</span>
     </a>
 
+    <!-- Мобильные иконки (всегда видны, до кнопки меню) -->
+    <div class="d-flex d-lg-none align-items-center gap-1 ms-auto me-2">
+      <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" title="Корзина">
+        <i class="bi bi-cart2 fs-5"></i>
+        {% if cart %}
+        <span class="cart-badge">{{ cart|length }}</span>
+        {% endif %}
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'accounts:profile' %}" class="navbar-icon-btn" title="Профиль">
+        <i class="bi bi-person-circle fs-5"></i>
+      </a>
+      {% else %}
+      <a href="{% url 'accounts:login' %}" class="navbar-icon-btn" title="Войти">
+        <i class="bi bi-person fs-5"></i>
+      </a>
+      {% endif %}
+    </div>
+
     <!-- Кнопка мобильного меню -->
     <button class="navbar-toggler border-0 text-white" type="button"
             data-bs-toggle="collapse" data-bs-target="#navbarMain">
