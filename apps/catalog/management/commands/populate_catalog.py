@@ -3,28 +3,40 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.conf import settings
-from apps.catalog.models import Product
+from apps.catalog.models import Product, Category
 
 
 class Command(BaseCommand):
     help = 'Загружает начальные данные каталога если БД пуста'
 
     def handle(self, *args, **options):
-        # 1. Загружаем фикстуру если товаров нет
-        if Product.objects.exists():
-            self.stdout.write('[skip] Данные уже есть, пропускаем loaddata')
+        # 1. Создаём категории и бренды если их ещё нет
+        if not Category.objects.exists():
+            self.stdout.write('Создаю категории и бренды...')
+            call_command('seed_catalog')
+
+        # 2. Импортируем товары из CSV если реальных товаров ещё нет
+        csv_products = Product.objects.filter(sku__startswith='CSV-').count()
+        if csv_products:
+            self.stdout.write(f'[skip] CSV-товары уже импортированы ({csv_products} шт.)')
         else:
-            fixture = Path(settings.BASE_DIR) / 'fixtures' / 'catalog_data.json'
-            if fixture.exists():
-                self.stdout.write('Загружаю fixtures/catalog_data.json...')
-                call_command('loaddata', str(fixture))
+            csv_path = Path(settings.BASE_DIR) / 'fixtures' / 'price_kameks.csv'
+            if csv_path.exists():
+                # Удаляем тестовые/сидовые товары перед импортом реальных
+                test_count = Product.objects.exclude(sku__startswith='CSV-').count()
+                if test_count:
+                    Product.objects.exclude(sku__startswith='CSV-').delete()
+                    self.stdout.write(f'Удалено {test_count} тестовых товаров')
+
+                self.stdout.write('Импортирую товары из price_kameks.csv...')
+                call_command('import_csv', str(csv_path))
                 self.stdout.write(self.style.SUCCESS(
-                    f'[OK] Загружено {Product.objects.count()} товаров'
+                    f'[OK] Импортировано {Product.objects.count()} товаров'
                 ))
             else:
-                self.stdout.write(self.style.WARNING('[warn] fixtures/catalog_data.json не найден'))
+                self.stdout.write(self.style.WARNING('[warn] fixtures/price_kameks.csv не найден'))
 
-        # 2. Копируем фото категорий в media/ если их нет
+        # 3. Копируем фото категорий в media/ если их нет
         src_dir = Path(settings.BASE_DIR) / 'initial_media' / 'categories'
         dst_dir = Path(settings.MEDIA_ROOT) / 'categories'
         if src_dir.exists():

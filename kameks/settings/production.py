@@ -19,8 +19,9 @@ DATABASES = {
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+_https = os.environ.get('HTTPS', 'false').lower() == 'true'
+SESSION_COOKIE_SECURE = _https
+CSRF_COOKIE_SECURE = _https
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.yandex.ru')
