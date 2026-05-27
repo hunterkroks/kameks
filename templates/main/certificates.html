@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Сертификаты качества — КАМЭКС{% endblock %}
+{% block meta_description %}Сертификаты соответствия и качества на запасные части КАМАЗ, МАЗ, Урал. ООО «ПКФ КАМЭКС» — официальный дистрибьютор заводов-производителей.{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background:var(--color-bg-primary);min-height:60vh;">
+  <div class="container">
+
+    <!-- Заголовок -->
+    <div class="text-center mb-5">
+      <h1 class="section-title">Сертификаты качества</h1>
+      <div class="section-divider mx-auto mt-2 mb-3"></div>
+      <p class="section-subtitle">Вся продукция сертифицирована и соответствует требованиям ГОСТ</p>
+    </div>
+
+    <!-- Intro -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8">
+        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:32px;">
+          <p style="color:var(--color-text-secondary);line-height:1.8;margin-bottom:16px;">
+            ООО «ПКФ КАМЭКС» является официальным дистрибьютором ведущих заводов-производителей запасных частей
+            для грузовых автомобилей и спецтехники. Все поставляемые запчасти имеют сертификаты соответствия
+            и декларации о соответствии требованиям технических регламентов Таможенного союза.
+          </p>
+          <p style="color:var(--color-text-secondary);line-height:1.8;margin-bottom:0;">
+            Для получения копии сертификата на конкретный товар обратитесь к нашим менеджерам по телефону
+            или электронной почте — мы предоставим документы в течение одного рабочего дня.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Карточки сертификатов/партнёров -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <h5>ОАО «Белкард»</h5>
+          <p>Сертификат соответствия на карданные валы и комплектующие. СМК по ISO 9001:2015.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <h5>ОАО «БАТЭ»</h5>
+          <p>Сертификаты на стартеры, генераторы и электрооборудование. Соответствие ГОСТ Р.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <h5>ПААЗ / РААЗ</h5>
+          <p>Декларации соответствия на тормозную аппаратуру. Технический регламент ТР ТС 018/2011.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <h5>SORL Auto Parts</h5>
+          <p>Международные сертификаты ISO/TS 16949 на тормозные компоненты и пневмосистемы.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <h5>ПРАМО / ЗИТ</h5>
+          <p>Сертификаты соответствия на стартеры и генераторы. Соответствие ТУ заводов-производителей.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 fade-in-up">
+        <div class="advantage-card">
+          <div class="advantage-icon"><i class="bi bi-shield-check"></i></div>
+          <h5>Запрос документов</h5>
+          <p>Сертификат на любую позицию предоставляем по запросу. Срок — 1 рабочий день.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center">
+      <a href="{% url 'main:contacts' %}" class="btn-kameks-primary text-decoration-none me-3">
+        <i class="bi bi-envelope me-2"></i>Запросить сертификат
+      </a>
+      <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none">
+        <i class="bi bi-grid me-2"></i>В каталог
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

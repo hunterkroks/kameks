@@ -10,6 +10,14 @@ def about(request):
     return render(request, 'main/about.html')
 
 
+def certificates(request):
+    return render(request, 'main/certificates.html')
+
+
+def privacy(request):
+    return render(request, 'main/privacy.html')
+
+
 def delivery(request):
     return render(request, 'main/delivery.html')
 
