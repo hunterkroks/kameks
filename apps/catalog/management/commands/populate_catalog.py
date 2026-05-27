@@ -16,17 +16,35 @@ CATEGORY_IMAGES = {
     'tormoza':      '100-3521010.jpg',
 }
 
+MAIN_BRANDS = [
+    {'name': 'КАМАЗ', 'slug': 'kamaz', 'order': 1},
+    {'name': 'МАЗ',   'slug': 'maz',   'order': 2},
+    {'name': 'Урал',  'slug': 'ural',  'order': 3},
+    {'name': 'КрАЗ',  'slug': 'kraz',  'order': 4},
+    {'name': 'ЯМЗ',   'slug': 'yamz',  'order': 5},
+]
+
 
 class Command(BaseCommand):
     help = 'Загружает начальные данные каталога если БД пуста'
 
     def handle(self, *args, **options):
-        # 1. Создаём категории и бренды если их ещё нет
-        if not Category.objects.exists() or not Brand.objects.filter(is_active=True).exists():
-            self.stdout.write('Создаю категории и бренды...')
+        # 1. Создаём категории если их ещё нет
+        if not Category.objects.exists():
+            self.stdout.write('Создаю категории и бренды через seed_catalog...')
             call_command('seed_catalog')
 
-        # 2. Импортируем товары из CSV если реальных товаров ещё нет
+        # 2. Всегда гарантируем что 5 основных марок существуют и активны
+        for bd in MAIN_BRANDS:
+            brand, created = Brand.objects.update_or_create(
+                slug=bd['slug'],
+                defaults={'name': bd['name'], 'order': bd['order'], 'is_active': True},
+            )
+            if created:
+                self.stdout.write(f'  + Создана марка: {brand.name}')
+        self.stdout.write('[OK] Марки автомобилей в порядке')
+
+        # 3. Импортируем товары из CSV если реальных товаров ещё нет
         csv_products = Product.objects.filter(sku__startswith='CSV-').count()
         if csv_products:
             self.stdout.write(f'[skip] CSV-товары уже импортированы ({csv_products} шт.)')
@@ -40,26 +58,32 @@ class Command(BaseCommand):
 
                 self.stdout.write('Импортирую товары из price_kameks.csv...')
                 call_command('import_csv', str(csv_path))
-                total = Product.objects.count()
-                self.stdout.write(self.style.SUCCESS(f'[OK] Импортировано {total} товаров'))
-
-                # Помечаем первые 8 как хиты, следующие 8 как новинки
-                bestseller_ids = list(
-                    Product.objects.filter(sku__startswith='CSV-', is_active=True)
-                    .order_by('id')[:8].values_list('id', flat=True)
-                )
-                new_ids = list(
-                    Product.objects.filter(sku__startswith='CSV-', is_active=True)
-                    .exclude(id__in=bestseller_ids)
-                    .order_by('id')[:8].values_list('id', flat=True)
-                )
-                Product.objects.filter(id__in=bestseller_ids).update(is_bestseller=True)
-                Product.objects.filter(id__in=new_ids).update(is_new=True)
-                self.stdout.write(f'[OK] Помечено {len(bestseller_ids)} хитов, {len(new_ids)} новинок')
+                self.stdout.write(self.style.SUCCESS(
+                    f'[OK] Импортировано {Product.objects.count()} товаров'
+                ))
             else:
                 self.stdout.write(self.style.WARNING('[warn] fixtures/price_kameks.csv не найден'))
 
-        # 3. Копируем фото категорий в media/ и прописываем пути в БД
+        # 4. Помечаем хиты и новинки — всегда, если их ещё нет
+        if not Product.objects.filter(sku__startswith='CSV-', is_bestseller=True).exists():
+            bestseller_ids = list(
+                Product.objects.filter(sku__startswith='CSV-', is_active=True)
+                .order_by('id')[:8].values_list('id', flat=True)
+            )
+            if bestseller_ids:
+                Product.objects.filter(id__in=bestseller_ids).update(is_bestseller=True)
+                self.stdout.write(f'[OK] Помечено {len(bestseller_ids)} хитов продаж')
+
+        if not Product.objects.filter(sku__startswith='CSV-', is_new=True).exists():
+            new_ids = list(
+                Product.objects.filter(sku__startswith='CSV-', is_active=True, is_bestseller=False)
+                .order_by('id')[:8].values_list('id', flat=True)
+            )
+            if new_ids:
+                Product.objects.filter(id__in=new_ids).update(is_new=True)
+                self.stdout.write(f'[OK] Помечено {len(new_ids)} новинок')
+
+        # 5. Копируем фото категорий в media/ и прописываем пути в БД
         src_dir = Path(settings.BASE_DIR) / 'initial_media' / 'categories'
         dst_dir = Path(settings.MEDIA_ROOT) / 'categories'
         if src_dir.exists():
@@ -71,6 +95,5 @@ class Command(BaseCommand):
                 dst = dst_dir / filename
                 if not dst.exists():
                     shutil.copy2(src, dst)
-                # Прописываем путь в БД (идемпотентно)
                 Category.objects.filter(slug=slug).update(image=f'categories/{filename}')
             self.stdout.write(self.style.SUCCESS('[OK] Фото категорий назначены'))
