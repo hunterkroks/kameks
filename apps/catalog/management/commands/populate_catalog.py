@@ -1,3 +1,4 @@
+import re
 import shutil
 from pathlib import Path
 from django.core.management.base import BaseCommand
@@ -30,6 +31,14 @@ MAIN_BRANDS = [
     {'name': 'МТЗ',    'slug': 'mtz',    'order': 15},
 ]
 
+# SKU-паттерны тестовых товаров из seed_catalog
+_TEST_SKU_RE = re.compile(r'^(KAM|MAZ|URA|KRZ)-\d+$')
+
+
+def _is_real_catalog(total: int) -> bool:
+    """Реальные данные из CSV — более 50 позиций."""
+    return total > 50
+
 
 class Command(BaseCommand):
     help = 'Загружает начальные данные каталога если БД пуста'
@@ -40,26 +49,45 @@ class Command(BaseCommand):
             self.stdout.write('Создаю категории и бренды через seed_catalog...')
             call_command('seed_catalog')
 
-        # 2. Всегда гарантируем что 5 основных марок существуют и активны
+        # 2. Всегда гарантируем что основные марки существуют и активны
         for bd in MAIN_BRANDS:
-            brand, created = Brand.objects.update_or_create(
+            Brand.objects.update_or_create(
                 slug=bd['slug'],
                 defaults={'name': bd['name'], 'order': bd['order'], 'is_active': True},
             )
-            if created:
-                self.stdout.write(f'  + Создана марка: {brand.name}')
         self.stdout.write('[OK] Марки автомобилей в порядке')
 
-        # 3. Импортируем товары из CSV если реальных товаров ещё нет
-        csv_products = Product.objects.filter(sku__startswith='CSV-').count()
-        if csv_products:
-            self.stdout.write(f'[skip] CSV-товары уже импортированы ({csv_products} шт.)')
+        # 3. Убираем префикс CSV- из артикулов (одноразовая очистка)
+        prefixed = list(Product.objects.filter(sku__startswith='CSV-').values('pk', 'sku'))
+        if prefixed:
+            clean_skus = set(
+                Product.objects.exclude(sku__startswith='CSV-').values_list('sku', flat=True)
+            )
+            fixed = 0
+            for row in prefixed:
+                new_sku = row['sku'][4:]
+                if new_sku not in clean_skus:
+                    Product.objects.filter(pk=row['pk']).update(sku=new_sku)
+                    clean_skus.add(new_sku)
+                    fixed += 1
+            if fixed:
+                self.stdout.write(self.style.SUCCESS(f'[OK] Убраны префиксы CSV- у {fixed} артикулов'))
+
+        # 4. Импортируем товары из CSV если реального каталога ещё нет
+        total = Product.objects.count()
+        if _is_real_catalog(total):
+            self.stdout.write(f'[skip] Каталог уже заполнен ({total} товаров)')
         else:
             csv_path = Path(settings.BASE_DIR) / 'fixtures' / 'price_kameks.csv'
             if csv_path.exists():
-                test_count = Product.objects.exclude(sku__startswith='CSV-').count()
+                # Удаляем тестовые товары seed_catalog
+                test_qs = Product.objects.filter(
+                    sku__in=[p.sku for p in Product.objects.all()
+                              if _TEST_SKU_RE.match(p.sku)]
+                )
+                test_count = test_qs.count()
                 if test_count:
-                    Product.objects.exclude(sku__startswith='CSV-').delete()
+                    test_qs.delete()
                     self.stdout.write(f'Удалено {test_count} тестовых товаров')
 
                 self.stdout.write('Импортирую товары из price_kameks.csv...')
@@ -70,26 +98,26 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.WARNING('[warn] fixtures/price_kameks.csv не найден'))
 
-        # 4. Помечаем хиты и новинки — всегда, если их ещё нет
-        if not Product.objects.filter(sku__startswith='CSV-', is_bestseller=True).exists():
-            bestseller_ids = list(
-                Product.objects.filter(sku__startswith='CSV-', is_active=True)
+        # 5. Помечаем хиты и новинки — всегда, если их ещё нет
+        if not Product.objects.filter(is_bestseller=True).exists():
+            ids = list(
+                Product.objects.filter(is_active=True).order_by('id')[:8]
+                .values_list('id', flat=True)
+            )
+            if ids:
+                Product.objects.filter(id__in=ids).update(is_bestseller=True)
+                self.stdout.write(f'[OK] Помечено {len(ids)} хитов продаж')
+
+        if not Product.objects.filter(is_new=True).exists():
+            ids = list(
+                Product.objects.filter(is_active=True, is_bestseller=False)
                 .order_by('id')[:8].values_list('id', flat=True)
             )
-            if bestseller_ids:
-                Product.objects.filter(id__in=bestseller_ids).update(is_bestseller=True)
-                self.stdout.write(f'[OK] Помечено {len(bestseller_ids)} хитов продаж')
+            if ids:
+                Product.objects.filter(id__in=ids).update(is_new=True)
+                self.stdout.write(f'[OK] Помечено {len(ids)} новинок')
 
-        if not Product.objects.filter(sku__startswith='CSV-', is_new=True).exists():
-            new_ids = list(
-                Product.objects.filter(sku__startswith='CSV-', is_active=True, is_bestseller=False)
-                .order_by('id')[:8].values_list('id', flat=True)
-            )
-            if new_ids:
-                Product.objects.filter(id__in=new_ids).update(is_new=True)
-                self.stdout.write(f'[OK] Помечено {len(new_ids)} новинок')
-
-        # 5. Копируем фото категорий в media/ и прописываем пути в БД
+        # 6. Копируем фото категорий в media/ и прописываем пути в БД
         src_dir = Path(settings.BASE_DIR) / 'initial_media' / 'categories'
         dst_dir = Path(settings.MEDIA_ROOT) / 'categories'
         if src_dir.exists():

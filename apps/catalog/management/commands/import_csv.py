@@ -202,8 +202,8 @@ class Command(BaseCommand):
             raise CommandError('Категории не найдены. Сначала выполните: python manage.py seed_catalog')
 
         if options['clear'] and not dry_run:
-            deleted = Product.objects.filter(sku__startswith='CSV-').delete()
-            self.stdout.write(f'Удалено {deleted[0]} товаров с префиксом CSV-')
+            deleted, _ = Product.objects.all().delete()
+            self.stdout.write(f'Удалено {deleted} товаров')
 
         # --- Разбор CSV ---
         created_count = 0
@@ -283,7 +283,7 @@ class Command(BaseCommand):
                 sku_raw = col_sku if col_sku else f'AUTO-{auto_seq:04d}'
                 if not col_sku:
                     auto_seq += 1
-                sku = f'CSV-{sku_raw}'[:100]
+                sku = sku_raw[:100]
 
                 # Slug
                 base_slug = make_slug(col_sku, name)
