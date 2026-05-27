@@ -17,11 +17,17 @@ CATEGORY_IMAGES = {
 }
 
 MAIN_BRANDS = [
-    {'name': 'КАМАЗ', 'slug': 'kamaz', 'order': 1},
-    {'name': 'МАЗ',   'slug': 'maz',   'order': 2},
-    {'name': 'Урал',  'slug': 'ural',  'order': 3},
-    {'name': 'КрАЗ',  'slug': 'kraz',  'order': 4},
-    {'name': 'ЯМЗ',   'slug': 'yamz',  'order': 5},
+    {'name': 'КАМАЗ',  'slug': 'kamaz',  'order': 1},
+    {'name': 'МАЗ',    'slug': 'maz',    'order': 2},
+    {'name': 'Урал',   'slug': 'ural',   'order': 3},
+    {'name': 'КрАЗ',   'slug': 'kraz',   'order': 4},
+    {'name': 'ЯМЗ',    'slug': 'yamz',   'order': 5},
+    {'name': 'ЗИЛ',    'slug': 'zil',    'order': 10},
+    {'name': 'ЛиАЗ',   'slug': 'liaz',   'order': 11},
+    {'name': 'НЕФАЗ',  'slug': 'nefaz',  'order': 12},
+    {'name': 'Икарус', 'slug': 'ikarus', 'order': 13},
+    {'name': 'ГАЗ',    'slug': 'gaz',    'order': 14},
+    {'name': 'МТЗ',    'slug': 'mtz',    'order': 15},
 ]
 
 
