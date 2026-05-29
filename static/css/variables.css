@@ -36,7 +36,7 @@
   --transition: 0.25s ease;
 }
 
-/* === СВЕТЛАЯ ТЕМА (красный · чёрный · белый) === */
+/* === СВЕТЛАЯ ТЕМА (оранжевый · чёрный · белый) === */
 [data-theme="light"] {
   --color-bg-primary:    #ffffff;
   --color-bg-secondary:  #f4f5f7;
@@ -44,9 +44,9 @@
   --color-bg-card:       #ffffff;
   --color-border:        #e0e0e5;
 
-  --color-accent-blue:   #c0392b;   /* синий → красный */
-  --color-accent-light:  #e74c3c;
-  --color-accent-orange: #c0392b;   /* оранжевый → красный */
+  --color-accent-blue:   #e67e22;   /* синий → оранжевый */
+  --color-accent-light:  #f0a030;
+  --color-accent-orange: #e67e22;
   --color-accent-red:    #c0392b;
   /* --color-accent-gold: #f39c12 — не меняем, нужен для звёзд */
 
@@ -56,5 +56,5 @@
   --color-white:         #ffffff;
 
   --shadow-card:  0 2px 16px rgba(0,0,0,0.08);
-  --shadow-hover: 0 8px 28px rgba(192,57,43,0.18);
+  --shadow-hover: 0 8px 28px rgba(230,126,34,0.18);
 }
