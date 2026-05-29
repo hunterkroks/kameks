@@ -130,7 +130,7 @@
     cursor: pointer;
     border: 1px solid rgba(46,134,222,0.4);
   }
-  .filter-tag:hover { background: rgba(192,57,43,0.15); border-color: var(--color-accent-red); color: var(--color-accent-red); }
+  .filter-tag:hover { background: rgba(230,126,34,0.15); border-color: var(--color-accent-orange); color: var(--color-accent-orange); }
 
   .products-empty {
     text-align: center;
@@ -207,7 +207,7 @@
     </span>
     {% endfor %}
     <a href="{% url 'catalog:catalog' %}{% if search_q %}?q={{ search_q }}{% endif %}"
-       class="filter-tag" style="background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.3);color:#e74c3c;">
+       class="filter-tag" style="background:rgba(230,126,34,0.1);border-color:rgba(230,126,34,0.3);color:#e67e22;">
       Сбросить всё <i class="bi bi-x-circle"></i>
     </a>
   </div>

@@ -657,33 +657,33 @@ html { transition: background-color 0.2s ease; }
 
 /* Кнопки */
 [data-theme="light"] .btn-kameks-primary {
-  background: linear-gradient(135deg, #c0392b, #922b21);
-  box-shadow: 0 4px 15px rgba(192,57,43,0.3);
+  background: linear-gradient(135deg, #e67e22, #c96a10);
+  box-shadow: 0 4px 15px rgba(230,126,34,0.3);
 }
 [data-theme="light"] .btn-kameks-primary:hover {
-  background: linear-gradient(135deg, #922b21, #c0392b);
-  box-shadow: 0 6px 20px rgba(192,57,43,0.45);
+  background: linear-gradient(135deg, #c96a10, #e67e22);
+  box-shadow: 0 6px 20px rgba(230,126,34,0.45);
 }
 [data-theme="light"] .btn-kameks-outline {
-  color: #c0392b;
-  border-color: #c0392b;
+  color: #e67e22;
+  border-color: #e67e22;
 }
 [data-theme="light"] .btn-kameks-outline:hover {
-  background: #c0392b;
+  background: #e67e22;
   color: #fff;
-  box-shadow: 0 6px 20px rgba(192,57,43,0.35);
+  box-shadow: 0 6px 20px rgba(230,126,34,0.35);
 }
 
-/* Карточки категорий и марок: ховер → красный фон */
+/* Карточки категорий и марок: ховер → оранжевый фон */
 [data-theme="light"] .category-card:hover,
 [data-theme="light"] .brand-card:hover {
-  background: #c0392b;
+  background: #e67e22;
 }
 
 /* Иконка в карточке категории */
 [data-theme="light"] .advantage-card .advantage-icon {
-  background: rgba(192,57,43,0.08);
-  border-color: rgba(192,57,43,0.25);
+  background: rgba(230,126,34,0.08);
+  border-color: rgba(230,126,34,0.25);
 }
 
 /* Dropdown меню в навбаре */
@@ -693,28 +693,28 @@ html { transition: background-color 0.2s ease; }
 }
 [data-theme="light"] .dropdown-item { color: #111111 !important; }
 [data-theme="light"] .dropdown-item:hover {
-  background: rgba(192,57,43,0.08) !important;
-  color: #c0392b !important;
+  background: rgba(230,126,34,0.08) !important;
+  color: #e67e22 !important;
 }
 [data-theme="light"] .dropdown-divider { border-color: #e0e0e5 !important; }
 
 /* Иконки-кнопки в навбаре */
 [data-theme="light"] .navbar-icon-btn:hover {
-  color: #c0392b;
-  background: rgba(192,57,43,0.08);
+  color: #e67e22;
+  background: rgba(230,126,34,0.08);
 }
 
-/* Фильтры каталога (хардкод rgba(46,134,222) → красный) */
+/* Фильтры каталога */
 [data-theme="light"] .filter-tag {
-  background: rgba(192,57,43,0.08);
-  border-color: rgba(192,57,43,0.3);
-  color: #c0392b;
+  background: rgba(230,126,34,0.08);
+  border-color: rgba(230,126,34,0.3);
+  color: #e67e22;
 }
-[data-theme="light"] .suggest-item:hover { background: rgba(192,57,43,0.08); }
+[data-theme="light"] .suggest-item:hover { background: rgba(230,126,34,0.08); }
 
-/* CTA-баннер (хардкод #1b4f72 в градиенте) */
+/* CTA-баннер */
 [data-theme="light"] .cta-section {
-  background: linear-gradient(135deg, #7b1a1a 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #8a4a0a 0%, #e67e22 100%);
 }
 
 /* Пагинация */
@@ -724,8 +724,8 @@ html { transition: background-color 0.2s ease; }
   color: #444444;
 }
 [data-theme="light"] .pagination .page-link:hover {
-  background-color: #c0392b;
-  border-color: #c0392b;
+  background-color: #e67e22;
+  border-color: #e67e22;
   color: #fff;
 }
 
@@ -738,12 +738,12 @@ html { transition: background-color 0.2s ease; }
 }
 [data-theme="light"] .form-control:focus,
 [data-theme="light"] .form-select:focus {
-  border-color: #c0392b !important;
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.15) !important;
+  border-color: #e67e22 !important;
+  box-shadow: 0 0 0 3px rgba(230,126,34,0.15) !important;
 }
 [data-theme="light"] .form-check-input:checked {
-  background-color: #c0392b;
-  border-color: #c0392b;
+  background-color: #e67e22;
+  border-color: #e67e22;
 }
 
 /* Footer — всегда тёмный, переопределяем border и muted */
