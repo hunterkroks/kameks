@@ -1,0 +1,69 @@
+Attached Element Context from Integrated Browser
+
+Element: div.hero-bg-overlay
+
+URL: http://127.0.0.1:8000/
+
+HTML Path: main > section.hero-section > div.hero-bg-overlay
+
+Outer HTML:
+```html
+<div class="hero-bg-overlay"></div>
+```
+
+Dimensions:
+- top: -92px
+- left: 0px
+- width: 1133px
+- height: 700px
+
+CSS:
+```css
+*, ::after, ::before { box-sizing:border-box }
+*, *::before, *::after { box-sizing: border-box; }
+.hero-bg-overlay { position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(7,14,22,0.92) 0%, rgba(13,27,42,0.75) 100%);
+  z-index: 1; }
+
+/* Inherited */
+body { font-family:var(--bs-body-font-family); font-size:var(--bs-body-font-size); font-weight:var(--bs-body-font-weight); line-height:var(--bs-body-line-height); color:var(--bs-body-color); text-align:var(--bs-body-text-align) }
+body { font-family: var(--font-main); color: var(--color-text-primary) }
+
+/* Resolved values */
+background-attachment: scroll;
+background-clip: border-box;
+background-color: rgba(0, 0, 0, 0);
+background-image: linear-gradient(135deg, rgba(7, 14, 22, 0.92) 0%, rgba(13, 27, 42, 0.75) 100%);
+background-origin: padding-box;
+background-position-x: 0%;
+background-position-y: 0%;
+background-repeat: repeat;
+background-size: auto;
+bottom: 0px;
+box-sizing: border-box;
+color: rgb(232, 237, 242);
+display: block;
+font-family: Inter, "Segoe UI", Arial, sans-serif;
+font-size: 16px;
+font-weight: 400;
+height: 700.391px;
+left: 0px;
+line-height: 24px;
+position: absolute;
+right: 0px;
+text-align: start;
+top: 0px;
+unicode-bidi: isolate /*UA*/;
+width: 1133px;
+z-index: 1;
+
+/* CSS variables */
+--bs-body-font-weight: 400;
+--bs-body-line-height: 1.5;
+--color-text-primary: #e8edf2;
+--font-main: 'Inter', 'Segoe UI', Arial, sans-serif;
+--bs-body-font-size: 1rem;
+--bs-body-font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+--bs-body-color: #212529;
+```

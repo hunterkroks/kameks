@@ -94,10 +94,12 @@
         </a>
         {% endif %}
 
-        <!-- Кнопка каталога -->
-        <a href="{% url 'catalog:catalog' %}" class="btn-catalog ms-1 d-none d-md-inline-flex">
+        <!-- Кнопка каталога (триггер мега-меню) -->
+        <button id="mega-trigger" class="btn-catalog ms-1 d-none d-md-inline-flex" type="button"
+                aria-expanded="false" aria-controls="mega-menu">
           <i class="bi bi-grid-3x3-gap-fill"></i>Каталог
-        </a>
+          <i class="bi bi-chevron-down ms-1" style="font-size:10px;transition:transform .2s;" id="mega-chevron"></i>
+        </button>
 
         <!-- Мобильное меню -->
         <button class="navbar-toggler border-0 d-lg-none ms-1" type="button"
@@ -136,6 +138,54 @@
   </div>
 </header>
 
+<!-- ════════════════════════════════════════
+     МЕГА-МЕНЮ — выпадает под шапкой
+     ════════════════════════════════════════ -->
+<div id="mega-menu" class="mega-menu" aria-hidden="true">
+  <div class="mega-inner">
+
+    <!-- Левая панель: разделы первого уровня -->
+    <div class="mega-left">
+      {% for section in menu_cats %}
+      <button class="mega-section-btn {% if forloop.first %}active{% endif %}"
+              data-idx="{{ forloop.counter0 }}" type="button">
+        <i class="bi {{ section.icon }} mega-section-icon"></i>
+        <span>{{ section.name }}</span>
+        <i class="bi bi-chevron-right ms-auto" style="font-size:10px;opacity:.4;"></i>
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Правая панель: подкатегории -->
+    <div class="mega-right">
+      {% for section in menu_cats %}
+      <div class="mega-panel{% if forloop.first %} active{% endif %}"
+           id="mega-panel-{{ forloop.counter0 }}">
+        <div class="mega-panel-grid">
+          {% for sub in section.children.all %}
+          <div class="mega-subsection">
+            <a href="{% url 'catalog:catalog' %}?category={{ sub.slug }}"
+               class="mega-sub-title">{{ sub.name }}</a>
+            <ul class="mega-sub-list">
+              {% for leaf in sub.children.all %}
+              <li>
+                <a href="{% url 'catalog:catalog' %}?category={{ leaf.slug }}"
+                   class="mega-sub-link">{{ leaf.name }}</a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </div>
+        <a href="{% url 'catalog:catalog' %}" class="mega-all-link">
+          <i class="bi bi-grid me-1"></i>Все товары раздела «{{ section.name }}»
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
 <!-- ════════════════════════════════════════
      SITE NAV — вторая строка навигации
      ════════════════════════════════════════ -->

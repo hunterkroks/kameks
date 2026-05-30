@@ -262,6 +262,66 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // --- Мега-меню каталога ---
+  (function () {
+    const trigger  = document.getElementById('mega-trigger');
+    const menu     = document.getElementById('mega-menu');
+    const chevron  = document.getElementById('mega-chevron');
+    const secBtns  = document.querySelectorAll('.mega-section-btn');
+    const panels   = document.querySelectorAll('.mega-panel');
+    if (!trigger || !menu) return;
+
+    function openMenu() {
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden', 'false');
+      trigger.setAttribute('aria-expanded', 'true');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+    function closeMenu() {
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+      trigger.setAttribute('aria-expanded', 'false');
+      if (chevron) chevron.style.transform = '';
+    }
+    function toggleMenu() {
+      menu.classList.contains('open') ? closeMenu() : openMenu();
+    }
+
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    // Переключение панелей при наведении на раздел
+    secBtns.forEach(function (btn) {
+      btn.addEventListener('mouseenter', function () {
+        const idx = btn.dataset.idx;
+        secBtns.forEach(b => b.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.getElementById('mega-panel-' + idx);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // Закрытие по клику вне меню
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target) && e.target !== trigger) {
+        closeMenu();
+      }
+    });
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    // Закрытие при клике на ссылку внутри мега-меню
+    menu.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeMenu);
+    });
+  })();
+
   // --- Инициализация тикера ---
   const tickerEl = document.getElementById('ticker-track');
   if (tickerEl && !tickerEl.children.length) {
