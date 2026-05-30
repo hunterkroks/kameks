@@ -249,7 +249,7 @@ class Command(BaseCommand):
                     if c3_slug == 'prochie-list':
                         self._fallback = c3
 
-        self.stdout.write(f'  ✓ Создано: {self._stats["cats"]} категорий')
+        self.stdout.write(f'  OK Создано: {self._stats["cats"]} категорий')
 
     # ── Шаг 2: марки ─────────────────────────────────────────────────────────
 
@@ -261,7 +261,7 @@ class Command(BaseCommand):
             )
             self._brands[slug] = b
             self._stats['brands'] += 1
-        self.stdout.write(f'  ✓ Обработано: {self._stats["brands"]} марок')
+        self.stdout.write(f'  OK Обработано: {self._stats["brands"]} марок')
 
     # ── Шаг 3: товары ────────────────────────────────────────────────────────
 
@@ -273,7 +273,7 @@ class Command(BaseCommand):
 
         used_slugs: set = set()
 
-        with open(self.CSV_PATH, encoding='cp1251', errors='replace') as f:
+        with open(self.CSV_PATH, encoding='mac_cyrillic', errors='replace') as f:
             reader = csv.reader(f, delimiter=';')
             for row_num, row in enumerate(reader):
                 if row_num < 2 or len(row) < 9:
@@ -327,7 +327,7 @@ class Command(BaseCommand):
                 if category == self._fallback:
                     self._stats['misc'] += 1
 
-        self.stdout.write(f'  ✓ Импортировано: {self._stats["products"]} товаров')
+        self.stdout.write(f'  OK Импортировано: {self._stats["products"]} товаров')
 
     def _resolve_cat(self, c1: str, c2: str, c3: str):
         key = (c1.lower(), c2.lower(), c3.lower())
@@ -367,7 +367,7 @@ class Command(BaseCommand):
             .values_list('id', flat=True)[:8]
         )
         Product.objects.filter(id__in=new_ids).update(is_new=True)
-        self.stdout.write(f'  ✓ Хиты: {len(best_ids)}, Новинки: {len(new_ids)}')
+        self.stdout.write(f'  OK Хиты: {len(best_ids)}, Новинки: {len(new_ids)}')
 
     # ── Шаг 5: статистика ────────────────────────────────────────────────────
 
