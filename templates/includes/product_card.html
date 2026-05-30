@@ -48,11 +48,11 @@
     </div>
 
     <!-- Наличие -->
-    <div class="mt-1 mb-2" style="font-size:0.75rem;">
+    <div class="mt-1 mb-2">
       {% if product.in_stock %}
-        <span style="color:#27ae60;"><i class="bi bi-check-circle-fill me-1"></i>В наличии ({{ product.stock }} шт.)</span>
+        <span class="stock-badge-ok"><i class="bi bi-check-circle-fill me-1"></i>В наличии ({{ product.stock }} шт.)</span>
       {% else %}
-        <span style="color:var(--color-accent-red);"><i class="bi bi-x-circle me-1"></i>Под заказ</span>
+        <span class="stock-badge-ord"><i class="bi bi-x-circle me-1"></i>Под заказ</span>
       {% endif %}
     </div>
 

@@ -2,8 +2,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <!-- Применяем тему ДО загрузки CSS — предотвращает мигание -->
-  <script>(function(){var t=localStorage.getItem('kameks-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="{% block meta_description %}ООО «ПКФ КАМЭКС» — запасные части для КАМАЗ, МАЗ, Урал и спецтехники. Оригинальные и аналоговые запчасти с доставкой по России.{% endblock %}">
@@ -39,6 +37,12 @@
   </main>
 
   {% include 'includes/footer.html' %}
+
+  <!-- Плавающий телефон -->
+  <a href="tel:+78001234567" class="float-phone" title="Позвонить нам">
+    <span class="fp-dot"></span>
+    <span class="fp-label">8 (800) 123-45-67</span>
+  </a>
 
   <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

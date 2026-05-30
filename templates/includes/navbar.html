@@ -1,84 +1,59 @@
 {% load static %}
-<!-- Верхняя строка контактов -->
+
+<!-- ════════════════════════════════════════
+     TOPBAR — тёмная полоса
+     ════════════════════════════════════════ -->
 <div class="topbar d-none d-md-block">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center">
-      <div class="d-flex gap-4">
-        <span><i class="bi bi-telephone-fill me-1"></i><a href="tel:+78001234567">+7 (800) 123-45-67</a></span>
-        <span><i class="bi bi-envelope-fill me-1"></i><a href="mailto:info@kameks.ru">info@kameks.ru</a></span>
+      <div class="d-flex align-items-center gap-3">
+        <a href="tel:+78001234567" class="topbar-phone">+7 (800) 123-45-67</a>
+        <span class="topbar-live"><span class="live-dot"></span>Работаем сейчас</span>
       </div>
-      <div class="d-flex gap-4">
-        <span><i class="bi bi-clock-fill me-1"></i>Пн–Пт: 9:00–18:00</span>
-        <span><i class="bi bi-geo-alt-fill me-1"></i>г. Набережные Челны</span>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);">
+        Пн–Пт 9:00–18:00 &nbsp;·&nbsp;
+        <a href="mailto:info@kameks.ru">info@kameks.ru</a> &nbsp;·&nbsp;
+        г. Набережные Челны
+      </div>
+      <div class="d-flex gap-3" style="font-size:11px;">
+        <a href="{% url 'main:about' %}">О компании</a>
+        <a href="{% url 'main:certificates' %}">Сертификаты</a>
+        <a href="{% url 'main:delivery' %}">Оптовым</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Основная навигация -->
-<nav class="navbar navbar-expand-lg navbar-kameks">
+<!-- ════════════════════════════════════════
+     MAIN HEADER — белый, логотип + поиск + иконки
+     ════════════════════════════════════════ -->
+<header class="navbar-kameks">
   <div class="container">
-    <!-- Логотип -->
-    <a href="{% url 'main:index' %}" class="navbar-brand-kameks me-4">
-      КАМ<span>ЭКС</span>
-    </a>
+    <div class="d-flex align-items-center gap-3">
 
-    <!-- Мобильные иконки (всегда видны, до кнопки меню) -->
-    <div class="d-flex d-lg-none align-items-center gap-1 ms-auto me-2">
-      <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" title="Корзина">
-        <i class="bi bi-cart2 fs-5"></i>
-        {% if cart %}
-        <span class="cart-badge">{{ cart|length }}</span>
-        {% endif %}
+      <!-- Логотип -->
+      <a href="{% url 'main:index' %}" class="navbar-brand-kameks me-2" style="flex-shrink:0;">
+        КАМЭКС
+        <span class="navbar-brand-sub">Запчасти КАМАЗ · МАЗ · Урал · КРАЗ</span>
       </a>
-      {% if user.is_authenticated %}
-      <a href="{% url 'accounts:profile' %}" class="navbar-icon-btn" title="Профиль">
-        <i class="bi bi-person-circle fs-5"></i>
-      </a>
-      {% else %}
-      <a href="{% url 'accounts:login' %}" class="navbar-icon-btn" title="Войти">
-        <i class="bi bi-person fs-5"></i>
-      </a>
-      {% endif %}
-    </div>
 
-    <!-- Кнопка мобильного меню -->
-    <button class="navbar-toggler border-0 text-white" type="button"
-            data-bs-toggle="collapse" data-bs-target="#navbarMain">
-      <i class="bi bi-list fs-4"></i>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarMain">
-      <!-- Основные ссылки -->
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a href="{% url 'catalog:catalog' %}" class="nav-link nav-link-kameks">
-            <i class="bi bi-grid me-1"></i>Каталог
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{% url 'main:about' %}" class="nav-link nav-link-kameks">О компании</a>
-        </li>
-        <li class="nav-item">
-          <a href="{% url 'main:delivery' %}" class="nav-link nav-link-kameks">Доставка и оплата</a>
-        </li>
-        <li class="nav-item">
-          <a href="{% url 'main:contacts' %}" class="nav-link nav-link-kameks">Контакты</a>
-        </li>
-      </ul>
-
-      <!-- Иконки: поиск, тема, корзина, личный кабинет -->
-      <div class="d-flex align-items-center gap-2">
-        <!-- Поиск -->
-        <a href="{% url 'catalog:catalog' %}" class="navbar-icon-btn" title="Поиск">
-          <i class="bi bi-search"></i>
-        </a>
-
-        <!-- Переключатель темы -->
-        <button class="navbar-icon-btn" id="theme-toggle" title="Светлая тема" type="button"
-                style="font-size:1.1rem;">
-          <i class="bi bi-sun-fill" id="theme-toggle-icon"></i>
+      <!-- Поиск (скрыт на мобиле) -->
+      <div class="header-search d-none d-lg-flex flex-grow-1">
+        <input type="text" id="header-search-input"
+               placeholder="Артикул, OEM-номер или название детали..."
+               autocomplete="off">
+        <button class="header-search-btn" id="header-search-btn" type="button">
+          <i class="bi bi-search"></i> Найти
         </button>
+      </div>
+
+      <!-- Действия -->
+      <div class="d-flex align-items-center gap-1 ms-auto">
+
+        <!-- Поиск на мобиле -->
+        <a href="{% url 'catalog:catalog' %}" class="navbar-icon-btn d-lg-none" title="Поиск">
+          <i class="bi bi-search fs-5"></i>
+        </a>
 
         <!-- Корзина -->
         <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" title="Корзина">
@@ -91,22 +66,21 @@
         <!-- Личный кабинет -->
         {% if user.is_authenticated %}
         <div class="dropdown">
-          <button class="navbar-icon-btn" data-bs-toggle="dropdown">
+          <button class="navbar-icon-btn" data-bs-toggle="dropdown" title="Профиль" type="button">
             <i class="bi bi-person-circle fs-5"></i>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end"
-              style="background:var(--color-bg-secondary);border-color:var(--color-border);">
+          <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <a class="dropdown-item text-light" href="{% url 'accounts:profile' %}">
+              <a class="dropdown-item" href="{% url 'accounts:profile' %}">
                 <i class="bi bi-person me-2"></i>Мой профиль
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-light" href="{% url 'accounts:profile' %}#orders">
+              <a class="dropdown-item" href="{% url 'accounts:profile' %}#orders">
                 <i class="bi bi-bag me-2"></i>Мои заказы
               </a>
             </li>
-            <li><hr class="dropdown-divider border-secondary"></li>
+            <li><hr class="dropdown-divider"></li>
             <li>
               <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
                 <i class="bi bi-box-arrow-right me-2"></i>Выйти
@@ -115,12 +89,90 @@
           </ul>
         </div>
         {% else %}
-        <a href="{% url 'accounts:login' %}" class="btn-kameks-outline d-none d-lg-inline-block"
-           style="padding:7px 18px;font-size:0.85rem;">
-          <i class="bi bi-person me-1"></i>Войти
+        <a href="{% url 'accounts:login' %}" class="navbar-icon-btn d-none d-md-flex" title="Войти">
+          <i class="bi bi-person fs-5"></i>
         </a>
         {% endif %}
+
+        <!-- Кнопка каталога -->
+        <a href="{% url 'catalog:catalog' %}" class="btn-catalog ms-1 d-none d-md-inline-flex">
+          <i class="bi bi-grid-3x3-gap-fill"></i>Каталог
+        </a>
+
+        <!-- Мобильное меню -->
+        <button class="navbar-toggler border-0 d-lg-none ms-1" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMobile"
+                style="color:var(--color-text-primary);">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Мобильное меню (collapse) -->
+    <div class="collapse navbar-collapse" id="navbarMobile">
+      <div class="py-3 border-top mt-2" style="border-color:var(--color-border) !important;">
+        <div class="d-flex mb-3" style="background:var(--color-bg-primary);border:1.5px solid var(--color-border);border-radius:var(--radius-sm);overflow:hidden;">
+          <input type="text" id="mobile-search-input" placeholder="Поиск по артикулу..."
+                 style="flex:1;border:none;background:transparent;padding:10px 14px;font-size:13px;outline:none;color:var(--color-text-primary);">
+          <button id="mobile-search-btn" type="button"
+                  style="background:linear-gradient(180deg,#2A4E7A,#1B3A5C,#0E2840);border:none;padding:0 16px;color:#fff;cursor:pointer;">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+        <div class="d-flex flex-column gap-1">
+          <a href="{% url 'main:index' %}"     class="nav-link-kameks px-0">Главная</a>
+          <a href="{% url 'catalog:catalog' %}" class="nav-link-kameks px-0">Каталог</a>
+          <a href="{% url 'main:about' %}"      class="nav-link-kameks px-0">О компании</a>
+          <a href="{% url 'main:delivery' %}"   class="nav-link-kameks px-0">Доставка и оплата</a>
+          <a href="{% url 'main:certificates' %}" class="nav-link-kameks px-0">Сертификаты</a>
+          <a href="{% url 'main:contacts' %}"   class="nav-link-kameks px-0">Контакты</a>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'accounts:login' %}"  class="nav-link-kameks px-0">Войти</a>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
+</header>
+
+<!-- ════════════════════════════════════════
+     SITE NAV — вторая строка навигации
+     ════════════════════════════════════════ -->
+<nav class="site-nav d-none d-lg-block">
+  <div class="site-nav-inner">
+    <a href="{% url 'main:index' %}"       class="nav-link-kameks">Главная</a>
+    <a href="{% url 'catalog:catalog' %}"  class="nav-link-kameks">Подбор по марке</a>
+    <a href="{% url 'main:delivery' %}"    class="nav-link-kameks">Доставка и оплата</a>
+    <a href="{% url 'main:certificates' %}" class="nav-link-kameks">Сертификаты</a>
+    <a href="{% url 'main:about' %}"       class="nav-link-kameks">О компании</a>
+    <a href="{% url 'main:contacts' %}"    class="nav-link-kameks">Контакты</a>
+    <a href="{% url 'main:contacts' %}#callback" class="nav-link-kameks nav-hl ms-auto">
+      <i class="bi bi-telephone-fill me-1" style="font-size:10px;"></i>Перезвоните мне
+    </a>
+  </div>
 </nav>
+
+<script>
+// Поиск из шапки → каталог
+(function () {
+  function goSearch(input) {
+    var q = input.value.trim();
+    if (q) window.location.href = '/catalog/?q=' + encodeURIComponent(q);
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var inp = document.getElementById('header-search-input');
+    var btn = document.getElementById('header-search-btn');
+    var mobInp = document.getElementById('mobile-search-input');
+    var mobBtn = document.getElementById('mobile-search-btn');
+    if (inp && btn) {
+      btn.addEventListener('click', function () { goSearch(inp); });
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') goSearch(inp); });
+    }
+    if (mobInp && mobBtn) {
+      mobBtn.addEventListener('click', function () { goSearch(mobInp); });
+      mobInp.addEventListener('keydown', function (e) { if (e.key === 'Enter') goSearch(mobInp); });
+    }
+  });
+})();
+</script>

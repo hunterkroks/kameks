@@ -1,33 +1,5 @@
 /* KAMEKS — Основной JS */
 
-/* --- Переключатель темы --- */
-(function () {
-  const THEME_KEY = 'kameks-theme';
-  const html = document.documentElement;
-
-  function applyTheme(theme) {
-    html.setAttribute('data-theme', theme);
-    localStorage.setItem(THEME_KEY, theme);
-    const icon = document.getElementById('theme-toggle-icon');
-    const btn  = document.getElementById('theme-toggle');
-    if (icon) icon.className = theme === 'light' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
-    if (btn)  btn.title      = theme === 'light' ? 'Тёмная тема'    : 'Светлая тема';
-  }
-
-  // Синхронизируем иконку с текущей темой
-  applyTheme(html.getAttribute('data-theme') || 'dark');
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const btn = document.getElementById('theme-toggle');
-    if (btn) {
-      btn.addEventListener('click', function () {
-        const current = html.getAttribute('data-theme') || 'dark';
-        applyTheme(current === 'dark' ? 'light' : 'dark');
-      });
-    }
-  });
-})();
-
 document.addEventListener('DOMContentLoaded', function () {
 
   // --- Sticky navbar ---
@@ -38,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // --- Fade-in анимация при скролле ---
+  // --- Fade-in-up анимация (старый класс) ---
   const fadeItems = document.querySelectorAll('.fade-in-up');
   if (fadeItems.length) {
     const observer = new IntersectionObserver((entries) => {
@@ -52,7 +24,21 @@ document.addEventListener('DOMContentLoaded', function () {
     fadeItems.forEach(el => observer.observe(el));
   }
 
-  // --- Счётчик цифр (trust bar) ---
+  // --- Fade-up анимация (.anim-fadeup) ---
+  const fadeupItems = document.querySelectorAll('.anim-fadeup');
+  if (fadeupItems.length) {
+    const fadeupObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          fadeupObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    fadeupItems.forEach(el => fadeupObs.observe(el));
+  }
+
+  // --- Анимированный счётчик цифр (data-target) ---
   function animateCounter(el) {
     const target = parseInt(el.dataset.target, 10);
     const duration = 1800;
@@ -79,6 +65,33 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }, { threshold: 0.5 });
     counters.forEach(el => counterObserver.observe(el));
+  }
+
+  // --- Анимированный счётчик для trust-bar (data-t) ---
+  function animateTrustCounter(el) {
+    const target = parseInt(el.dataset.t, 10);
+    if (!target) return;
+    const dur = target > 100 ? 2000 : 1400;
+    const start = performance.now();
+    (function step(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(eased * target);
+      if (p < 1) requestAnimationFrame(step);
+    })(start);
+  }
+
+  const trustCounters = document.querySelectorAll('[data-t]');
+  if (trustCounters.length) {
+    const trustObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateTrustCounter(entry.target);
+          trustObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    trustCounters.forEach(el => trustObs.observe(el));
   }
 
   // --- Корзина: счётчик в карточках товаров ---
@@ -192,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
       document.body.appendChild(container);
     }
     const toast = document.createElement('div');
-    const bg = type === 'success' ? '#2e86de' : '#c0392b';
-    toast.style.cssText = `background:${bg};color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.4);opacity:0;transition:opacity 0.3s ease;max-width:280px;`;
+    const bg = type === 'success' ? '#1B3A5C' : '#CC2B2B';
+    toast.style.cssText = `background:${bg};color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:280px;`;
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '1'; }, 10);
@@ -203,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 3000);
   }
 
-  // --- Избранное (session-based, визуальное состояние) ---
+  // --- Избранное (sessionStorage, визуальное) ---
   window.toggleFavorite = function(btn, productId) {
     const icon = btn.querySelector('i');
     const key = 'fav_' + productId;
@@ -223,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
-  // Восстанавливаем состояние избранного при загрузке страницы
+  // Восстанавливаем состояние избранного при загрузке
   document.querySelectorAll('[onclick^="toggleFavorite"]').forEach(btn => {
     const match = btn.getAttribute('onclick').match(/toggleFavorite\(this,\s*(\d+)\)/);
     if (match && sessionStorage.getItem('fav_' + match[1])) {
@@ -239,13 +252,29 @@ document.addEventListener('DOMContentLoaded', function () {
   if (heroSearchForm) {
     heroSearchForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      const brand = document.getElementById('hero-brand').value;
-      const model = document.getElementById('hero-model').value;
-      const category = document.getElementById('hero-category').value;
+      const brand = document.getElementById('hero-brand')?.value || '';
+      const model = document.getElementById('hero-model')?.value || '';
+      const category = document.getElementById('hero-category')?.value || '';
       let url = '/catalog/?';
       if (brand) url += `brand=${brand}&`;
       if (category) url += `category=${category}&`;
       window.location.href = url;
+    });
+  }
+
+  // --- Инициализация тикера ---
+  const tickerEl = document.getElementById('ticker-track');
+  if (tickerEl && !tickerEl.children.length) {
+    const partners = [
+      'ОАО Белкард · Гродно', 'ОАО БАТЭ · Борисов', 'ПААЗ · Полтава',
+      'РААЗ · Рославль', 'ПРАМО · Москва', 'SORL · Китай',
+      'Iskra · Словения', 'ОАО БРТ · Балаково', 'ЗИТ · Чернигов', 'ШААЗ · Шадринск'
+    ];
+    [...partners, ...partners].forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'ticker-item';
+      d.innerHTML = `<span class="ticker-dot"></span>${p}<span class="ticker-sep"></span>`;
+      tickerEl.appendChild(d);
     });
   }
 

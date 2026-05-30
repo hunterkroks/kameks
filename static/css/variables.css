@@ -1,60 +1,61 @@
 /* ======================================================
    КАМЭКС — CSS-переменные
-   Тёмная тема: :root (по умолчанию)
-   Светлая тема: [data-theme="light"]
+   Единая тема: светлый фон + тёмные металлические акценты
    ====================================================== */
 
-/* === ТЁМНАЯ ТЕМА === */
 :root {
-  --color-bg-primary:    #0d1b2a;
-  --color-bg-secondary:  #1a2b3c;
-  --color-bg-dark:       #070e16;
-  --color-bg-card:       #162236;
-  --color-border:        #243447;
+  /* --- Базовый фон --- */
+  --color-bg-primary:    #F0EFED;
+  --color-bg-secondary:  #ffffff;
+  --color-bg-dark:       #1C2128;
+  --color-bg-card:       #ffffff;
+  --color-border:        #E2DFD9;
 
-  --color-accent-blue:   #2e86de;
-  --color-accent-light:  #5ba4f5;
+  /* --- Синяя сталь (главный акцент) --- */
+  --color-accent-blue:   #1B3A5C;
+  --color-accent-light:  #5A90B4;
   --color-accent-orange: #e67e22;
-  --color-accent-red:    #c0392b;
-  --color-accent-gold:   #f39c12;
+  --color-accent-red:    #CC2B2B;
+  --color-accent-gold:   #C89C24;
 
-  --color-text-primary:  #e8edf2;
-  --color-text-secondary:#8fa3b8;
-  --color-text-muted:    #5a7a96;
+  /* --- Текст --- */
+  --color-text-primary:  #1A1A1A;
+  --color-text-secondary:#3D3D3A;
+  --color-text-muted:    #78776F;
   --color-white:         #ffffff;
 
+  /* --- Тёмные металлические --- */
+  --color-dark-1: #1C2128;
+  --color-dark-2: #252B34;
+  --color-dark-3: #2E3540;
+
+  /* --- Синяя сталь, шкала --- */
+  --color-blue:    #1B3A5C;
+  --color-blue-h:  #254E7A;
+  --color-blue-md: #3A6A90;
+  --color-blue-lt: #5A90B4;
+  --color-blue-bg: #EBF1F8;
+
+  /* --- Бронза (только ХИТ и звёзды) --- */
+  --color-bronze:    #A67C14;
+  --color-bronze-lt: #C89C24;
+
+  /* --- Статусы --- */
+  --color-green:    #1A7035;
+  --color-green-bg: #E6F4EC;
+
+  /* --- Шрифты --- */
   --font-main:    'Inter', 'Segoe UI', Arial, sans-serif;
   --font-heading: 'Inter', 'Segoe UI', Arial, sans-serif;
 
-  --shadow-card:  0 4px 24px rgba(0,0,0,0.35);
-  --shadow-hover: 0 8px 32px rgba(46,134,222,0.25);
+  /* --- Тени --- */
+  --shadow-card:  0 2px 16px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 28px rgba(27,58,92,0.15);
 
+  /* --- Радиусы --- */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --transition: 0.25s ease;
-}
-
-/* === СВЕТЛАЯ ТЕМА (оранжевый · чёрный · белый) === */
-[data-theme="light"] {
-  --color-bg-primary:    #ffffff;
-  --color-bg-secondary:  #f4f5f7;
-  --color-bg-dark:       #111111;   /* navbar/footer — всегда тёмные */
-  --color-bg-card:       #ffffff;
-  --color-border:        #e0e0e5;
-
-  --color-accent-blue:   #e67e22;   /* синий → оранжевый */
-  --color-accent-light:  #f0a030;
-  --color-accent-orange: #e67e22;
-  --color-accent-red:    #c0392b;
-  /* --color-accent-gold: #f39c12 — не меняем, нужен для звёзд */
-
-  --color-text-primary:  #111111;
-  --color-text-secondary:#444444;
-  --color-text-muted:    #888888;
-  --color-white:         #ffffff;
-
-  --shadow-card:  0 2px 16px rgba(0,0,0,0.08);
-  --shadow-hover: 0 8px 28px rgba(230,126,34,0.18);
+  --transition: 0.2s ease;
 }

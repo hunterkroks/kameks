@@ -5,149 +5,60 @@
 
 {% block extra_css %}
 <style>
-/* ---- Hero ---- */
-.hero-section {
-  position: relative;
-  min-height: 520px;
-  display: flex;
-  align-items: center;
-  overflow: visible;
-  background: #060e18;
-  z-index: 10;
-}
-#hero-canvas {
+/* ---- Поиск в hero ---- */
+.hero-search-wrap input { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.hero-suggest-drop {
+  display: none;
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
+  left: 0; right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 0 8px 28px rgba(0,0,0,.15);
 }
-.hero-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg,
-    rgba(6,14,24,0.92) 0%,
-    rgba(6,14,24,0.75) 50%,
-    rgba(6,14,24,0.55) 100%);
-  z-index: 1;
-}
-.hero-content { position: relative; z-index: 2; padding: 70px 0 60px; }
-.hero-search-wrap input::placeholder { color: rgba(255,255,255,0.45); }
-.hero-search-wrap input:focus { outline: none; }
-.hero-suggest-item:hover { background: var(--color-bg-card) !important; }
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(230,126,34,0.15);
-  border: 1px solid rgba(230,126,34,0.4);
-  color: var(--color-accent-orange);
-  padding: 5px 14px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-}
-.hero-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 800;
-  line-height: 1.12;
-  color: #fff;
-  margin-bottom: 18px;
-  letter-spacing: -.02em;
-}
-.hero-title span { color: var(--color-accent-orange); }
-.hero-brands-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 32px;
-  margin-bottom: 8px;
-}
-.hero-brand-pill {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.75);
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  transition: all .2s;
-  text-decoration: none;
-}
-.hero-brand-pill:hover {
-  background: rgba(230,126,34,0.2);
-  border-color: rgba(230,126,34,0.5);
-  color: var(--color-accent-orange);
-}
-.hero-stat {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px;
-  border-right: 1px solid rgba(255,255,255,0.12);
-}
-.hero-stat:last-child { border-right: none; }
-.hero-stat-num {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1;
-}
-.hero-stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
 
-/* ---- Tabs fix ---- */
+/* ---- Вкладки ---- */
 #productsTab .nav-link {
   background: transparent;
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-weight: 600;
   padding: 8px 22px;
-  transition: all .2s;
+  transition: all var(--transition);
 }
 #productsTab .nav-link.active,
 #productsTab .nav-link:hover {
-  background: var(--color-accent-blue) !important;
+  background: var(--color-blue) !important;
   color: #fff !important;
-  border-color: var(--color-accent-blue) !important;
+  border-color: var(--color-blue) !important;
 }
 
-/* ---- Partners strip ---- */
-.partner-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 18px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  transition: all .2s;
-  white-space: nowrap;
-}
-.partner-pill:hover {
-  border-color: var(--color-accent-blue);
-  color: var(--color-accent-blue);
-}
+/* ---- Категории: горизонтальные карточки ---- */
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 991px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .cat-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ---- Марки: 6 колонок ---- */
+.brands-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+@media (max-width: 991px) { .brands-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 480px)  { .brands-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 {% endblock %}
 
 {% block content %}
 
 <!-- ===================================================
-     01. HERO — canvas particles
+     01. HERO
      =================================================== -->
 <section class="hero-section">
-  <canvas id="hero-canvas"></canvas>
-  <div class="hero-gradient-overlay"></div>
-  <div class="container hero-content">
-    <div class="row align-items-center">
+  <div class="container" style="position:relative;z-index:2;">
+    <div class="row align-items-start g-4">
+
+      <!-- Левая часть -->
       <div class="col-lg-7">
 
         <div class="hero-badge">
@@ -157,75 +68,100 @@
 
         <h1 class="hero-title">
           Запасные части<br>
-          для грузовых<br>
-          <span>автомобилей</span>
+          для <em>КАМАЗ</em>, МАЗ<br>
+          и Урал — в наличии
         </h1>
 
-        <p style="font-size:1.05rem;color:rgba(255,255,255,0.65);max-width:480px;line-height:1.7;margin-bottom:28px;">
-          Оригинальные и сертифицированные запчасти с доставкой по всей России.
-          Прямые поставки от заводов-производителей.
+        <p style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:22px;max-width:460px;">
+          Оригинальные и сертифицированные детали. Прямые поставки с заводов.
+          Доставка по всей России от 1 дня.
         </p>
 
-        <div class="d-flex flex-wrap gap-3 mb-4">
-          <a href="{% url 'catalog:catalog' %}" class="btn-kameks-primary text-decoration-none" style="font-size:0.95rem;">
+        <!-- Поиск -->
+        <div class="hero-search-wrap mb-3" style="max-width:520px;position:relative;">
+          <div>
+            <input type="text" id="hero-search-input"
+                   placeholder="Введите артикул или OEM-номер..."
+                   autocomplete="off"
+                   data-catalog-url="{% url 'catalog:catalog' %}"
+                   data-suggest-url="{% url 'catalog:search_suggest' %}">
+            <button id="hero-search-btn" type="button">
+              <i class="bi bi-search"></i> Найти запчасть
+            </button>
+          </div>
+          <div id="hero-suggest-drop" class="hero-suggest-drop"></div>
+        </div>
+
+        <!-- Подсказки -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <a href="{% url 'catalog:catalog' %}?q=5320-3502236" class="hero-brand-pill">5320-3502236</a>
+          <a href="{% url 'catalog:catalog' %}?q=тормозная+камера" class="hero-brand-pill">Тормозная камера</a>
+          <a href="{% url 'catalog:catalog' %}?q=крестовина" class="hero-brand-pill">Крестовина</a>
+          <a href="{% url 'catalog:catalog' %}?q=рессора" class="hero-brand-pill">Рессора</a>
+        </div>
+
+        <!-- Кнопки CTA -->
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'catalog:catalog' %}" class="btn-kameks-primary text-decoration-none">
             <i class="bi bi-grid-fill me-2"></i>Перейти в каталог
           </a>
-          <a href="{% url 'main:contacts' %}" class="btn-kameks-outline text-decoration-none" style="font-size:0.95rem;">
+          <a href="{% url 'main:contacts' %}" class="btn-kameks-outline text-decoration-none"
+             style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7);">
             <i class="bi bi-telephone me-2"></i>Связаться с нами
           </a>
         </div>
 
-        <!-- Поиск по товарам -->
-        <div class="hero-search-wrap mt-2" style="max-width:480px;position:relative;">
-          <div style="display:flex;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.22);border-radius:8px;overflow:visible;">
-            <input type="text" id="hero-search-input"
-                   placeholder="Поиск по артикулу, названию, OEM..."
-                   autocomplete="off"
-                   data-catalog-url="{% url 'catalog:catalog' %}"
-                   data-suggest-url="{% url 'catalog:search_suggest' %}"
-                   style="flex:1;background:transparent;border:none;padding:13px 16px;color:#fff;font-size:0.93rem;min-width:0;border-radius:8px 0 0 8px;">
-            <button id="hero-search-btn" type="button"
-                    style="background:var(--color-accent-blue);border:none;padding:13px 20px;color:#fff;cursor:pointer;border-radius:0 8px 8px 0;flex-shrink:0;transition:background .2s;">
-              <i class="bi bi-search"></i>
-            </button>
+        <!-- Мини-статистика -->
+        <div class="hero-stats-grid mt-4">
+          <div class="hero-stat">
+            <div class="hero-stat-num">25<em>+</em></div>
+            <div class="hero-stat-label">лет на рынке</div>
           </div>
-          <div id="hero-suggest-drop"
-               style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:8px;overflow:hidden;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,0.5);">
+          <div class="hero-stat">
+            <div class="hero-stat-num">658<em>+</em></div>
+            <div class="hero-stat-label">позиций на складе</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">10<em>+</em></div>
+            <div class="hero-stat-label">заводов-партнёров</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">1<em>д</em></div>
+            <div class="hero-stat-label">доставка от</div>
           </div>
         </div>
 
       </div>
 
-      <!-- Правая: статистика -->
-      <div class="col-lg-5 d-none d-lg-flex justify-content-end">
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:32px 24px;backdrop-filter:blur(8px);">
-          <div class="d-flex mb-4">
-            <div class="hero-stat">
-              <div class="hero-stat-num">25+</div>
-              <div class="hero-stat-label">лет на рынке</div>
+      <!-- Правая часть — форма "Не нашли деталь" -->
+      <div class="col-lg-5 d-none d-lg-block">
+        <div class="hero-form-card">
+          <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">
+            Не нашли нужную деталь?
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:16px;line-height:1.5;">
+            Менеджер подберёт по артикулу или описанию за 30 минут
+          </div>
+          <input class="form-control mb-2" type="text" placeholder="Артикул или название детали">
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <input class="form-control" type="text" placeholder="Марка авто">
             </div>
-            <div class="hero-stat">
-              <div class="hero-stat-num">658+</div>
-              <div class="hero-stat-label">позиций в каталоге</div>
+            <div class="col-6">
+              <input class="form-control" type="text" placeholder="Модель">
             </div>
           </div>
-          <div class="d-flex">
-            <div class="hero-stat">
-              <div class="hero-stat-num">10+</div>
-              <div class="hero-stat-label">заводов-партнёров</div>
-            </div>
-            <div class="hero-stat">
-              <div class="hero-stat-num">99%</div>
-              <div class="hero-stat-label">гарантия подлинности</div>
-            </div>
+          <input class="form-control mb-3" type="text" placeholder="Ваш телефон *">
+          <a href="{% url 'main:contacts' %}#callback" class="btn-kameks-primary text-decoration-none">
+            Отправить заявку →
+          </a>
+          <div style="font-size:10px;color:rgba(255,255,255,.2);text-align:center;margin-top:10px;">
+            Ответим в течение 30 минут в рабочее время
           </div>
-
-          <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:24px;padding-top:20px;">
-            <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Основные поставщики</div>
-            <div style="font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.8;">
-              Белкард · БАТЭ · ПААЗ · РААЗ<br>
-              ПРАМО · SORL · ЗИТ · ШААЗ
-            </div>
+          <hr style="border-color:rgba(255,255,255,.06);margin:14px 0;">
+          <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:3px;">Или позвоните прямо сейчас</div>
+          <div style="font-size:16px;font-weight:800;color:#fff;text-align:center;">
+            <a href="tel:+78001234567" style="color:#fff;text-decoration:none;">+7 (800) 123-45-67</a>
           </div>
         </div>
       </div>
@@ -236,51 +172,73 @@
 
 
 <!-- ===================================================
-     02. КАТЕГОРИИ ЗАПЧАСТЕЙ
+     02. WHY BAR — Почему мы
      =================================================== -->
-<section class="py-5" style="background:var(--color-bg-primary);">
-  <div class="container">
-    <div class="text-center mb-4">
-      <h2 class="section-title">Категории запчастей</h2>
-      <div class="section-divider mx-auto mt-2 mb-3"></div>
-      <p class="section-subtitle">Запасные части для всех систем грузового автомобиля</p>
+<div class="why-bar">
+  <div class="container p-0">
+    <div class="why-bar-inner">
+      <div class="why-item">
+        <span class="why-ico">🏭</span>
+        <div>
+          <div class="why-title">Прямые поставки</div>
+          <div class="why-desc">Белкард, БАТЭ, ПААЗ — <span class="why-hl">без посредников</span></div>
+        </div>
+      </div>
+      <div class="why-item">
+        <span class="why-ico">🚚</span>
+        <div>
+          <div class="why-title">Доставка от 1 дня</div>
+          <div class="why-desc">СДЭКа, ПЭК, ТК · <span class="why-hl">бесплатно от 50 000 ₽</span></div>
+        </div>
+      </div>
+      <div class="why-item">
+        <span class="why-ico">🛡</span>
+        <div>
+          <div class="why-title">Гарантия 12 мес.</div>
+          <div class="why-desc">Письменная · <span class="why-hl">возврат 14 дней</span></div>
+        </div>
+      </div>
+      <div class="why-item">
+        <span class="why-ico">💬</span>
+        <div>
+          <div class="why-title">Подбор за 30 мин.</div>
+          <div class="why-desc">По артикулу, OEM или <span class="why-hl">описанию поломки</span></div>
+        </div>
+      </div>
     </div>
-    <div class="row g-3">
+  </div>
+</div>
+
+
+<!-- ===================================================
+     03. КАТЕГОРИИ ЗАПЧАСТЕЙ
+     =================================================== -->
+<section class="py-4" style="background:var(--color-bg-secondary);">
+  <div class="container anim-fadeup">
+    <div class="sec-h">
+      <div>
+        <h2 class="section-title">Категории запчастей</h2>
+        <div class="section-divider" style="margin:6px 0 0;"></div>
+      </div>
+      <a href="{% url 'catalog:catalog' %}" class="sec-link">Весь каталог →</a>
+    </div>
+    <div class="cat-grid">
       {% for cat in categories %}
-      <div class="col-6 col-md-3 col-lg-2 fade-in-up">
-        <a href="{{ cat.get_absolute_url }}" class="category-card">
-          <div class="category-icon"><i class="bi {{ cat.icon|default:'bi-gear' }}"></i></div>
+      <a href="{{ cat.get_absolute_url }}" class="category-card fade-in-up">
+        <div class="category-icon"><i class="bi {{ cat.icon|default:'bi-gear' }}"></i></div>
+        <div>
           <div class="category-name">{{ cat.name }}</div>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="text-center mt-4">
-      <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none">
-        Весь каталог <i class="bi bi-arrow-right ms-1"></i>
+        </div>
       </a>
-    </div>
-  </div>
-</section>
-
-
-<!-- ===================================================
-     03. ПОДБОР ПО МАРКЕ
-     =================================================== -->
-<section class="py-5" style="background:var(--color-bg-secondary);">
-  <div class="container">
-    <div class="text-center mb-4">
-      <h2 class="section-title">Подберите запчасть по марке</h2>
-      <div class="section-divider mx-auto mt-2"></div>
-    </div>
-    <div class="row g-3 justify-content-center">
-      {% for brand in brands %}
-      <div class="col-6 col-sm-4 col-md-3 col-lg-2 fade-in-up">
-        <a href="{% url 'catalog:catalog' %}?brand={{ brand.slug }}" class="brand-card">
-          <div class="brand-name" style="font-size:1.3rem;"><i class="bi bi-truck me-1"></i></div>
-          <div class="brand-name">{{ brand.name }}</div>
-        </a>
-      </div>
+      {% empty %}
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-cpu"></i></div><div><div class="category-name">Двигатель и детали</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-gear-wide-connected"></i></div><div><div class="category-name">Трансмиссия</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-circle"></i></div><div><div class="category-name">Ходовая часть</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-exclamation-circle"></i></div><div><div class="category-name">Тормозная система</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-lightning-charge"></i></div><div><div class="category-name">Электрооборудование</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-truck"></i></div><div><div class="category-name">Кузов и кабина</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-droplet"></i></div><div><div class="category-name">Топливная система</div></div></a>
+      <a href="{% url 'catalog:catalog' %}" class="category-card"><div class="category-icon"><i class="bi bi-tools"></i></div><div><div class="category-name">Расходные материалы</div></div></a>
       {% endfor %}
     </div>
   </div>
@@ -288,16 +246,49 @@
 
 
 <!-- ===================================================
-     04. ХИТЫ ПРОДАЖ / НОВИНКИ
+     04. ПОДБОР ПО МАРКЕ
      =================================================== -->
-<section class="py-5" style="background:var(--color-bg-primary);">
-  <div class="container">
-    <div class="text-center mb-4">
-      <h2 class="section-title">Популярные товары</h2>
-      <div class="section-divider mx-auto mt-2"></div>
+<section class="py-4" style="background:var(--color-bg-primary);border-top:1px solid var(--color-border);">
+  <div class="container anim-fadeup">
+    <div class="sec-h">
+      <div>
+        <h2 class="section-title">Подбор по марке автомобиля</h2>
+        <div class="section-divider" style="margin:6px 0 0;"></div>
+      </div>
+    </div>
+    <div class="brands-grid">
+      {% for brand in brands %}
+      <a href="{% url 'catalog:catalog' %}?brand={{ brand.slug }}" class="brand-card fade-in-up">
+        <div class="brand-ico-box"><i class="bi bi-truck" style="font-size:14px;"></i></div>
+        <div class="brand-name">{{ brand.name }}</div>
+      </a>
+      {% empty %}
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">КАМ</div><div class="brand-name">КАМАЗ</div></a>
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">МАЗ</div><div class="brand-name">МАЗ</div></a>
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">УРА</div><div class="brand-name">Урал</div></a>
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">КРАЗ</div><div class="brand-name">КРАЗ</div></a>
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">ГАЗ</div><div class="brand-name">ГАЗ</div></a>
+      <a href="{% url 'catalog:catalog' %}" class="brand-card"><div class="brand-ico-box">ЗИЛ</div><div class="brand-name">ЗИЛ</div></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================================================
+     05. ХИТЫ ПРОДАЖ / НОВИНКИ
+     =================================================== -->
+<section class="py-4" style="background:var(--color-bg-secondary);border-top:1px solid var(--color-border);">
+  <div class="container anim-fadeup">
+    <div class="sec-h mb-3">
+      <div>
+        <h2 class="section-title">Популярные товары</h2>
+        <div class="section-divider" style="margin:6px 0 0;"></div>
+      </div>
+      <a href="{% url 'catalog:catalog' %}" class="sec-link">Смотреть все →</a>
     </div>
 
-    <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="productsTab" role="tablist">
+    <ul class="nav nav-pills justify-content-start mb-4 gap-2" id="productsTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="tab-best" data-bs-toggle="pill" data-bs-target="#bestsellers" type="button" role="tab">
           <i class="bi bi-fire me-1"></i>Хиты продаж
@@ -334,22 +325,55 @@
         </div>
       </div>
     </div>
-
-    <div class="text-center mt-4">
-      <a href="{% url 'catalog:catalog' %}" class="btn-kameks-primary text-decoration-none">
-        Смотреть весь каталог <i class="bi bi-arrow-right ms-1"></i>
-      </a>
-    </div>
   </div>
 </section>
 
 
 <!-- ===================================================
-     05. ПОЧЕМУ ВЫБИРАЮТ НАС
+     06. TRUST BAR — цифры доверия
      =================================================== -->
-<section class="py-5" style="background:var(--color-bg-secondary);">
+<div class="trust-wrap anim-fadeup">
   <div class="container">
-    <div class="text-center mb-5">
+    <div class="trust-grid">
+      <div class="trust-card">
+        <span class="trust-number trust-number-chrome"><span data-t="1995">0</span></span>
+        <div class="trust-title-text">Год основания</div>
+        <div class="trust-desc-text">25+ лет опыта поставок <span style="color:#5A90B4;font-weight:600;">грузовых запчастей</span></div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-number trust-number-blue"><span data-t="10">0</span>+</span>
+        <div class="trust-title-text">Заводов-партнёров</div>
+        <div class="trust-desc-text">Прямые договоры · <span style="color:#5A90B4;font-weight:600;">без посредников</span></div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-number trust-number-bronze"><span data-t="658">0</span>+</span>
+        <div class="trust-title-text">Позиций в наличии</div>
+        <div class="trust-desc-text">Всегда на складе · <span style="color:#C89C24;font-weight:600;">отгрузка в день</span></div>
+      </div>
+      <div class="trust-card">
+        <span class="trust-number trust-number-green"><span data-t="99">0</span>%</span>
+        <div class="trust-title-text">Подлинность</div>
+        <div class="trust-desc-text">Сертификаты на каждую <span style="color:#4A9A5A;font-weight:600;">партию товара</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================================================
+     07. ТИКЕР — поставщики
+     =================================================== -->
+<div class="ticker-section">
+  <div id="ticker-track" class="ticker-track"></div>
+</div>
+
+
+<!-- ===================================================
+     08. ПРЕИМУЩЕСТВА
+     =================================================== -->
+<section class="py-5" style="background:var(--color-bg-primary);border-top:1px solid var(--color-border);">
+  <div class="container anim-fadeup">
+    <div class="text-center mb-4">
       <h2 class="section-title">Почему выбирают КАМЭКС</h2>
       <div class="section-divider mx-auto mt-2"></div>
     </div>
@@ -366,7 +390,7 @@
         {% endfor %}
       {% else %}
         <div class="col-md-6 col-lg-3 fade-in-up"><div class="advantage-card"><div class="advantage-icon"><i class="bi bi-shield-check"></i></div><h5>Подлинные запчасти</h5><p>Прямые поставки с заводов-изготовителей. Гарантия подлинности каждой детали.</p></div></div>
-        <div class="col-md-6 col-lg-3 fade-in-up"><div class="advantage-card"><div class="advantage-icon"><i class="bi bi-truck"></i></div><h5>Быстрая доставка</h5><p>Доставка по всей России от 1 дня. Транспортные компании, курьер, самовывоз.</p></div></div>
+        <div class="col-md-6 col-lg-3 fade-in-up"><div class="advantage-card"><div class="advantage-icon"><i class="bi bi-truck"></i></div><h5>Быстрая доставка</h5><p>По всей России от 1 дня. Транспортные компании, курьер, самовывоз.</p></div></div>
         <div class="col-md-6 col-lg-3 fade-in-up"><div class="advantage-card"><div class="advantage-icon"><i class="bi bi-patch-check"></i></div><h5>Гарантия 12 мес.</h5><p>На все запчасти предоставляем гарантию 12 месяцев с момента покупки.</p></div></div>
         <div class="col-md-6 col-lg-3 fade-in-up"><div class="advantage-card"><div class="advantage-icon"><i class="bi bi-headset"></i></div><h5>Экспертная поддержка</h5><p>Менеджеры помогут подобрать нужную деталь по артикулу, OEM или VIN.</p></div></div>
       {% endif %}
@@ -376,38 +400,15 @@
 
 
 <!-- ===================================================
-     06. ОФИЦИАЛЬНЫЕ ПОСТАВЩИКИ
+     09. ОТЗЫВЫ
      =================================================== -->
-<section class="py-4" style="background:var(--color-bg-primary);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border);">
-  <div class="container">
-    <p class="text-center mb-3" style="color:var(--color-text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;">
-      Официальные партнёры и поставщики
-    </p>
-    <div class="d-flex flex-wrap justify-content-evenly align-items-center gap-2">
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ОАО Белкард, г.Гродно</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ОАО БАТЭ, г.Борисов</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ПААЗ, г.Полтава</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>РААЗ, г.Рославль</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ПРАМО, г.Москва</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>SORL, Китай</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>Iskra, Словения</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ОАО БРТ, г.Балаково</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ЗИТ, г.Чернигов</div>
-      <div class="partner-pill"><i class="bi bi-building me-1"></i>ШААЗ, г.Шадринск</div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ===================================================
-     07. ОТЗЫВЫ
-     =================================================== -->
-<section class="py-5" style="background:var(--color-bg-secondary);">
-  <div class="container">
-    <div class="text-center mb-5">
+<section class="py-5" style="background:var(--color-bg-secondary);border-top:1px solid var(--color-border);">
+  <div class="container anim-fadeup">
+    <div class="text-center mb-4">
       <h2 class="section-title">Отзывы наших клиентов</h2>
       <div class="section-divider mx-auto mt-2"></div>
     </div>
+
     <div id="reviewsCarousel" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-inner">
         {% if reviews %}
@@ -420,9 +421,12 @@
                     {% for i in "12345" %}{% if forloop.counter <= review.rating %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}
                   </div>
                   <p class="review-text">{{ review.text }}</p>
-                  <div class="mt-3">
-                    <div class="review-author">{{ review.author_name }}</div>
-                    {% if review.author_company %}<div class="review-company">{{ review.author_company }}</div>{% endif %}
+                  <div class="d-flex align-items-center gap-2 mt-3">
+                    <div class="review-ava">{{ review.author_name|slice:":2"|upper }}</div>
+                    <div>
+                      <div class="review-author">{{ review.author_name }}</div>
+                      {% if review.author_company %}<div class="review-company">{{ review.author_company }}</div>{% endif %}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -434,8 +438,12 @@
             <div class="row justify-content-center"><div class="col-md-8 col-lg-6">
               <div class="review-card">
                 <div class="stars mb-3"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                <p class="review-text">«Работаем с КАМЭКС уже 5 лет. Быстрая доставка, оригинальные запчасти, менеджеры всегда помогут подобрать нужную деталь даже для редких модификаций.»</p>
-                <div class="mt-3"><div class="review-author">Иванов А.В.</div><div class="review-company">ООО «ТрансГруз», г. Москва</div></div>
+                <p class="review-text">«Работаем с КАМЭКС уже 5 лет. Тормозные камеры и крестовины — всегда в наличии. Ни разу не подвели ни по срокам, ни по качеству.»</p>
+                <div class="d-flex align-items-center gap-2 mt-3">
+                  <div class="review-ava">АИ</div>
+                  <div><div class="review-author">Алексей Иванов, снабженец</div><div class="review-company">ООО «ТрансГруз» · 15 заказов</div></div>
+                  <span style="font-size:10px;color:var(--color-text-muted);margin-left:auto;">март 2024</span>
+                </div>
               </div>
             </div></div>
           </div>
@@ -443,20 +451,22 @@
             <div class="row justify-content-center"><div class="col-md-8 col-lg-6">
               <div class="review-card">
                 <div class="stars mb-3"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                <p class="review-text">«Заказывали карданные валы Белкард и тормозную аппаратуру РААЗ. Всё пришло в срок, качество соответствует заявленному. Рекомендуем!»</p>
-                <div class="mt-3"><div class="review-author">Петров С.И.</div><div class="review-company">ИП Петров, г. Екатеринбург</div></div>
+                <p class="review-text">«Заказывал карданные валы Белкард для парка 12 КАМАЗов. Пришло в срок, качество как у официального дилера, цена ниже. Рекомендую.»</p>
+                <div class="d-flex align-items-center gap-2 mt-3">
+                  <div class="review-ava">СП</div>
+                  <div><div class="review-author">Сергей Петров, механик</div><div class="review-company">ИП Петров · Екатеринбург · 8 заказов</div></div>
+                  <span style="font-size:10px;color:var(--color-text-muted);margin-left:auto;">фев 2024</span>
+                </div>
               </div>
             </div></div>
           </div>
         {% endif %}
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="prev"
-              style="width:40px;height:40px;background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:50%;top:50%;transform:translateY(-50%);left:-20px;">
-        <i class="bi bi-chevron-left" style="color:var(--color-accent-blue);"></i>
+      <button class="carousel-control-prev" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="prev">
+        <i class="bi bi-chevron-left" style="color:var(--color-blue);"></i>
       </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="next"
-              style="width:40px;height:40px;background:var(--color-bg-card);border:1px solid var(--color-border);border-radius:50%;top:50%;transform:translateY(-50%);right:-20px;">
-        <i class="bi bi-chevron-right" style="color:var(--color-accent-blue);"></i>
+      <button class="carousel-control-next" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="next">
+        <i class="bi bi-chevron-right" style="color:var(--color-blue);"></i>
       </button>
     </div>
   </div>
@@ -464,22 +474,58 @@
 
 
 <!-- ===================================================
-     08. CTA
+     10. CTA
      =================================================== -->
 <section class="cta-section">
-  <div class="container text-center">
-    <h2 class="section-title mb-3">Не нашли нужную запчасть?</h2>
-    <p class="section-subtitle mb-4" style="max-width:550px;margin-inline:auto;">
-      Оставьте заявку — наш менеджер подберёт деталь по артикулу, OEM-номеру или VIN
-      и рассчитает стоимость в течение <strong style="color:var(--color-white);">30 минут</strong>
-    </p>
-    <div class="d-flex flex-wrap justify-content-center gap-3">
-      <a href="{% url 'main:contacts' %}" class="btn-kameks-primary text-decoration-none" style="font-size:1rem;">
-        <i class="bi bi-envelope me-2"></i>Оставить заявку
-      </a>
-      <a href="tel:+78001234567" class="btn-kameks-outline text-decoration-none" style="font-size:1rem;">
-        <i class="bi bi-telephone me-2"></i>Позвонить нам
-      </a>
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <h2 class="section-title-light mb-3">Не нашли нужную запчасть?</h2>
+        <p style="color:rgba(255,255,255,.45);font-size:13px;line-height:1.6;margin-bottom:20px;">
+          Оставьте заявку — менеджер подберёт деталь по артикулу, OEM-номеру или VIN
+          и рассчитает стоимость в течение <strong style="color:#fff;">30 минут</strong>
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.6);">
+            <span style="width:18px;height:18px;border-radius:50%;background:rgba(90,144,180,.2);border:1px solid rgba(90,144,180,.3);display:flex;align-items:center;justify-content:center;font-size:9px;color:#7AAAC8;font-weight:900;flex-shrink:0;">✓</span>
+            Ответ в течение 30 минут в рабочее время
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.6);">
+            <span style="width:18px;height:18px;border-radius:50%;background:rgba(90,144,180,.2);border:1px solid rgba(90,144,180,.3);display:flex;align-items:center;justify-content:center;font-size:9px;color:#7AAAC8;font-weight:900;flex-shrink:0;">✓</span>
+            Подбор аналогов, если оригинала нет
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,.6);">
+            <span style="width:18px;height:18px;border-radius:50%;background:rgba(90,144,180,.2);border:1px solid rgba(90,144,180,.3);display:flex;align-items:center;justify-content:center;font-size:9px;color:#7AAAC8;font-weight:900;flex-shrink:0;">✓</span>
+            Расчёт доставки до вашего города
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="{% url 'main:contacts' %}" class="btn-kameks-primary text-decoration-none">
+            <i class="bi bi-envelope me-2"></i>Оставить заявку
+          </a>
+          <a href="tel:+78001234567" class="btn-kameks-outline text-decoration-none"
+             style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7);">
+            <i class="bi bi-telephone me-2"></i>Позвонить нам
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="cta-form-card">
+          <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">Оставить заявку на подбор</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:16px;">Заполните форму — мы найдём и предложим варианты</div>
+          <input class="form-control mb-2" type="text" placeholder="Артикул или название детали *">
+          <div class="row g-2 mb-2">
+            <div class="col-6"><input class="form-control" type="text" placeholder="Марка автомобиля"></div>
+            <div class="col-6"><input class="form-control" type="text" placeholder="Модель / год"></div>
+          </div>
+          <input class="form-control mb-3" type="text" placeholder="Ваш телефон *">
+          <button class="btn-chrome">Перезвоним за 30 минут →</button>
+          <div style="font-size:10px;color:rgba(255,255,255,.18);text-align:center;margin-top:8px;">
+            Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -489,101 +535,6 @@
 
 {% block extra_js %}
 <script>
-// ---- Canvas particle network ----
-(function() {
-  const canvas = document.getElementById('hero-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  const PARTICLE_COUNT = 55;
-  const MAX_DIST = 140;
-  const SPEED = 0.35;
-
-  let W, H, particles = [], mouse = { x: null, y: null };
-
-  function resize() {
-    W = canvas.width  = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
-  }
-
-  function rand(min, max) { return Math.random() * (max - min) + min; }
-
-  function init() {
-    particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: rand(0, W), y: rand(0, H),
-        vx: rand(-SPEED, SPEED), vy: rand(-SPEED, SPEED),
-        r: rand(1.5, 3),
-        alpha: rand(0.3, 0.8)
-      });
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    // Lines between particles
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d < MAX_DIST) {
-          const opacity = (1 - d / MAX_DIST) * 0.25;
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(46,134,222,${opacity})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
-      // Lines to mouse
-      if (mouse.x !== null) {
-        const dx = particles[i].x - mouse.x;
-        const dy = particles[i].y - mouse.y;
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d < MAX_DIST * 1.5) {
-          const opacity = (1 - d / (MAX_DIST * 1.5)) * 0.4;
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = `rgba(230,126,34,${opacity})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Dots
-    particles.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(46,134,222,${p.alpha})`;
-      ctx.fill();
-
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-    });
-
-    requestAnimationFrame(draw);
-  }
-
-  canvas.closest('section').addEventListener('mousemove', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - rect.left;
-    mouse.y = e.clientY - rect.top;
-  });
-  canvas.closest('section').addEventListener('mouseleave', function() {
-    mouse.x = mouse.y = null;
-  });
-
-  window.addEventListener('resize', function() { resize(); init(); });
-  resize(); init(); draw();
-})();
-
 // ---- Hero search with live suggestions ----
 (function () {
   var input = document.getElementById('hero-search-input');
@@ -606,9 +557,8 @@
     var a = document.createElement('a');
     a.href = '/catalog/' + r.slug + '/';
     a.className = 'hero-suggest-item';
-    a.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 16px;color:var(--color-text-primary);text-decoration:none;border-bottom:1px solid var(--color-border);';
     a.innerHTML = '<i class="bi bi-search" style="color:var(--color-text-muted);font-size:0.8rem;flex-shrink:0;"></i>'
-      + '<span style="font-size:0.78rem;color:var(--color-text-muted);flex-shrink:0;white-space:nowrap;">' + r.sku + '</span>'
+      + '<span style="font-size:0.75rem;color:var(--color-text-muted);flex-shrink:0;white-space:nowrap;font-family:Courier New,monospace;">' + r.sku + '</span>'
       + '<span style="font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + r.name + '</span>';
     return a;
   }
@@ -642,7 +592,7 @@
   btn.addEventListener('click', go);
 
   document.addEventListener('click', function (e) {
-    if (!input.parentElement.parentElement.contains(e.target)) close();
+    if (!input.closest('.hero-search-wrap').contains(e.target)) close();
   });
 })();
 </script>
