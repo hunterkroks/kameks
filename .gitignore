@@ -8,3 +8,6 @@ media/
 staticfiles/
 *.log
 .DS_Store
+backup.sql
+backup_utf8.sql
+*.sql
