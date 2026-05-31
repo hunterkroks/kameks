@@ -139,7 +139,16 @@ document.addEventListener('DOMContentLoaded', function () {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body,
-    }).then(r => r.json());
+    }).then(function(r) {
+      return r.json().then(function(data) {
+        if (r.status === 401 && data.redirect) {
+          showToast('Войдите в аккаунт, чтобы добавить товар в корзину', 'danger');
+          setTimeout(function() { window.location.href = data.redirect; }, 1500);
+          throw new Error('unauthenticated');
+        }
+        return data;
+      });
+    });
   }
 
   const cartItems = window.KAMEKS_CART || {};
@@ -218,6 +227,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // --- Избранное (sessionStorage, визуальное) ---
   window.toggleFavorite = function(btn, productId) {
+    if (!window.KAMEKS_USER) {
+      showToast('Войдите в аккаунт, чтобы добавить в избранное', 'danger');
+      setTimeout(function() { window.location.href = '/accounts/login/'; }, 1500);
+      return;
+    }
     const icon = btn.querySelector('i');
     const key = 'fav_' + productId;
     const isFav = sessionStorage.getItem(key);

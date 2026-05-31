@@ -54,6 +54,7 @@
   window.KAMEKS_CART = {
     {% for prod_id, item in cart.cart.items %}"{{ prod_id }}": {{ item.quantity }}{% if not forloop.last %},{% endif %}{% endfor %}
   };
+  window.KAMEKS_USER = {{ user.is_authenticated|yesno:"true,false" }};
   </script>
   <!-- Основной JS -->
   <script src="{% static 'js/main.js' %}"></script>

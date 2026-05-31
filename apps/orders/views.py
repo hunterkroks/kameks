@@ -6,6 +6,7 @@ from .models import Order, OrderItem
 from .forms import OrderCreateForm
 
 
+@login_required
 def order_create(request):
     cart = Cart(request)
     if len(cart) == 0:
