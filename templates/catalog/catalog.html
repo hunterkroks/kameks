@@ -110,23 +110,6 @@
           </div>
         </div>
 
-        <!-- Блок: Цена -->
-        <div class="filter-block">
-          <div class="filter-head" onclick="toggleFilterBlock(this)">
-            <span class="filter-head-title"><i class="bi bi-cash me-2"></i>Цена, ₽</span>
-            <i class="bi bi-chevron-down filter-toggle"></i>
-          </div>
-          <div class="filter-body">
-            <div class="price-row">
-              <input class="price-inp" type="number" id="inp-min-price" placeholder="от"
-                     value="{{ request.GET.min_price }}">
-              <span class="price-sep">—</span>
-              <input class="price-inp" type="number" id="inp-max-price" placeholder="до"
-                     value="{{ request.GET.max_price }}">
-            </div>
-          </div>
-        </div>
-
         <!-- Блок: Наличие -->
         <div class="filter-block">
           <div class="filter-head" onclick="toggleFilterBlock(this)">
@@ -141,32 +124,9 @@
           </div>
         </div>
 
-        <!-- Блок: Тип запчасти -->
-        <div class="filter-block">
-          <div class="filter-head" onclick="toggleFilterBlock(this)">
-            <span class="filter-head-title"><i class="bi bi-patch-check me-2"></i>Тип запчасти</span>
-            <i class="bi bi-chevron-down filter-toggle"></i>
-          </div>
-          <div class="filter-body">
-            <div class="radio-item{% if not request.GET.original %} sel{% endif %}"
-                 data-filter="original" data-value="" data-type="radio">
-              <span>Все</span>
-            </div>
-            <div class="radio-item{% if request.GET.original == '1' %} sel{% endif %}"
-                 data-filter="original" data-value="1" data-type="radio">
-              <span>Оригинальные</span>
-            </div>
-            <div class="radio-item{% if request.GET.original == '0' %} sel{% endif %}"
-                 data-filter="original" data-value="0" data-type="radio">
-              <span>Аналоги</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Кнопки -->
         <div class="filter-actions">
-          <button type="button" class="btn-apply" id="btn-apply-filter">Применить</button>
-          <button type="button" class="btn-reset" id="btn-reset-filter">↺ Сброс</button>
+          <button type="button" class="btn-reset" id="btn-reset-filter" style="width:100%;">↺ Сбросить фильтры</button>
         </div>
 
       </div>
