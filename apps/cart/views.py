@@ -32,6 +32,10 @@ def cart_add(request, product_id):
 
 @require_POST
 def cart_remove(request, product_id):
+    if not request.user.is_authenticated:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'redirect': '/accounts/login/'}, status=401)
+        return redirect('/accounts/login/')
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
