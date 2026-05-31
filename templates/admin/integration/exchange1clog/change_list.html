@@ -1,0 +1,18 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:integration_import' %}"
+       class="addlink">
+      📥 Импортировать XML из 1С
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'admin:integration_export_catalog' %}"
+       class="addlink"
+       style="background:#417690;">
+      📤 Выгрузить каталог XML
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}

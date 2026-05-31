@@ -41,12 +41,24 @@ class Cart:
         for product in products:
             cart[str(product.id)]['product'] = product
         for item in cart.values():
+            # Пропускаем позиции у которых товар удалён из БД
+            if 'product' not in item:
+                continue
             item['price'] = Decimal(item['price'])
             item['total_price'] = item['price'] * item['quantity']
             yield item
 
     def __len__(self):
-        return sum(item['quantity'] for item in self.cart.values())
+        product_ids = set(self.cart.keys())
+        existing_ids = set(
+            str(pk) for pk in
+            Product.objects.filter(id__in=product_ids).values_list('id', flat=True)
+        )
+        return sum(
+            item['quantity']
+            for pid, item in self.cart.items()
+            if pid in existing_ids
+        )
 
     def get_total_price(self):
         return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())

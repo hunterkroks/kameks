@@ -1,0 +1,294 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Предпросмотр импорта — {{ filename }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+  .preview-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .preview-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 14px 20px;
+    min-width: 130px;
+    text-align: center;
+  }
+  .preview-card .num {
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  .preview-card .lbl {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .card-create  { border-top: 4px solid #28a745; }
+  .card-update  { border-top: 4px solid #417690; }
+  .card-nosku   { border-top: 4px solid #e6a817; }
+  .card-same    { border-top: 4px solid #aaa; }
+  .card-error   { border-top: 4px solid #ba2121; }
+
+  .filter-bar {
+    margin: 12px 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-btn {
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f8f8f8;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .filter-btn.active {
+    background: #417690;
+    color: #fff;
+    border-color: #417690;
+  }
+
+  #preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #preview-table th {
+    background: #417690;
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  #preview-table td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  #preview-table tr:hover td { background: #f5f9fc; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  .badge-create   { background: #d4edda; color: #155724; }
+  .badge-update   { background: #cce5ff; color: #004085; }
+  .badge-nosku    { background: #fff3cd; color: #856404; }
+  .badge-same     { background: #e9ecef; color: #6c757d; }
+  .badge-error    { background: #f8d7da; color: #721c24; }
+
+  .val-changed { color: #28a745; font-weight: bold; }
+  .val-same    { color: #999; }
+  .arrow       { color: #aaa; margin: 0 4px; }
+
+  .action-bar {
+    position: sticky;
+    bottom: 0;
+    background: #f8f8f8;
+    border-top: 2px solid #ddd;
+    padding: 14px 0;
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 10;
+  }
+  .btn-apply {
+    background: #28a745;
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-apply:hover { background: #218838; }
+  .btn-cancel {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-cancel:hover { background: #5a6268; color: #fff; }
+
+  .search-box {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 220px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>🔍 Предпросмотр импорта</h1>
+<p style="color:#555;">
+  Файл: <strong>{{ filename }}</strong> — {{ total }} товаров.
+  Изменения будут применены только после нажатия <strong>«Применить импорт»</strong>.
+</p>
+
+{# Карточки-сводка #}
+<div class="preview-summary">
+  <div class="preview-card card-create">
+    <div class="num" style="color:#28a745;">{{ stats.created }}</div>
+    <div class="lbl">🆕 Новых товаров</div>
+  </div>
+  <div class="preview-card card-update">
+    <div class="num" style="color:#417690;">{{ stats.price_updated }}</div>
+    <div class="lbl">🔄 Обновлено цен</div>
+  </div>
+  <div class="preview-card card-update">
+    <div class="num" style="color:#417690;">{{ stats.stock_updated }}</div>
+    <div class="lbl">📊 Обновлено остатков</div>
+  </div>
+  <div class="preview-card card-nosku">
+    <div class="num" style="color:#e6a817;">{{ stats.no_sku }}</div>
+    <div class="lbl">⚠️ Без артикула</div>
+  </div>
+  <div class="preview-card card-same">
+    <div class="num" style="color:#6c757d;">{{ stats.unchanged }}</div>
+    <div class="lbl">✔ Без изменений</div>
+  </div>
+  {% if stats.errors %}
+  <div class="preview-card card-error">
+    <div class="num" style="color:#ba2121;">{{ stats.errors }}</div>
+    <div class="lbl">❌ Ошибок</div>
+  </div>
+  {% endif %}
+</div>
+
+{# Фильтры и поиск #}
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterTable('all', this)">Все ({{ total }})</button>
+  <button class="filter-btn" onclick="filterTable('create', this)">🆕 Новые ({{ stats.created }})</button>
+  <button class="filter-btn" onclick="filterTable('update', this)">🔄 Обновления</button>
+  <button class="filter-btn" onclick="filterTable('nosku', this)">⚠️ Без артикула ({{ stats.no_sku }})</button>
+  <button class="filter-btn" onclick="filterTable('unchanged', this)">✔ Без изменений ({{ stats.unchanged }})</button>
+  {% if stats.errors %}<button class="filter-btn" onclick="filterTable('error', this)">❌ Ошибки ({{ stats.errors }})</button>{% endif %}
+  <input type="text" class="search-box" placeholder="🔎 Поиск по артикулу или названию..."
+         oninput="searchTable(this.value)">
+</div>
+
+{# Таблица изменений #}
+<div style="overflow-x:auto;max-height:60vh;overflow-y:auto;border:1px solid #ddd;border-radius:4px;">
+  <table id="preview-table">
+    <thead>
+      <tr>
+        <th style="width:100px;">Действие</th>
+        <th style="width:110px;">Артикул</th>
+        <th>Название</th>
+        <th style="width:180px;">Цена</th>
+        <th style="width:180px;">Остаток</th>
+        <th style="width:140px;">Категория</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ch in changes %}
+      <tr data-action="{% if ch.action == 'create' or ch.action == 'create_no_sku' %}create{% elif ch.action == 'unchanged' %}unchanged{% elif ch.action == 'update_no_sku' %}nosku{% elif ch.action == 'error' %}error{% else %}update{% endif %}"
+          data-search="{{ ch.sku|lower }} {{ ch.name|lower }}">
+        <td>
+          {% if ch.action == 'create' %}
+            <span class="badge badge-create">🆕 Новый</span>
+          {% elif ch.action == 'create_no_sku' %}
+            <span class="badge badge-nosku">🆕 Без арт.</span>
+          {% elif ch.action == 'update_no_sku' %}
+            <span class="badge badge-nosku">⚠️ Без арт.</span>
+          {% elif ch.action == 'unchanged' %}
+            <span class="badge badge-same">✔ Не изменится</span>
+          {% elif ch.action == 'error' %}
+            <span class="badge badge-error">❌ Ошибка</span>
+          {% else %}
+            <span class="badge badge-update">🔄 Обновление</span>
+          {% endif %}
+        </td>
+        <td style="font-family:monospace;">{{ ch.sku }}</td>
+        <td>{{ ch.name }}</td>
+        <td>
+          {% if ch.price_old is not None %}
+            {% if ch.changed_price %}
+              <span style="text-decoration:line-through;color:#999;">{{ ch.price_old }} ₽</span>
+              <span class="arrow">→</span>
+              <span class="val-changed">{{ ch.price_new }} ₽</span>
+            {% else %}
+              <span class="val-same">{{ ch.price_new }} ₽</span>
+            {% endif %}
+          {% else %}
+            <span class="val-changed">{{ ch.price_new }} ₽</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if ch.stock_old is not None %}
+            {% if ch.changed_stock %}
+              <span style="text-decoration:line-through;color:#999;">{{ ch.stock_old }}</span>
+              <span class="arrow">→</span>
+              <span class="val-changed">{{ ch.stock_new }}</span>
+            {% else %}
+              <span class="val-same">{{ ch.stock_new }}</span>
+            {% endif %}
+          {% else %}
+            <span class="val-changed">{{ ch.stock_new }}</span>
+          {% endif %}
+        </td>
+        <td style="color:#555;font-size:12px;">{{ ch.category_name }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Нижняя панель действий #}
+<div class="action-bar">
+  <form method="post" action="{% url 'integration:import_confirm' %}" id="confirm-form">
+    {% csrf_token %}
+    <button type="submit" class="btn-apply"
+            onclick="this.disabled=true;this.textContent='⏳ Применяется...';this.form.submit();">
+      ✅ Применить импорт
+    </button>
+  </form>
+
+  <a href="{% url 'integration:import' %}" class="btn-cancel">
+    ← Отмена
+  </a>
+
+  <span style="color:#888;font-size:13px;margin-left:8px;">
+    Данные не будут изменены пока вы не нажмёте «Применить импорт»
+  </span>
+</div>
+
+<script>
+  function filterTable(action, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#preview-table tbody tr').forEach(row => {
+      if (action === 'all') {
+        row.style.display = '';
+      } else {
+        row.style.display = row.dataset.action === action ? '' : 'none';
+      }
+    });
+  }
+
+  function searchTable(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('#preview-table tbody tr').forEach(row => {
+      row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+    });
+    // Сбрасываем активный фильтр
+    if (q) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    }
+  }
+</script>
+{% endblock %}

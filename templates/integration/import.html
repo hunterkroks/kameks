@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Импорт XML из 1С{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;">
+  <h1>📥 Импорт XML из 1С</h1>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="{% if msg.tags == 'error' %}errornote{% else %}success{% endif %}" style="margin-bottom:12px;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div style="background:#fff;border:1px solid #ddd;padding:24px;border-radius:4px;">
+    <p style="margin-top:0;color:#555;">
+      Загрузите файл CommerceML 2.05 из 1С. Поддерживаемые форматы: <code>kameks_commerceml.xml</code>, <code>kameks_1c_price.xml</code>.
+    </p>
+    <form method="post" enctype="multipart/form-data" id="import-form">
+      {% csrf_token %}
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-weight:bold;margin-bottom:6px;">XML-файл:</label>
+
+        {# Скрытый настоящий input #}
+        <input type="file" name="xml_file" accept=".xml" required id="xml-file-input"
+               style="display:none;">
+
+        {# Кастомная кнопка выбора файла #}
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button type="button"
+                  onclick="document.getElementById('xml-file-input').click()"
+                  style="background:#417690;color:#fff;border:none;padding:9px 18px;
+                         border-radius:4px;cursor:pointer;font-size:13px;white-space:nowrap;">
+            📁 Выберите файл
+          </button>
+          <span id="file-name-display"
+                style="color:#888;font-size:13px;font-style:italic;">
+            Файл не выбран
+          </span>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="button default"
+              style="font-size:14px;padding:10px 24px;margin-top:4px;">
+        📤 Импортировать
+      </button>
+    </form>
+
+    <script>
+      document.getElementById('xml-file-input').addEventListener('change', function() {
+        var name = this.files.length ? this.files[0].name : 'Файл не выбран';
+        document.getElementById('file-name-display').textContent = name;
+        document.getElementById('file-name-display').style.color = '#333';
+        document.getElementById('file-name-display').style.fontStyle = 'normal';
+        document.getElementById('file-name-display').style.fontWeight = 'bold';
+      });
+
+      document.getElementById('import-form').addEventListener('submit', function() {
+        var btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Импортируется...';
+      });
+    </script>
+  </div>
+
+  <div style="margin-top:24px;background:#fff;border:1px solid #ddd;padding:20px;border-radius:4px;">
+    <h2 style="font-size:15px;margin-top:0;">Логика импорта</h2>
+    <ul style="line-height:2;color:#444;margin:0;padding-left:20px;">
+      <li>Товар найден по артикулу → обновляется <strong>цена</strong> и <strong>остаток</strong> (название и фото не трогаются)</li>
+      <li>Товар не найден → <strong>создаётся новый</strong> с категорией из XML</li>
+      <li>Товар без артикула → помещается в <strong>«Прочие детали»</strong>, артикул <code>NO-ART-0001</code></li>
+      <li>Перед каждым изменением создаётся <strong>бэкап</strong> для возможности отката</li>
+    </ul>
+  </div>
+
+  <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+    <a href="{% url 'admin:integration_export_catalog' %}"
+       style="background:#417690;color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;font-size:13px;">
+      📤 Выгрузить каталог XML для 1С
+    </a>
+
+    {% if last_log %}
+    <form method="post" action="{% url 'integration:rollback_last' %}">
+      {% csrf_token %}
+      <button type="submit"
+              style="background:#ba2121;color:#fff;border:none;cursor:pointer;padding:10px 18px;border-radius:4px;font-size:13px;"
+              onclick="return confirm('Откатить последний импорт «{{ last_log.filename }}»?\n\nВсе созданные товары будут удалены, обновлённые — возвращены к прежним значениям.')">
+        ↩️ Откатить последний импорт ({{ last_log.filename }})
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

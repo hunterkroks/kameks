@@ -82,8 +82,7 @@ class Product(models.Model):
     sku = models.CharField('Артикул (собственный)', max_length=100, unique=True)
     oem_number = models.CharField('OEM-номер', max_length=100, blank=True, db_index=True)
     description = models.TextField('Описание', blank=True)
-    specifications = models.TextField('Характеристики (JSON)', blank=True,
-                                      help_text='Ключ: значение, по одному на строку')
+    no_sku = models.BooleanField('Без артикула', default=False, db_index=True)
 
     price = models.DecimalField('Цена', max_digits=10, decimal_places=2)
     discount_price = models.DecimalField('Цена со скидкой', max_digits=10, decimal_places=2, null=True, blank=True)
@@ -143,6 +142,22 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f'Фото #{self.pk} → {self.product.sku}'
+
+
+class ProductAttribute(models.Model):
+    """Характеристики товара (ключ-значение)"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes', verbose_name='Товар')
+    name = models.CharField('Характеристика', max_length=150)
+    value = models.CharField('Значение', max_length=300)
+    order = models.PositiveSmallIntegerField('Порядок', default=0)
+
+    class Meta:
+        verbose_name = 'Характеристика товара'
+        verbose_name_plural = 'Характеристики товара'
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f'{self.name}: {self.value}'
 
 
 class Analogue(models.Model):

@@ -1,0 +1,39 @@
+/* Скрываем заголовок колонки "УДАЛИТЬ?" */
+.delete th.delete,
+th.column-delete,
+.tabular thead th:last-child {
+    /* не трогаем — оставим место для кнопки */
+}
+
+/* Скрываем оригинальный чекбокс удаления */
+.tabular td.delete-button input[type="checkbox"] {
+    display: none !important;
+}
+
+/* Превращаем ячейку удаления в кнопку */
+.tabular td.delete-button {
+    vertical-align: middle;
+    text-align: center;
+    padding: 4px !important;
+}
+
+.tabular td.delete-button label {
+    display: none !important;
+}
+
+/* Псевдо-кнопка через JS (см. ниже) — fallback через CSS */
+.tabular tr.has_original td.delete-button::after,
+.tabular tr.dynamic-form td.delete-button::after {
+    content: "✕";
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: #ba2121;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
