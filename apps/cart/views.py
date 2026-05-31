@@ -21,11 +21,27 @@ def cart_add(request, product_id):
     product = get_object_or_404(Product, id=product_id, is_active=True)
     quantity = int(request.POST.get('quantity', 1))
     override = request.POST.get('override', False)
+
+    # Clamp quantity to available stock
+    if quantity > product.stock:
+        quantity = product.stock
+    if quantity < 0:
+        quantity = 0
+
     cart.add(product=product, quantity=quantity, override_quantity=bool(override))
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         item_quantity = cart.cart.get(str(product_id), {}).get('quantity', 0)
-        return JsonResponse({'cart_total': len(cart), 'success': True, 'item_quantity': item_quantity})
+        from decimal import Decimal
+        price = Decimal(cart.cart.get(str(product_id), {}).get('price', product.current_price))
+        return JsonResponse({
+            'cart_total': len(cart),
+            'success': True,
+            'item_quantity': item_quantity,
+            'item_total': float(price * item_quantity),
+            'cart_grand_total': float(cart.get_total_price()),
+            'stock': product.stock,
+        })
     return redirect('cart:detail')
 
 
@@ -39,5 +55,10 @@ def cart_remove(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': True, 'cart_total': len(cart), 'item_quantity': 0})
+        return JsonResponse({
+            'success': True,
+            'cart_total': len(cart),
+            'item_quantity': 0,
+            'cart_grand_total': float(cart.get_total_price()),
+        })
     return redirect('cart:detail')

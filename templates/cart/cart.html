@@ -34,10 +34,12 @@
 
     <!-- Список товаров -->
     <div class="col-lg-8">
-      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+      <div id="cart-items" style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
 
         {% for item in cart %}
-        <div style="padding:16px 20px;border-bottom:1px solid var(--color-border);" class="d-flex gap-3 align-items-start">
+        <div id="cart-row-{{ item.product.id }}"
+             style="padding:16px 20px;border-bottom:1px solid var(--color-border);"
+             class="d-flex gap-3 align-items-start cart-item-row">
 
           <!-- Фото -->
           <div style="width:80px;height:80px;flex-shrink:0;background:var(--color-bg-primary);border:1px solid var(--color-border);border-radius:var(--radius-sm);overflow:hidden;">
@@ -60,33 +62,44 @@
             <div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:3px;">
               Арт.: {{ item.product.sku }}
             </div>
-            <div class="d-flex align-items-center gap-3 mt-2">
-              <!-- Форма изменения количества -->
-              <form method="POST" action="{% url 'cart:add' item.product.id %}" class="d-flex align-items-center gap-1">
-                {% csrf_token %}
-                <input type="hidden" name="override" value="true">
-                <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
-                        style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">−</button>
-                <span style="width:32px;text-align:center;font-weight:600;">{{ item.quantity }}</span>
-                <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
-                        style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">+</button>
-              </form>
-              <span style="color:var(--color-text-muted);font-size:0.82rem;">× {{ item.price|floatformat:0 }} ₽</span>
+            {% if item.product.stock > 0 %}
+            <div style="font-size:0.75rem;color:#27ae60;margin-top:2px;">
+              В наличии: {{ item.product.stock }} шт.
+            </div>
+            {% endif %}
+            <div class="d-flex align-items-center gap-1 mt-2">
+              <!-- Кнопки количества (AJAX) -->
+              <button class="qty-btn"
+                      data-product-id="{{ item.product.id }}"
+                      data-action="minus"
+                      data-add-url="{% url 'cart:add' item.product.id %}"
+                      data-current="{{ item.quantity }}"
+                      data-stock="{{ item.product.stock }}"
+                      style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">−</button>
+              <span id="qty-{{ item.product.id }}" style="width:32px;text-align:center;font-weight:600;">{{ item.quantity }}</span>
+              <button class="qty-btn"
+                      data-product-id="{{ item.product.id }}"
+                      data-action="plus"
+                      data-add-url="{% url 'cart:add' item.product.id %}"
+                      data-current="{{ item.quantity }}"
+                      data-stock="{{ item.product.stock }}"
+                      style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">+</button>
+              <span style="color:var(--color-text-muted);font-size:0.82rem;margin-left:4px;">× {{ item.price|floatformat:0 }} ₽</span>
             </div>
           </div>
 
           <!-- Цена и удалить -->
           <div class="text-end" style="flex-shrink:0;">
-            <div style="font-size:1.1rem;font-weight:700;color:var(--color-accent-orange);">
+            <div id="total-{{ item.product.id }}" style="font-size:1.1rem;font-weight:700;color:var(--color-accent-orange);">
               {{ item.total_price|floatformat:0 }} ₽
             </div>
-            <form method="POST" action="{% url 'cart:remove' item.product.id %}" class="mt-2">
-              {% csrf_token %}
-              <button type="submit" style="background:none;border:none;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;padding:0;"
-                      onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color=''">
-                <i class="bi bi-trash me-1"></i>Удалить
-              </button>
-            </form>
+            <button class="remove-btn mt-2"
+                    data-product-id="{{ item.product.id }}"
+                    data-remove-url="{% url 'cart:remove' item.product.id %}"
+                    style="background:none;border:none;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;padding:0;"
+                    onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color=''">
+              <i class="bi bi-trash me-1"></i>Удалить
+            </button>
           </div>
 
         </div>
@@ -108,11 +121,11 @@
 
         <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;color:var(--color-text-secondary);">
           <span>Товаров:</span>
-          <span>{{ cart|length }} поз.</span>
+          <span id="summary-count">{{ cart|length }} поз.</span>
         </div>
         <div class="d-flex justify-content-between mb-3" style="font-size:0.9rem;color:var(--color-text-secondary);">
           <span>Стоимость товаров:</span>
-          <span>{{ cart.get_total_price|floatformat:0 }} ₽</span>
+          <span id="summary-price">{{ cart.get_total_price|floatformat:0 }} ₽</span>
         </div>
         <div class="d-flex justify-content-between mb-3" style="font-size:0.9rem;color:var(--color-text-muted);">
           <span>Доставка:</span>
@@ -122,7 +135,7 @@
         <div style="border-top:1px solid var(--color-border);padding-top:16px;margin-bottom:20px;">
           <div class="d-flex justify-content-between">
             <span style="font-weight:700;font-size:1rem;">Итого:</span>
-            <span style="font-weight:800;font-size:1.4rem;color:var(--color-accent-orange);">
+            <span id="summary-total" style="font-weight:800;font-size:1.4rem;color:var(--color-accent-orange);">
               {{ cart.get_total_price|floatformat:0 }} ₽
             </span>
           </div>
@@ -143,7 +156,7 @@
   </div>
 
   {% else %}
-  <div style="text-align:center;padding:80px 0;color:var(--color-text-muted);">
+  <div id="cart-empty-state" style="text-align:center;padding:80px 0;color:var(--color-text-muted);">
     <i class="bi bi-cart-x" style="font-size:4rem;display:block;margin-bottom:16px;"></i>
     <h4 style="color:var(--color-text-secondary);margin-bottom:10px;">Корзина пуста</h4>
     <p style="margin-bottom:24px;">Добавьте товары из каталога</p>
@@ -154,4 +167,129 @@
   {% endif %}
 
 </div>
+
+<script>
+(function () {
+  const csrfToken = '{{ csrf_token }}';
+
+  function fmt(num) {
+    return Math.round(num).toLocaleString('ru-RU') + ' ₽';
+  }
+
+  function updateSummary(cartTotal, grandTotal) {
+    const countEl = document.getElementById('summary-count');
+    const priceEl = document.getElementById('summary-price');
+    const totalEl = document.getElementById('summary-total');
+    const navBadge = document.querySelector('.cart-badge');
+    if (countEl) countEl.textContent = cartTotal + ' поз.';
+    if (priceEl) priceEl.textContent = fmt(grandTotal);
+    if (totalEl) totalEl.textContent = fmt(grandTotal);
+    if (navBadge) navBadge.textContent = cartTotal;
+  }
+
+  function syncQtyButtons(productId, qty, stock) {
+    document.querySelectorAll(`.qty-btn[data-product-id="${productId}"]`).forEach(btn => {
+      btn.dataset.current = qty;
+      if (btn.dataset.action === 'plus') {
+        btn.disabled = qty >= stock;
+        btn.style.opacity = qty >= stock ? '0.4' : '1';
+      }
+      if (btn.dataset.action === 'minus') {
+        btn.disabled = qty <= 1;
+        btn.style.opacity = qty <= 1 ? '0.4' : '1';
+      }
+    });
+  }
+
+  // Init button states on load
+  document.querySelectorAll('.qty-btn').forEach(btn => {
+    const qty = parseInt(btn.dataset.current);
+    const stock = parseInt(btn.dataset.stock);
+    const pid = btn.dataset.productId;
+    syncQtyButtons(pid, qty, stock);
+  });
+
+  // Quantity change
+  document.querySelectorAll('.qty-btn').forEach(btn => {
+    btn.addEventListener('click', async function () {
+      const productId = this.dataset.productId;
+      const action = this.dataset.action;
+      const url = this.dataset.addUrl;
+      const stock = parseInt(this.dataset.stock);
+      let qty = parseInt(document.getElementById('qty-' + productId).textContent);
+
+      if (action === 'plus') qty = Math.min(qty + 1, stock);
+      else qty = Math.max(qty - 1, 1);
+
+      // Optimistic UI
+      document.getElementById('qty-' + productId).textContent = qty;
+      syncQtyButtons(productId, qty, stock);
+
+      try {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', csrfToken);
+        fd.append('quantity', qty);
+        fd.append('override', 'true');
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {'X-Requested-With': 'XMLHttpRequest'},
+          body: fd,
+        });
+        const data = await resp.json();
+        if (data.success) {
+          const itemTotal = document.getElementById('total-' + productId);
+          if (itemTotal) itemTotal.textContent = fmt(data.item_total);
+          updateSummary(data.cart_total, data.cart_grand_total);
+          syncQtyButtons(productId, data.item_quantity, data.stock);
+          document.getElementById('qty-' + productId).textContent = data.item_quantity;
+        }
+      } catch (e) {
+        console.error('Cart update failed', e);
+      }
+    });
+  });
+
+  // Remove item
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', async function () {
+      const productId = this.dataset.productId;
+      const url = this.dataset.removeUrl;
+      const row = document.getElementById('cart-row-' + productId);
+
+      // Animate out
+      row.style.transition = 'opacity 0.25s, max-height 0.3s';
+      row.style.opacity = '0';
+      row.style.overflow = 'hidden';
+      setTimeout(() => { row.style.maxHeight = row.offsetHeight + 'px'; }, 10);
+      setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; }, 30);
+
+      try {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', csrfToken);
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {'X-Requested-With': 'XMLHttpRequest'},
+          body: fd,
+        });
+        const data = await resp.json();
+        setTimeout(() => {
+          row.remove();
+          updateSummary(data.cart_total, data.cart_grand_total);
+
+          // If cart is now empty — reload to show empty state
+          if (document.querySelectorAll('.cart-item-row').length === 0) {
+            window.location.reload();
+          }
+        }, 320);
+      } catch (e) {
+        // Restore on error
+        row.style.opacity = '1';
+        row.style.maxHeight = '';
+        row.style.padding = '';
+        console.error('Remove failed', e);
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}
