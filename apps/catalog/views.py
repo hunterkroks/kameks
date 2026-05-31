@@ -39,7 +39,19 @@ def catalog(request):
 
     if category_slugs:
         current_categories = Category.objects.filter(slug__in=category_slugs, is_active=True)
-        products = products.filter(category__slug__in=category_slugs)
+        # Собираем все категории: сам slug + все потомки (L2→L3, L1→L2+L3)
+        all_cat_ids = set()
+        for cat in current_categories:
+            all_cat_ids.add(cat.pk)
+            # дети
+            children = list(cat.children.filter(is_active=True).values_list('pk', flat=True))
+            all_cat_ids.update(children)
+            # внуки
+            grandchildren = Category.objects.filter(
+                parent__pk__in=children, is_active=True
+            ).values_list('pk', flat=True)
+            all_cat_ids.update(grandchildren)
+        products = products.filter(category__pk__in=all_cat_ids)
 
     if min_price:
         try:
