@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('Товар добавлен в корзину');
           }
         })
-        .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+        .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
     });
 
     widget.querySelector('.cart-counter-plus').addEventListener('click', function () {
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateCartBadges(data.cart_total);
           }
         })
-        .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+        .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
     });
 
     widget.querySelector('.cart-counter-minus').addEventListener('click', function () {
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
               updateCartBadges(data.cart_total);
             }
           })
-          .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+          .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
       } else {
         cartPost(`/cart/add/${pid}/`, `quantity=${current - 1}&override=true`)
           .then(data => {
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
               updateCartBadges(data.cart_total);
             }
           })
-          .catch(() => showToast('Ошибка. Попробуйте ещё раз.', 'danger'));
+          .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
       }
     });
   });
