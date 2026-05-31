@@ -134,7 +134,9 @@
           <a href="{% url 'main:certificates' %}" class="nav-link-kameks px-0">Сертификаты</a>
           <a href="{% url 'main:contacts' %}"   class="nav-link-kameks px-0">Контакты</a>
           {% if not user.is_authenticated %}
-          <a href="{% url 'accounts:login' %}"  class="nav-link-kameks px-0">Войти</a>
+          <a href="{% url 'accounts:login' %}" class="nav-mobile-login-btn mt-2">
+            <i class="bi bi-person-fill me-2"></i>Войти в аккаунт
+          </a>
           {% endif %}
         </div>
       </div>

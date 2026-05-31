@@ -1647,6 +1647,25 @@ h1, h2, h3, h4, h5, h6 {
   .hero-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Кнопка "Войти" в мобильном меню */
+.nav-mobile-login-btn {
+  display: flex;
+  align-items: center;
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #2A4E7A, #1B3A5C);
+  color: #fff !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,.12);
+  transition: background var(--transition);
+}
+.nav-mobile-login-btn:hover {
+  background: linear-gradient(135deg, #3A5E8A, #254E7A);
+  color: #fff !important;
+}
+
 /* ═══════════════════════════════════════════════
    МЕГА-МЕНЮ
    ═══════════════════════════════════════════════ */

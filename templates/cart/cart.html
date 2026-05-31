@@ -20,7 +20,16 @@
     <i class="bi bi-cart3 me-2" style="color:var(--color-accent-blue);"></i>Корзина
   </h1>
 
-  {% if cart|length %}
+  {% if not user.is_authenticated %}
+  <div style="text-align:center;padding:80px 0;">
+    <i class="bi bi-lock" style="font-size:3.5rem;display:block;margin-bottom:16px;color:var(--color-accent-blue);"></i>
+    <h4 style="color:var(--color-text-secondary);margin-bottom:10px;">Войдите в аккаунт</h4>
+    <p style="color:var(--color-text-muted);margin-bottom:24px;">Чтобы просматривать корзину и оформлять заказы</p>
+    <a href="{% url 'accounts:login' %}?next=/cart/" class="btn-kameks-primary text-decoration-none">
+      <i class="bi bi-person me-2"></i>Войти в аккаунт
+    </a>
+  </div>
+  {% elif cart|length %}
   <div class="row g-4">
 
     <!-- Список товаров -->
