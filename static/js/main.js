@@ -264,24 +264,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ─── Мега-меню (split-кнопка: стрелка открывает, ссылка — переход) ───────
   (function () {
-    const trigger  = document.getElementById('mega-trigger');
-    const menu     = document.getElementById('mega-menu');
-    const overlay  = document.getElementById('mega-overlay');
-    const chevron  = document.getElementById('mega-chevron');
-    const secBtns  = document.querySelectorAll('.mega-section-btn');
-    const panels   = document.querySelectorAll('.mega-panel');
+    var trigger = document.getElementById('mega-trigger');
+    var menu    = document.getElementById('mega-menu');
+    var overlay = document.getElementById('mega-overlay');
+    var chevron = document.getElementById('mega-chevron');
+    var header  = document.querySelector('.navbar-kameks');
     if (!trigger || !menu) return;
 
+    function getHeaderBottom() {
+      if (!header) return 60;
+      return header.getBoundingClientRect().bottom;
+    }
+
     function openMenu() {
+      menu.style.top = getHeaderBottom() + 'px';
       menu.classList.add('open');
-      if (overlay) { overlay.classList.add('show'); }
+      if (overlay) overlay.classList.add('show');
       trigger.classList.add('open');
       trigger.setAttribute('aria-expanded', 'true');
       if (chevron) chevron.style.transform = 'rotate(180deg)';
     }
+
     function closeMenu() {
       menu.classList.remove('open');
-      if (overlay) { overlay.classList.remove('show'); }
+      if (overlay) overlay.classList.remove('show');
       trigger.classList.remove('open');
       trigger.setAttribute('aria-expanded', 'false');
       if (chevron) chevron.style.transform = '';
@@ -292,28 +298,39 @@ document.addEventListener('DOMContentLoaded', function () {
       menu.classList.contains('open') ? closeMenu() : openMenu();
     });
 
-    if (overlay) {
-      overlay.addEventListener('click', closeMenu);
-    }
+    if (overlay) overlay.addEventListener('click', closeMenu);
 
-    // Переключение правой панели при наведении на раздел
+    // Пересчитываем позицию при скролле (header sticky)
+    window.addEventListener('scroll', function () {
+      if (menu.classList.contains('open')) {
+        menu.style.top = getHeaderBottom() + 'px';
+      }
+    }, { passive: true });
+
+    // Переключение правой панели по hover на раздел
+    var secBtns = document.querySelectorAll('.mega-section-btn');
+    var panels  = document.querySelectorAll('.mega-panel');
+
     secBtns.forEach(function (btn) {
       btn.addEventListener('mouseenter', function () {
-        const idx = btn.dataset.idx;
-        secBtns.forEach(function(b) { b.classList.remove('active'); });
-        panels.forEach(function(p) { p.classList.remove('active'); });
+        var idx = btn.dataset.idx;
+        secBtns.forEach(function (b) { b.classList.remove('active'); });
+        panels.forEach(function (p) { p.classList.remove('active'); });
         btn.classList.add('active');
-        const panel = document.getElementById('mega-panel-' + idx);
+        var panel = document.getElementById('mega-panel-' + idx);
         if (panel) panel.classList.add('active');
       });
     });
 
+    // Закрытие по Escape / клик вне
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closeMenu();
     });
-
-    menu.querySelectorAll('a').forEach(function (link) {
-      link.addEventListener('click', closeMenu);
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target) && !trigger.contains(e.target)) closeMenu();
+    });
+    menu.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', closeMenu);
     });
   })();
 

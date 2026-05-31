@@ -1651,24 +1651,24 @@ h1, h2, h3, h4, h5, h6 {
    МЕГА-МЕНЮ
    ═══════════════════════════════════════════════ */
 .mega-menu {
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: 60px;           /* overridden by JS on open */
   left: 0;
   right: 0;
-  z-index: 1100;
+  z-index: 1200;
   background: linear-gradient(135deg, #2E3540 0%, #1C2128 45%, #141820 100%);
-  border-top: 1px solid transparent;
-  border-image: linear-gradient(90deg, #1B3A5C, #A67C14 50%, #1B3A5C) 1;
-  box-shadow: 0 16px 48px rgba(0,0,0,.55);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #1B3A5C 0%, #A67C14 50%, #1B3A5C 100%) 1;
+  box-shadow: 0 16px 48px rgba(0,0,0,.6);
   display: none;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity .18s ease, transform .18s ease;
 }
 .mega-menu.open {
   display: block;
-  opacity: 1;
-  transform: translateY(0);
+  animation: megaFadeIn .15s ease;
+}
+@keyframes megaFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .mega-inner {
   display: flex;
@@ -1855,6 +1855,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 20px;
   align-items: start;
 }
+.catalog-main { min-width: 0; }
 @media (max-width: 991px) {
   .catalog-layout { grid-template-columns: 1fr; }
 }
