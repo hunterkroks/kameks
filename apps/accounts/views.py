@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import RegisterForm, LoginForm, ProfileForm
+from .forms import RegisterForm, FlexLoginForm, ProfileForm
 from .models import UserProfile
 from apps.orders.models import Order
 
@@ -14,8 +14,7 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            UserProfile.objects.create(user=user)
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, 'Регистрация прошла успешно! Добро пожаловать.')
             return redirect('accounts:profile')
     else:
@@ -27,14 +26,14 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect('accounts:profile')
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
+        form = FlexLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
-            next_url = request.GET.get('next', 'accounts:profile')
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            next_url = request.GET.get('next') or 'accounts:profile'
             return redirect(next_url)
     else:
-        form = LoginForm(request)
+        form = FlexLoginForm(request)
     return render(request, 'accounts/login.html', {'form': form})
 
 

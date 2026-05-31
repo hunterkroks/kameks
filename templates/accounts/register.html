@@ -13,39 +13,40 @@
           <p style="color:var(--color-text-muted);font-size:0.85rem;">История заказов, избранное, быстрое оформление</p>
         </div>
 
-        <form method="POST">
+        <form method="POST" novalidate>
           {% csrf_token %}
           <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Имя *</label>
+
+            <div class="col-12">
+              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Имя *</label>
               {{ form.first_name }}
               {% if form.first_name.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.first_name.errors.0 }}</div>{% endif %}
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Фамилия *</label>
-              {{ form.last_name }}
-              {% if form.last_name.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.last_name.errors.0 }}</div>{% endif %}
-            </div>
+
             <div class="col-12">
-              <label class="form-label">Логин *</label>
-              {{ form.username }}
-              {% if form.username.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.username.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-12">
-              <label class="form-label">Email *</label>
+              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Email *</label>
               {{ form.email }}
               {% if form.email.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.email.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-12">
-              <label class="form-label">Пароль *</label>
+              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Номер телефона</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Пароль *</label>
               {{ form.password1 }}
               {% if form.password1.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.password1.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="col-12">
-              <label class="form-label">Повторите пароль *</label>
+              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Повторите пароль *</label>
               {{ form.password2 }}
               {% if form.password2.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.password2.errors.0 }}</div>{% endif %}
             </div>
+
           </div>
 
           <button type="submit" class="btn-kameks-primary w-100 mt-4" style="padding:12px;font-size:1rem;">

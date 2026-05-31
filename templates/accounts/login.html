@@ -13,15 +13,22 @@
           <p style="color:var(--color-text-muted);font-size:0.85rem;">Для доступа к заказам и избранному</p>
         </div>
 
-        <form method="POST">
+        <form method="POST" novalidate>
           {% csrf_token %}
           <div class="mb-3">
-            <label class="form-label">Логин</label>
-            {{ form.username }}
-            {% if form.username.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.username.errors.0 }}</div>{% endif %}
+            <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">
+              Email или телефон
+            </label>
+            {{ form.login }}
+            <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:5px;">
+              Можно использовать email или номер телефона
+            </div>
+            {% if form.login.errors %}
+            <div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.login.errors.0 }}</div>
+            {% endif %}
           </div>
           <div class="mb-4">
-            <label class="form-label">Пароль</label>
+            <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Пароль</label>
             {{ form.password }}
             {% if form.non_field_errors %}
             <div class="text-danger mt-2" style="font-size:0.82rem;">{{ form.non_field_errors.0 }}</div>

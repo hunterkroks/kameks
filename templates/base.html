@@ -56,6 +56,41 @@
   };
   window.KAMEKS_USER = {{ user.is_authenticated|yesno:"true,false" }};
   </script>
+  <!-- Рабочие часы (МСК) -->
+  <script>
+  (function () {
+    // Пн-Чт 08:00-17:00, Пт 08:00-16:00 (МСК, UTC+3)
+    var now = new Date();
+    var msk = new Date(now.getTime() + (now.getTimezoneOffset() + 180) * 60000);
+    var day  = msk.getDay();   // 0=вс,1=пн,...,5=пт,6=сб
+    var hour = msk.getHours();
+    var min  = msk.getMinutes();
+    var time = hour * 60 + min; // минуты с начала суток
+
+    var open = false;
+    if (day >= 1 && day <= 4) {           // Пн-Чт
+      open = time >= 480 && time < 1020;  // 08:00-17:00
+    } else if (day === 5) {               // Пт
+      open = time >= 480 && time < 960;   // 08:00-16:00
+    }
+
+    var liveBadge = document.querySelector('.topbar-live');
+    var liveDot   = document.querySelector('.live-dot');
+    var fpDot     = document.querySelector('.fp-dot');
+
+    if (!open) {
+      if (liveBadge) {
+        liveBadge.classList.add('closed');
+        var txt = liveBadge.childNodes;
+        for (var i = 0; i < txt.length; i++) {
+          if (txt[i].nodeType === 3) { txt[i].textContent = 'Сейчас закрыты'; break; }
+        }
+      }
+      if (liveDot)  liveDot.classList.add('closed');
+      if (fpDot)    fpDot.classList.add('closed');
+    }
+  })();
+  </script>
   <!-- Основной JS -->
   <script src="{% static 'js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}

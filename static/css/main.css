@@ -131,6 +131,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 100px;
   letter-spacing: .3px;
 }
+.topbar-live.closed {
+  background: rgba(180,30,30,.18);
+  border-color: rgba(180,30,30,.3);
+  color: #FF6B6B;
+}
 .live-dot {
   width: 6px;
   height: 6px;
@@ -138,6 +143,17 @@ h1, h2, h3, h4, h5, h6 {
   background: #2ECC71;
   flex-shrink: 0;
   animation: pulse 2s infinite;
+}
+.live-dot.closed {
+  background: #E74C3C;
+  animation: none;
+}
+.fp-dot.closed {
+  background: #E74C3C;
+}
+.fp-dot.closed::before {
+  border-color: rgba(231,76,60,.35);
+  animation: none;
 }
 
 /* ======================================================
