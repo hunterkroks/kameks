@@ -106,6 +106,7 @@ def preview_import(parsed):
         name = item['name']
         price_new = item['price']
         stock_new = item['stock']
+        stock_present = item.get('stock_present', False)
         category_name = item.get('category_name') or 'Прочие детали'
 
         try:
@@ -113,7 +114,7 @@ def preview_import(parsed):
                 try:
                     product = Product.objects.get(sku=sku)
                     changed_price = product.price != price_new
-                    changed_stock = product.stock != stock_new
+                    changed_stock = stock_present and product.stock != stock_new
 
                     if changed_price or changed_stock:
                         action = []
@@ -131,7 +132,7 @@ def preview_import(parsed):
                             'price_old': product.price,
                             'price_new': price_new,
                             'stock_old': product.stock,
-                            'stock_new': stock_new,
+                            'stock_new': stock_new if stock_present else product.stock,
                             'category_name': product.category.name,
                             'changed_price': changed_price,
                             'changed_stock': changed_stock,
@@ -146,7 +147,7 @@ def preview_import(parsed):
                             'price_old': product.price,
                             'price_new': price_new,
                             'stock_old': product.stock,
-                            'stock_new': stock_new,
+                            'stock_new': stock_new if stock_present else product.stock,
                             'category_name': product.category.name,
                             'changed_price': False,
                             'changed_stock': False,
@@ -259,6 +260,7 @@ def run_import(file_obj, filename):
         'no_sku': 0,
         'errors': 0,
         'details': [],
+        'stock_in_xml': 0,
     }
 
     try:
@@ -282,7 +284,10 @@ def run_import(file_obj, filename):
             log.count_stock_updated = stats['stock_updated']
             log.count_no_sku = stats['no_sku']
             log.count_errors = stats['errors']
-            log.details = json.dumps(stats['details'], ensure_ascii=False)
+            details_data = {'items': stats['details']}
+            if stats['stock_in_xml'] == 0:
+                details_data['no_stock_warning'] = True
+            log.details = json.dumps(details_data, ensure_ascii=False)
             log.save()
 
     except Exception as e:
@@ -299,16 +304,23 @@ def _process_item(item, log, stats):
     name = item['name']
     price = item['price']
     stock = item['stock']
+    stock_present = item.get('stock_present', False)
+
+    if stock_present:
+        stats['stock_in_xml'] += 1
 
     if sku:
         try:
             product = Product.objects.get(sku=sku)
             _backup(product, log, 'updated')
             changed_price = product.price != price
-            changed_stock = product.stock != stock
+            changed_stock = stock_present and product.stock != stock
+            update_fields = ['price', 'updated_at']
             product.price = price
-            product.stock = stock
-            product.save(update_fields=['price', 'stock', 'updated_at'])
+            if stock_present:
+                product.stock = stock
+                update_fields.append('stock')
+            product.save(update_fields=update_fields)
             if changed_price:
                 stats['price_updated'] += 1
             if changed_stock:
@@ -318,7 +330,7 @@ def _process_item(item, log, stats):
             slug = _make_product_slug(name, sku)
             product = Product.objects.create(
                 sku=sku, name=name, slug=slug,
-                price=price, stock=stock,
+                price=price, stock=stock if stock_present else 0,
                 category=category, is_active=True,
             )
             _backup(product, log, 'created')
@@ -329,15 +341,18 @@ def _process_item(item, log, stats):
         try:
             product = Product.objects.get(name=name)
             _backup(product, log, 'updated')
+            update_fields = ['price', 'updated_at']
             product.price = price
-            product.stock = stock
-            product.save(update_fields=['price', 'stock', 'updated_at'])
+            if stock_present:
+                product.stock = stock
+                update_fields.append('stock')
+            product.save(update_fields=update_fields)
         except Product.DoesNotExist:
             auto_sku = _next_no_art_sku()
             slug = _make_product_slug(name, auto_sku)
             product = Product.objects.create(
                 sku=auto_sku, name=name, slug=slug,
-                price=price, stock=stock,
+                price=price, stock=stock if stock_present else 0,
                 category=misc_cat, no_sku=True, is_active=True,
             )
             _backup(product, log, 'created')
@@ -345,9 +360,12 @@ def _process_item(item, log, stats):
         except Product.MultipleObjectsReturned:
             product = Product.objects.filter(name=name).first()
             _backup(product, log, 'updated')
+            update_fields = ['price', 'updated_at']
             product.price = price
-            product.stock = stock
-            product.save(update_fields=['price', 'stock', 'updated_at'])
+            if stock_present:
+                product.stock = stock
+                update_fields.append('stock')
+            product.save(update_fields=update_fields)
 
 
 def _backup(product, log, action):

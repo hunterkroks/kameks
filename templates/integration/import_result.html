@@ -16,6 +16,15 @@
     <tr style="border-bottom:1px solid #eee;"><td style="padding:8px 0;">⚠️ Без артикула (→ Прочие детали)</td><td style="padding:8px 0;font-weight:bold;text-align:right;">{{ log.count_no_sku }}</td></tr>
     <tr><td style="padding:8px 0;">❌ Ошибок</td><td style="padding:8px 0;font-weight:bold;text-align:right;">{{ log.count_errors }}</td></tr>
   </table>
+  {% if log.details %}
+  {% with log.details|default:"{}" as raw_details %}
+  {% if "no_stock_warning" in raw_details %}
+  <div style="margin-top:14px;background:#fff8e1;border:1px solid #f0c040;border-radius:4px;padding:12px 16px;font-size:13px;color:#856404;">
+    ⚠️ Остатки не обновлены: в файле нет данных об остатках
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% endif %}
   <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
   <div style="color:#666;font-size:13px;">
     🕐 Время импорта: {{ log.created_at|date:"H:i:s" }}&nbsp;&nbsp;

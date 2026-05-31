@@ -120,10 +120,16 @@ def _parse_product(товар, categories):
     price = parse_price(price_raw)
 
     stock_raw = _text(товар, 'Остатки', 'Остаток', 'Количество')
-    try:
-        stock = int(Decimal(stock_raw.replace(',', '.').replace(' ', ''))) if stock_raw else 0
-    except (InvalidOperation, ValueError):
-        stock = 0
+    if stock_raw:
+        try:
+            stock = int(Decimal(stock_raw.replace(',', '.').replace(' ', '')))
+            stock_present = True
+        except (InvalidOperation, ValueError):
+            stock = None
+            stock_present = False
+    else:
+        stock = None
+        stock_present = False
 
     # Категория товара
     category_id = None
@@ -141,6 +147,7 @@ def _parse_product(товар, categories):
         'name': name,
         'price': price,
         'stock': stock,
+        'stock_present': stock_present,
         'category_id': category_id,
         'category_name': category_name,
     }
