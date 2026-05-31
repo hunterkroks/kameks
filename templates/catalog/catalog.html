@@ -397,13 +397,6 @@ document.querySelectorAll('[data-filter]').forEach(function(el) {
   });
 });
 
-// Цена — применить по кнопке
-document.getElementById('btn-apply-filter') && document.getElementById('btn-apply-filter').addEventListener('click', function() {
-  filterState.min_price = document.getElementById('inp-min-price').value;
-  filterState.max_price = document.getElementById('inp-max-price').value;
-  applyFilters();
-});
-
 // Сброс всех фильтров
 document.getElementById('btn-reset-filter') && document.getElementById('btn-reset-filter').addEventListener('click', function() {
   filterState.brand = [];
@@ -412,10 +405,7 @@ document.getElementById('btn-reset-filter') && document.getElementById('btn-rese
   filterState.original = '';
   filterState.min_price = '';
   filterState.max_price = '';
-  document.getElementById('inp-min-price').value = '';
-  document.getElementById('inp-max-price').value = '';
   document.querySelectorAll('[data-filter]').forEach(function(el) { el.classList.remove('sel'); });
-  document.querySelectorAll('[data-filter="original"][data-value=""]').forEach(function(el) { el.classList.add('sel'); });
   applyFilters();
 });
 
