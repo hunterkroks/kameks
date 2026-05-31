@@ -143,50 +143,54 @@
 </header>
 
 <!-- ════════════════════════════════════════
-     МЕГА-МЕНЮ — выпадает под шапкой
+     МЕГА-МЕНЮ — выпадает под шапкой (position:fixed, top задаётся JS)
      ════════════════════════════════════════ -->
 <div id="mega-menu" class="mega-menu" aria-hidden="true">
-  <div class="mega-inner">
+  <div class="mega-inner container">
 
-    <!-- Левая панель: разделы первого уровня -->
+    <!-- Левая колонка: разделы первого уровня -->
     <div class="mega-left">
       {% for section in menu_cats %}
-      <button class="mega-section-btn {% if forloop.first %}active{% endif %}"
-              data-idx="{{ forloop.counter0 }}" type="button">
-        <i class="bi {{ section.icon }} mega-section-icon"></i>
-        <span>{{ section.name }}</span>
-        <i class="bi bi-chevron-right ms-auto" style="font-size:10px;opacity:.4;"></i>
-      </button>
-      {% endfor %}
-    </div>
-
-    <!-- Правая панель: подкатегории -->
-    <div class="mega-right">
-      {% for section in menu_cats %}
-      <div class="mega-panel{% if forloop.first %} active{% endif %}"
-           id="mega-panel-{{ forloop.counter0 }}">
-        <div class="mega-panel-grid">
-          {% for sub in section.children.all %}
-          <div class="mega-subsection">
-            <a href="{% url 'catalog:catalog' %}?category={{ sub.slug }}"
-               class="mega-sub-title">{{ sub.name }}</a>
-            <ul class="mega-sub-list">
-              {% for leaf in sub.children.all %}
-              <li>
-                <a href="{% url 'catalog:catalog' %}?category={{ leaf.slug }}"
-                   class="mega-sub-link">{{ leaf.name }}</a>
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endfor %}
+      <div class="mega-section{% if forloop.first %} active{% endif %}"
+           data-sec="{{ section.slug }}">
+        <i class="bi {{ section.icon }} mega-section-ico"></i>
+        <div class="mega-section-info">
+          <div class="mega-section-name">{{ section.name }}</div>
         </div>
-        <a href="{% url 'catalog:catalog' %}" class="mega-all-link">
-          <i class="bi bi-grid me-1"></i>Все товары раздела «{{ section.name }}»
-        </a>
       </div>
       {% endfor %}
+      <a href="{% url 'catalog:catalog' %}" class="mega-see-all-left">
+        <i class="bi bi-grid me-1"></i>Весь каталог
+      </a>
     </div>
+
+    <!-- Правые панели: по одной на каждый раздел -->
+    {% for section in menu_cats %}
+    <div class="mega-right{% if forloop.first %} active{% endif %}"
+         id="mega-sec-{{ section.slug }}">
+      <div class="mega-right-head">
+        <div class="mega-right-title">
+          <i class="bi {{ section.icon }} me-2"></i>{{ section.name }}
+        </div>
+        <a href="{% url 'catalog:catalog' %}?category={{ section.slug }}"
+           class="mega-right-all">Все товары раздела →</a>
+      </div>
+      <div class="mega-subsections">
+        {% for sub in section.children.all %}
+        <div class="mega-sub">
+          <a href="{% url 'catalog:catalog' %}?category={{ sub.slug }}"
+             class="mega-sub-title">{{ sub.name }}</a>
+          <div class="mega-sub-links">
+            {% for leaf in sub.children.all %}
+            <a href="{% url 'catalog:catalog' %}?category={{ leaf.slug }}"
+               class="mega-sub-link">{{ leaf.name }}</a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
 
   </div>
 </div>

@@ -308,16 +308,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: true });
 
     // Переключение правой панели по hover на раздел
-    var secBtns = document.querySelectorAll('.mega-section-btn');
-    var panels  = document.querySelectorAll('.mega-panel');
+    var secBtns = document.querySelectorAll('.mega-section');
+    var panels  = document.querySelectorAll('.mega-right');
 
     secBtns.forEach(function (btn) {
       btn.addEventListener('mouseenter', function () {
-        var idx = btn.dataset.idx;
+        var sec = btn.dataset.sec;
         secBtns.forEach(function (b) { b.classList.remove('active'); });
         panels.forEach(function (p) { p.classList.remove('active'); });
         btn.classList.add('active');
-        var panel = document.getElementById('mega-panel-' + idx);
+        var panel = document.getElementById('mega-sec-' + sec);
         if (panel) panel.classList.add('active');
       });
     });
