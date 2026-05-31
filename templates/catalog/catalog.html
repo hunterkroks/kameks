@@ -202,107 +202,74 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ brand_slugs|json_script:"init-brand-slugs" }}
+{{ category_slugs|json_script:"init-category-slugs" }}
 <script>
 var AJAX_URL = '{% url "catalog:catalog_ajax" %}';
 
-// Загрузить товары через AJAX
-function loadCatalog(params, scrollYOrPushState, pushState) {
-  var savedScrollY = typeof scrollYOrPushState === 'number' ? scrollYOrPushState : null;
-  var doPushState = typeof scrollYOrPushState === 'boolean' ? scrollYOrPushState : pushState;
-
-  var results = document.getElementById('catalog-results');
-  results.style.opacity = '0.4';
-  results.style.pointerEvents = 'none';
-
-  fetch(AJAX_URL + '?' + params.toString())
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      results.innerHTML = data.html;
-      results.style.opacity = '1';
-      results.style.pointerEvents = '';
-      if (savedScrollY !== null) {
-        window.scrollTo(0, savedScrollY);
-      }
-
-      // Обновить счётчик найденных
-      var found = document.querySelector('.catalog-found strong');
-      if (found) found.textContent = data.total;
-
-      // Восстановить вид (сетка/список)
-      try {
-        var saved = localStorage.getItem('kameks_view') || 'grid';
-        if (saved === 'list') window.setView('list');
-      } catch(e) {}
-
-      // Навесить обработчики на новую пагинацию
-      bindPagination();
-
-      // Навесить корзину на новые карточки
-      if (window.KAMEKS && window.KAMEKS.initCartWidgets) {
-        window.KAMEKS.initCartWidgets();
-      }
-
-
-      if (doPushState !== false) {
-        var url = new URL(window.location.href);
-        params.forEach(function(v, k) {
-          url.searchParams.delete(k);
-        });
-        params.forEach(function(v, k) {
-          url.searchParams.append(k, v);
-        });
-        history.pushState({params: params.toString()}, '', url.toString());
-      }
-    })
-    .catch(function() {
-      results.style.opacity = '1';
-      results.style.pointerEvents = '';
-    });
-}
-
 // Словари slug→name для тегов активных фильтров
-var BRAND_NAMES = { {% for b in brands %}'{{ b.slug }}': '{{ b.name|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %} };
+var BRAND_NAMES = { {% for b in brands %}"{{ b.slug }}": "{{ b.name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %} };
 var CAT_NAMES = {};
-{% for section in menu_cats %}{% for sub in section.children.all %}CAT_NAMES['{{ sub.slug }}'] = '{{ sub.name|escapejs }}';{% endfor %}{% endfor %}
+{% for section in menu_cats %}{% for sub in section.children.all %}CAT_NAMES["{{ sub.slug }}"] = "{{ sub.name|escapejs }}";
+{% endfor %}{% endfor %}
 
-// Состояние фильтров (в памяти, без DOM-инпутов с фокусом)
+// Состояние фильтров — инициализируется из Django, безопасно через json_script
 var filterState = {
-  brand: {{ brand_slugs|safe }},
-  category: {{ category_slugs|safe }},
-  in_stock: '{{ request.GET.in_stock|default:"" }}',
-  original: '{{ request.GET.original|default:"" }}',
+  brand:     JSON.parse(document.getElementById('init-brand-slugs').textContent),
+  category:  JSON.parse(document.getElementById('init-category-slugs').textContent),
+  in_stock:  '{{ request.GET.in_stock|default:"" }}',
+  original:  '{{ request.GET.original|default:"" }}',
   min_price: '{{ request.GET.min_price|default:"" }}',
   max_price: '{{ request.GET.max_price|default:"" }}',
-  q: '{{ search_q|escapejs }}',
-  sort: '{{ current_sort|default:"popular" }}',
+  q:         '{{ search_q|escapejs }}',
+  sort:      '{{ current_sort|default:"popular" }}',
 };
+
+// Синхронизировать классы .sel на sidebar с текущим filterState
+function syncSidebarSelections() {
+  document.querySelectorAll('[data-filter]').forEach(function(el) {
+    if (!el.dataset.type) return;
+    var name = el.dataset.filter;
+    var val  = el.dataset.value;
+    var active = false;
+    if (name === 'brand')    active = filterState.brand.indexOf(val) !== -1;
+    if (name === 'category') active = filterState.category.indexOf(val) !== -1;
+    if (name === 'in_stock') active = !!filterState.in_stock;
+    el.classList.toggle('sel', active);
+  });
+}
 
 function renderActiveTags() {
   var bar = document.getElementById('active-filters-bar');
   if (!bar) return;
-  var tags = [];
+  bar.innerHTML = '';
 
-  if (filterState.q) {
-    tags.push('<span class="active-filter-tag" onclick="removeParam(\'q\',\''+filterState.q+'\')">«'+filterState.q+'» <i class="bi bi-x"></i></span>');
-  }
-  filterState.brand.forEach(function(slug) {
-    var name = BRAND_NAMES[slug] || slug;
-    tags.push('<span class="active-filter-tag" onclick="removeParam(\'brand\',\''+slug+'\')">'+name+' <i class="bi bi-x"></i></span>');
-  });
-  filterState.category.forEach(function(slug) {
-    var name = CAT_NAMES[slug] || slug;
-    tags.push('<span class="active-filter-tag" onclick="removeParam(\'category\',\''+slug+'\')">'+name+' <i class="bi bi-x"></i></span>');
-  });
-  if (filterState.in_stock) {
-    tags.push('<span class="active-filter-tag" onclick="removeParam(\'in_stock\',\'1\')">Только в наличии <i class="bi bi-x"></i></span>');
-  }
+  var items = [];
+  if (filterState.q) items.push({key:'q', val:filterState.q, label:'«'+filterState.q+'»'});
+  filterState.brand.forEach(function(slug) { items.push({key:'brand', val:slug, label:BRAND_NAMES[slug]||slug}); });
+  filterState.category.forEach(function(slug) { items.push({key:'category', val:slug, label:CAT_NAMES[slug]||slug}); });
+  if (filterState.in_stock) items.push({key:'in_stock', val:'1', label:'Только в наличии'});
 
-  if (tags.length > 0) {
-    tags.push('<span class="active-filter-tag active-filter-reset" onclick="document.getElementById(\'btn-reset-filter\').click()">Сбросить всё <i class="bi bi-x-circle"></i></span>');
-    bar.innerHTML = '<div class="active-filters">' + tags.join('') + '</div>';
-  } else {
-    bar.innerHTML = '';
-  }
+  if (!items.length) return;
+
+  var wrap = document.createElement('div');
+  wrap.className = 'active-filters';
+
+  items.forEach(function(item) {
+    var span = document.createElement('span');
+    span.className = 'active-filter-tag';
+    span.innerHTML = item.label + ' <i class="bi bi-x"></i>';
+    (function(k, v) { span.addEventListener('click', function() { removeParam(k, v); }); })(item.key, item.val);
+    wrap.appendChild(span);
+  });
+
+  var resetBtn = document.createElement('span');
+  resetBtn.className = 'active-filter-tag active-filter-reset';
+  resetBtn.innerHTML = 'Сбросить всё <i class="bi bi-x-circle"></i>';
+  resetBtn.addEventListener('click', resetAllFilters);
+  wrap.appendChild(resetBtn);
+
+  bar.appendChild(wrap);
 }
 
 function getFilterParams() {
@@ -318,15 +285,26 @@ function getFilterParams() {
   return p;
 }
 
-function applyFilters() {
+function applyFilters(pushState) {
+  syncSidebarSelections();
   renderActiveTags();
   var params = getFilterParams();
   params.delete('page');
-  loadCatalog(params);
+  loadCatalog(params, pushState !== false);
 }
 
-// Отрисовать теги при первой загрузке
-renderActiveTags();
+function resetAllFilters() {
+  filterState.brand    = [];
+  filterState.category = [];
+  filterState.in_stock = '';
+  filterState.original = '';
+  filterState.min_price = '';
+  filterState.max_price = '';
+  filterState.q = '';
+  var searchInput = document.getElementById('catalog-search-input');
+  if (searchInput) searchInput.value = '';
+  applyFilters();
+}
 
 function sortCatalog(v) {
   filterState.sort = v;
@@ -336,7 +314,7 @@ function sortCatalog(v) {
 function goToPage(n) {
   var params = getFilterParams();
   params.set('page', n);
-  loadCatalog(params);
+  loadCatalog(params, true);
 }
 
 function removeParam(key, val) {
@@ -346,15 +324,50 @@ function removeParam(key, val) {
     if (input) input.value = '';
   } else if (key === 'brand') {
     filterState.brand = filterState.brand.filter(function(v) { return v !== val; });
-    document.querySelectorAll('[data-filter="brand"][data-value="' + val + '"]').forEach(function(el) { el.classList.remove('sel'); });
   } else if (key === 'category') {
     filterState.category = filterState.category.filter(function(v) { return v !== val; });
-    document.querySelectorAll('[data-filter="category"][data-value="' + val + '"]').forEach(function(el) { el.classList.remove('sel'); });
   } else if (key === 'in_stock') {
     filterState.in_stock = '';
-    document.querySelectorAll('[data-filter="in_stock"]').forEach(function(el) { el.classList.remove('sel'); });
   }
   applyFilters();
+}
+
+// Загрузить товары через AJAX
+function loadCatalog(params, doPushState) {
+  var results = document.getElementById('catalog-results');
+  results.style.opacity = '0.4';
+  results.style.pointerEvents = 'none';
+
+  fetch(AJAX_URL + '?' + params.toString())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      results.innerHTML = data.html;
+      results.style.opacity = '1';
+      results.style.pointerEvents = '';
+
+      var found = document.querySelector('.catalog-found strong');
+      if (found) found.textContent = data.total;
+
+      try {
+        var saved = localStorage.getItem('kameks_view') || 'grid';
+        if (saved === 'list') window.setView('list');
+      } catch(e) {}
+
+      bindPagination();
+
+      if (window.KAMEKS && window.KAMEKS.initCartWidgets) {
+        window.KAMEKS.initCartWidgets();
+      }
+
+      if (doPushState) {
+        var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        history.pushState({filterState: JSON.stringify(filterState)}, '', newUrl);
+      }
+    })
+    .catch(function() {
+      results.style.opacity = '1';
+      results.style.pointerEvents = '';
+    });
 }
 
 function bindPagination() {
@@ -368,15 +381,14 @@ function bindPagination() {
 // Клики по фильтрам — div вместо checkbox/radio, без фокуса и скролла
 document.querySelectorAll('[data-filter]').forEach(function(el) {
   if (!el.dataset.type) return;
-  el.addEventListener('mousedown', function(e) { e.preventDefault(); }); // блокируем фокус
+  el.addEventListener('mousedown', function(e) { e.preventDefault(); });
   el.addEventListener('click', function() {
     var name = this.dataset.filter;
-    var val = this.dataset.value;
+    var val  = this.dataset.value;
     var type = this.dataset.type;
 
     if (type === 'checkbox') {
       var isSel = this.classList.contains('sel');
-      this.classList.toggle('sel', !isSel);
       if (name === 'brand') {
         if (isSel) filterState.brand = filterState.brand.filter(function(v) { return v !== val; });
         else filterState.brand.push(val);
@@ -387,27 +399,15 @@ document.querySelectorAll('[data-filter]').forEach(function(el) {
         filterState.in_stock = isSel ? '' : '1';
       }
     } else if (type === 'radio') {
-      document.querySelectorAll('[data-filter="' + name + '"]').forEach(function(r) {
-        r.classList.remove('sel');
-      });
-      this.classList.add('sel');
       filterState[name] = val;
     }
     applyFilters();
   });
 });
 
-// Сброс всех фильтров
-document.getElementById('btn-reset-filter') && document.getElementById('btn-reset-filter').addEventListener('click', function() {
-  filterState.brand = [];
-  filterState.category = [];
-  filterState.in_stock = '';
-  filterState.original = '';
-  filterState.min_price = '';
-  filterState.max_price = '';
-  document.querySelectorAll('[data-filter]').forEach(function(el) { el.classList.remove('sel'); });
-  applyFilters();
-});
+// Кнопка сброса в сайдбаре
+var btnReset = document.getElementById('btn-reset-filter');
+if (btnReset) btnReset.addEventListener('click', resetAllFilters);
 
 // Поиск — AJAX submit
 var searchForm = document.getElementById('search-form');
@@ -419,14 +419,28 @@ if (searchForm) {
   });
 }
 
-// История браузера (кнопка Назад)
+// Кнопка Назад — восстановить filterState и перегрузить товары
 window.addEventListener('popstate', function(e) {
-  if (e.state && e.state.params) {
-    loadCatalog(new URLSearchParams(e.state.params), false);
+  if (e.state && e.state.filterState) {
+    try {
+      var saved = JSON.parse(e.state.filterState);
+      Object.assign(filterState, saved);
+      var searchInput = document.getElementById('catalog-search-input');
+      if (searchInput) searchInput.value = filterState.q || '';
+      var sortSelect = document.querySelector('.sort-select');
+      if (sortSelect) sortSelect.value = filterState.sort || 'popular';
+      applyFilters(false);
+    } catch(e) {}
+  } else {
+    // Обычный переход назад без state — перезагрузить по текущему URL
+    var params = new URLSearchParams(window.location.search);
+    loadCatalog(params, false);
   }
 });
 
-// Навесить пагинацию при первой загрузке
+// Первая отрисовка тегов и синхронизация sidebar
+syncSidebarSelections();
+renderActiveTags();
 bindPagination();
 
 // Live search suggest
