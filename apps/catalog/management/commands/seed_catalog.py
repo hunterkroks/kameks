@@ -432,6 +432,7 @@ class Command(BaseCommand):
             analogues = data.pop('analogues', [])
             brand_slugs = data.pop('brands', [])
             cat_slug = data.pop('category')
+            data.pop('specifications', None)  # поле удалено из модели
 
             product, created = Product.objects.update_or_create(
                 sku=data['sku'],

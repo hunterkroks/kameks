@@ -303,7 +303,6 @@ class Command(BaseCommand):
 
                 category = self._resolve_cat(c1, c2, c3)
                 brands   = self._parse_brands(brands_raw)
-                specs    = f'Производитель: {manuf}' if manuf else ''
 
                 base = slugify(sku) or slugify(name[:60]) or f'item-{row_num}'
                 slug, n = base, 2
@@ -317,7 +316,7 @@ class Command(BaseCommand):
                     defaults=dict(
                         name=name, slug=slug, price=price,
                         stock=10, is_active=True,
-                        category=category, specifications=specs,
+                        category=category,
                     ),
                 )
                 if brands:
