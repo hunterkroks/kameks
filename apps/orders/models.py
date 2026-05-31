@@ -61,6 +61,7 @@ class Order(models.Model):
     total_price = models.DecimalField('Итого', max_digits=12, decimal_places=2, default=0)
     exported_to_1c = models.BooleanField('Выгружен в 1С', default=False)
     exported_at = models.DateTimeField('Дата выгрузки в 1С', null=True, blank=True)
+    stock_deducted = models.BooleanField('Остаток списан', default=False)
 
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     updated_at = models.DateTimeField('Обновлён', auto_now=True)
