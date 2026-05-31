@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var scope = root || document;
     scope.querySelectorAll('.cart-widget[data-product-id]').forEach(function(widget) {
       var pid = widget.dataset.productId;
+      var stock = parseInt(widget.dataset.stock || 9999, 10);
       var savedQty = parseInt(cartItems[pid] || 0, 10);
       if (savedQty > 0) setWidgetQty(widget, savedQty);
 
@@ -163,22 +164,33 @@ document.addEventListener('DOMContentLoaded', function () {
         cartPost('/cart/add/' + pid + '/', 'quantity=1')
           .then(function(data) {
             if (data.success) {
+              stock = data.stock || stock;
               setWidgetQty(widget, data.item_quantity);
               updateCartBadges(data.cart_total);
               showToast('Товар добавлен в корзину');
+              // Заблокировать + если достигли остатка
+              var plusBtn = widget.querySelector('.cart-counter-plus');
+              if (plusBtn) plusBtn.disabled = data.item_quantity >= stock;
             }
           })
           .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
       });
 
       widget.querySelector('.cart-counter-plus').addEventListener('click', function() {
+        var current = parseInt(widget.querySelector('.cart-counter-qty').textContent, 10);
+        if (current >= stock) {
+          showToast('Больше нет в наличии (' + stock + ' шт.)', 'danger');
+          return;
+        }
         cartPost('/cart/add/' + pid + '/', 'quantity=1')
           .then(function(data) {
             if (data.success) {
+              stock = data.stock || stock;
               setWidgetQty(widget, data.item_quantity);
               updateCartBadges(data.cart_total);
+              this.disabled = data.item_quantity >= stock;
             }
-          })
+          }.bind(this))
           .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
       });
 
@@ -190,6 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
               if (data.success) {
                 setWidgetQty(widget, 0);
                 updateCartBadges(data.cart_total);
+                var plusBtn = widget.querySelector('.cart-counter-plus');
+                if (plusBtn) plusBtn.disabled = false;
               }
             })
             .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
@@ -197,8 +211,11 @@ document.addEventListener('DOMContentLoaded', function () {
           cartPost('/cart/add/' + pid + '/', 'quantity=' + (current - 1) + '&override=true')
             .then(function(data) {
               if (data.success) {
+                stock = data.stock || stock;
                 setWidgetQty(widget, data.item_quantity);
                 updateCartBadges(data.cart_total);
+                var plusBtn = widget.querySelector('.cart-counter-plus');
+                if (plusBtn) plusBtn.disabled = data.item_quantity >= stock;
               }
             })
             .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });

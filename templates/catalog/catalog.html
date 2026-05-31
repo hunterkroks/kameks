@@ -64,8 +64,7 @@
               {% for brand in brands %}
               <label class="brand-chip{% if brand.slug in brand_slugs %} sel{% endif %}">
                 <input type="checkbox" name="brand" value="{{ brand.slug }}"
-                       {% if brand.slug in brand_slugs %}checked{% endif %}
-                       onchange="this.closest('form').submit()">
+                       {% if brand.slug in brand_slugs %}checked{% endif %}>
                 {{ brand.name }}
               </label>
               {% endfor %}
@@ -92,8 +91,7 @@
                 {% for sub in section.children.all %}
                 <label class="cat-l2{% if sub.slug in category_slugs %} sel{% endif %}">
                   <input type="checkbox" name="category" value="{{ sub.slug }}"
-                         {% if sub.slug in category_slugs %}checked{% endif %}
-                         onchange="this.closest('form').submit()">
+                         {% if sub.slug in category_slugs %}checked{% endif %}>
                   <span class="cat-l2-name">{{ sub.name }}</span>
                 </label>
                 {% endfor %}

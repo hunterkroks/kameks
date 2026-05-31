@@ -39,7 +39,7 @@
       {% if product.discount_price %}
       <div class="list-price-old">{{ product.price|floatformat:0 }} ₽</div>
       {% endif %}
-      <div class="cart-widget" data-product-id="{{ product.id }}" onclick="event.preventDefault();event.stopPropagation();">
+      <div class="cart-widget" data-product-id="{{ product.id }}" data-stock="{{ product.stock }}" onclick="event.preventDefault();event.stopPropagation();">
         <button class="btn-add-to-cart btn-cart-add" type="button">
           <i class="bi bi-cart-plus me-1"></i>В корзину
         </button>
