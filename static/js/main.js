@@ -262,10 +262,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // --- Мега-меню каталога ---
+  // ─── Мега-меню (split-кнопка: стрелка открывает, ссылка — переход) ───────
   (function () {
     const trigger  = document.getElementById('mega-trigger');
     const menu     = document.getElementById('mega-menu');
+    const overlay  = document.getElementById('mega-overlay');
     const chevron  = document.getElementById('mega-chevron');
     const secBtns  = document.querySelectorAll('.mega-section-btn');
     const panels   = document.querySelectorAll('.mega-panel');
@@ -273,54 +274,103 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openMenu() {
       menu.classList.add('open');
-      menu.setAttribute('aria-hidden', 'false');
+      if (overlay) { overlay.classList.add('show'); }
+      trigger.classList.add('open');
       trigger.setAttribute('aria-expanded', 'true');
       if (chevron) chevron.style.transform = 'rotate(180deg)';
     }
     function closeMenu() {
       menu.classList.remove('open');
-      menu.setAttribute('aria-hidden', 'true');
+      if (overlay) { overlay.classList.remove('show'); }
+      trigger.classList.remove('open');
       trigger.setAttribute('aria-expanded', 'false');
       if (chevron) chevron.style.transform = '';
-    }
-    function toggleMenu() {
-      menu.classList.contains('open') ? closeMenu() : openMenu();
     }
 
     trigger.addEventListener('click', function (e) {
       e.stopPropagation();
-      toggleMenu();
+      menu.classList.contains('open') ? closeMenu() : openMenu();
     });
 
-    // Переключение панелей при наведении на раздел
+    if (overlay) {
+      overlay.addEventListener('click', closeMenu);
+    }
+
+    // Переключение правой панели при наведении на раздел
     secBtns.forEach(function (btn) {
       btn.addEventListener('mouseenter', function () {
         const idx = btn.dataset.idx;
-        secBtns.forEach(b => b.classList.remove('active'));
-        panels.forEach(p => p.classList.remove('active'));
+        secBtns.forEach(function(b) { b.classList.remove('active'); });
+        panels.forEach(function(p) { p.classList.remove('active'); });
         btn.classList.add('active');
         const panel = document.getElementById('mega-panel-' + idx);
         if (panel) panel.classList.add('active');
       });
     });
 
-    // Закрытие по клику вне меню
-    document.addEventListener('click', function (e) {
-      if (!menu.contains(e.target) && e.target !== trigger) {
-        closeMenu();
-      }
-    });
-
-    // Закрытие по Escape
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closeMenu();
     });
 
-    // Закрытие при клике на ссылку внутри мега-меню
     menu.querySelectorAll('a').forEach(function (link) {
       link.addEventListener('click', closeMenu);
     });
   })();
+
+  // ─── Каталог: раскрытие блоков фильтров ──────────────────────────────────
+  window.toggleFilterBlock = function (head) {
+    var block  = head.closest('.filter-block');
+    var toggle = head.querySelector('.filter-toggle');
+    if (!block) return;
+    block.classList.toggle('collapsed');
+    if (toggle) toggle.classList.toggle('rotated', block.classList.contains('collapsed'));
+  };
+
+  // ─── Каталог: дерево категорий в сайдбаре ────────────────────────────────
+  window.toggleCatNode = function (el) {
+    el.classList.toggle('open');
+  };
+
+  // ─── Каталог: переключение вид сетка/список ──────────────────────────────
+  window.setView = function (v) {
+    var grid  = document.getElementById('gridView');
+    var list  = document.getElementById('listView');
+    var btnG  = document.getElementById('viewGrid');
+    var btnL  = document.getElementById('viewList');
+    if (!grid || !list) return;
+    if (v === 'grid') {
+      grid.style.display = 'grid';
+      list.style.display = 'none';
+      if (btnG) btnG.classList.add('active');
+      if (btnL) btnL.classList.remove('active');
+    } else {
+      grid.style.display = 'none';
+      list.style.display = 'flex';
+      if (btnL) btnL.classList.add('active');
+      if (btnG) btnG.classList.remove('active');
+    }
+    try { localStorage.setItem('kameks_view', v); } catch(e) {}
+  };
+
+  // Восстанавливаем вид из localStorage
+  (function () {
+    var saved = '';
+    try { saved = localStorage.getItem('kameks_view') || ''; } catch(e) {}
+    if (saved === 'list') { window.setView('list'); }
+  })();
+
+  // ─── Каталог: мобильный сайдбар фильтров ─────────────────────────────────
+  window.toggleMobileSidebar = function () {
+    var sidebar = document.getElementById('catalog-sidebar');
+    if (sidebar) sidebar.classList.toggle('show');
+  };
+
+  // ─── Каталог: бренд-чипсы (клик по лейблу = submit формы) ───────────────
+  document.querySelectorAll('.brand-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      chip.classList.toggle('sel', chip.querySelector('input').checked);
+    });
+  });
 
   // --- Инициализация тикера ---
   const tickerEl = document.getElementById('ticker-track');

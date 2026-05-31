@@ -33,9 +33,11 @@
     <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
       <div class="product-name">{{ product.name }}</div>
     </a>
-    {% with product.brands.first as brand %}
-    {% if brand %}
-    <div class="product-brand"><i class="bi bi-truck me-1"></i>{{ brand.name }}</div>
+    {% with product.brands.all as pbr %}
+    {% if pbr %}
+    <div class="prod-compat">
+      {% for b in pbr %}<span class="compat-tag">{{ b.name }}</span>{% endfor %}
+    </div>
     {% endif %}
     {% endwith %}
 

@@ -94,12 +94,16 @@
         </a>
         {% endif %}
 
-        <!-- Кнопка каталога (триггер мега-меню) -->
-        <button id="mega-trigger" class="btn-catalog ms-1 d-none d-md-inline-flex" type="button"
-                aria-expanded="false" aria-controls="mega-menu">
-          <i class="bi bi-grid-3x3-gap-fill"></i>Каталог
-          <i class="bi bi-chevron-down ms-1" style="font-size:10px;transition:transform .2s;" id="mega-chevron"></i>
-        </button>
+        <!-- Split-кнопка каталога: ссылка + стрелка мега-меню -->
+        <div class="split-btn ms-1 d-none d-md-flex">
+          <a href="{% url 'catalog:catalog' %}" class="split-main">
+            <i class="bi bi-grid-3x3-gap-fill me-1"></i>Каталог
+          </a>
+          <button id="mega-trigger" class="split-arrow" type="button"
+                  aria-expanded="false" aria-controls="mega-menu">
+            <i class="bi bi-chevron-down" id="mega-chevron" style="font-size:11px;transition:transform .2s;"></i>
+          </button>
+        </div>
 
         <!-- Мобильное меню -->
         <button class="navbar-toggler border-0 d-lg-none ms-1" type="button"

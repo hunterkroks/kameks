@@ -33,13 +33,13 @@
       <div class="col-lg-2 col-md-6 col-6">
         <h5>Каталог</h5>
         <ul>
-          <li><a href="{% url 'catalog:catalog' %}?category=dvigatel">Двигатель и детали</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?category=tormoza">Тормозная система</a></li>
           <li><a href="{% url 'catalog:catalog' %}?category=transmissiya">Трансмиссия</a></li>
           <li><a href="{% url 'catalog:catalog' %}?category=hodovaya">Ходовая часть</a></li>
-          <li><a href="{% url 'catalog:catalog' %}?category=tormoza">Тормозная система</a></li>
-          <li><a href="{% url 'catalog:catalog' %}?category=kuzov">Кабина и кузов</a></li>
           <li><a href="{% url 'catalog:catalog' %}?category=elektro">Электрооборудование</a></li>
-          <li><a href="{% url 'catalog:catalog' %}">Все категории →</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?category=dvigatel">Двигатель</a></li>
+          <li><a href="{% url 'catalog:catalog' %}?category=rulevoe">Рулевое управление</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">Весь каталог →</a></li>
         </ul>
       </div>
 
@@ -57,16 +57,16 @@
         </ul>
       </div>
 
-      <!-- Партнёры -->
+      <!-- Производители -->
       <div class="col-lg-2 col-md-6 col-6">
-        <h5>Партнёры</h5>
+        <h5>Производители</h5>
         <ul>
-          <li><a href="{% url 'catalog:catalog' %}">Белкард</a></li>
-          <li><a href="{% url 'catalog:catalog' %}">БАТЭ</a></li>
-          <li><a href="{% url 'catalog:catalog' %}">РААЗ</a></li>
-          <li><a href="{% url 'catalog:catalog' %}">ПААЗ</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">Белкард (Гродно)</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">БАТЭ (Борисов)</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">ПААЗ (Полтава)</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">РААЗ (Рославль)</a></li>
           <li><a href="{% url 'catalog:catalog' %}">SORL</a></li>
-          <li><a href="{% url 'catalog:catalog' %}">Все партнёры →</a></li>
+          <li><a href="{% url 'catalog:catalog' %}">Все производители →</a></li>
         </ul>
       </div>
 
