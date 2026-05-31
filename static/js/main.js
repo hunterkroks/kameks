@@ -143,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function () {
       return r.json().then(function(data) {
         if (r.status === 401 && data.redirect) {
           showToast('Войдите в аккаунт, чтобы добавить товар в корзину', 'danger');
-          setTimeout(function() { window.location.href = data.redirect; }, 1500);
           throw new Error('unauthenticated');
         }
         return data;
@@ -229,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function () {
   window.toggleFavorite = function(btn, productId) {
     if (!window.KAMEKS_USER) {
       showToast('Войдите в аккаунт, чтобы добавить в избранное', 'danger');
-      setTimeout(function() { window.location.href = '/accounts/login/'; }, 1500);
       return;
     }
     const icon = btn.querySelector('i');
