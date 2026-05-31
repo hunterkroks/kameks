@@ -250,102 +250,10 @@
         </div>
       </div>
 
-      <!-- ─── СЕТКА ТОВАРОВ ─── -->
-      {% if products %}
-
-      <div class="catalog-grid" id="gridView">
-        {% for product in products %}
-        {% include 'includes/product_card.html' with product=product %}
-        {% endfor %}
+      <!-- Область с товарами (заполняется через AJAX) -->
+      <div id="catalog-results">
+        {% include 'catalog/partials/products_grid.html' with products=products %}
       </div>
-
-      <!-- ─── СПИСОК ТОВАРОВ ─── -->
-      <div class="catalog-list-view" id="listView" style="display:none;">
-        {% for product in products %}
-        <a href="{{ product.get_absolute_url }}" class="prod-list-item text-decoration-none">
-          <div class="list-img">
-            {% with product.get_main_image as img %}
-              {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
-              {% else %}<i class="bi bi-image"></i>{% endif %}
-            {% endwith %}
-          </div>
-          <div class="list-info">
-            <div class="list-art">{{ product.sku }}{% if product.brands.exists %} · {% for b in product.brands.all %}{{ b.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</div>
-            <div class="list-name">{{ product.name }}</div>
-            {% with product.brands.all as pbr %}
-            {% if pbr %}
-            <div class="prod-compat mt-1">
-              {% for b in pbr %}<span class="compat-tag">{{ b.name }}</span>{% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
-            <div class="mt-2">
-              {% if product.in_stock %}
-              <span class="stock-badge-ok"><i class="bi bi-check-circle-fill me-1"></i>В наличии · {{ product.stock }} шт.</span>
-              {% else %}
-              <span class="stock-badge-ord"><i class="bi bi-x-circle me-1"></i>Под заказ</span>
-              {% endif %}
-            </div>
-          </div>
-          <div class="list-price-block">
-            <div class="list-price">{{ product.current_price|floatformat:0 }} ₽</div>
-            {% if product.discount_price %}
-            <div class="list-price-old">{{ product.price|floatformat:0 }} ₽</div>
-            {% endif %}
-            <div class="cart-widget" data-product-id="{{ product.id }}" onclick="event.preventDefault();event.stopPropagation();">
-              <button class="btn-add-to-cart btn-cart-add" type="button">
-                <i class="bi bi-cart-plus me-1"></i>В корзину
-              </button>
-              <div class="cart-counter" style="display:none;">
-                <button class="cart-counter-btn cart-counter-minus" type="button">−</button>
-                <span class="cart-counter-qty">1</span>
-                <button class="cart-counter-btn cart-counter-plus" type="button">+</button>
-              </div>
-            </div>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-
-      <!-- Пагинация -->
-      {% if products.has_other_pages %}
-      <div class="catalog-pagination">
-        {% if products.has_previous %}
-        <button class="page-btn" onclick="goToPage({{ products.previous_page_number }})">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        {% endif %}
-
-        {% for num in products.paginator.page_range %}
-          {% if products.number == num %}
-          <button class="page-btn active">{{ num }}</button>
-          {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
-          <button class="page-btn" onclick="goToPage({{ num }})">{{ num }}</button>
-          {% elif num == 1 or num == products.paginator.num_pages %}
-          <button class="page-btn" onclick="goToPage({{ num }})">{{ num }}</button>
-          {% elif num == products.number|add:'-3' or num == products.number|add:'3' %}
-          <button class="page-btn dots" disabled>…</button>
-          {% endif %}
-        {% endfor %}
-
-        {% if products.has_next %}
-        <button class="page-btn" onclick="goToPage({{ products.next_page_number }})">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {% else %}
-      <div class="products-empty">
-        <i class="bi bi-search"></i>
-        <h4>Товары не найдены</h4>
-        <p>Попробуйте изменить параметры фильтра или поискать по другому запросу</p>
-        <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none mt-3">
-          Сбросить все фильтры
-        </a>
-      </div>
-      {% endif %}
 
     </div><!-- /catalog-main -->
   </div><!-- /catalog-layout -->
@@ -355,28 +263,158 @@
 
 {% block extra_js %}
 <script>
+var AJAX_URL = '{% url "catalog:catalog_ajax" %}';
+
+// Загрузить товары через AJAX
+function loadCatalog(params, pushState) {
+  var results = document.getElementById('catalog-results');
+  results.style.opacity = '0.4';
+  results.style.pointerEvents = 'none';
+
+  fetch(AJAX_URL + '?' + params.toString())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      results.innerHTML = data.html;
+      results.style.opacity = '1';
+      results.style.pointerEvents = '';
+
+      // Обновить счётчик найденных
+      var found = document.querySelector('.catalog-found strong');
+      if (found) found.textContent = data.total;
+
+      // Восстановить вид (сетка/список)
+      try {
+        var saved = localStorage.getItem('kameks_view') || 'grid';
+        if (saved === 'list') window.setView('list');
+      } catch(e) {}
+
+      // Навесить обработчики на новую пагинацию
+      bindPagination();
+
+      // Навесить корзину на новые карточки
+      if (window.KAMEKS && window.KAMEKS.initCartWidgets) {
+        window.KAMEKS.initCartWidgets();
+      }
+
+      // Прокрутить наверх результатов плавно
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (pushState !== false) {
+        var url = new URL(window.location.href);
+        params.forEach(function(v, k) {
+          url.searchParams.delete(k);
+        });
+        params.forEach(function(v, k) {
+          url.searchParams.append(k, v);
+        });
+        history.pushState({params: params.toString()}, '', url.toString());
+      }
+    })
+    .catch(function() {
+      results.style.opacity = '1';
+      results.style.pointerEvents = '';
+    });
+}
+
+function getFilterParams() {
+  var form = document.getElementById('filter-form');
+  var params = new URLSearchParams(new FormData(form));
+  // Убрать пустые значения
+  var clean = new URLSearchParams();
+  params.forEach(function(v, k) { if (v) clean.append(k, v); });
+  return clean;
+}
+
 function sortCatalog(v) {
-  var url = new URL(window.location.href);
-  url.searchParams.set('sort', v);
-  url.searchParams.delete('page');
-  window.location.href = url.toString();
+  var params = getFilterParams();
+  params.set('sort', v);
+  params.delete('page');
+  loadCatalog(params);
 }
+
 function goToPage(n) {
-  var url = new URL(window.location.href);
-  url.searchParams.set('page', n);
-  window.location.href = url.toString();
+  var params = getFilterParams();
+  params.set('page', n);
+  loadCatalog(params);
 }
+
 function removeParam(key, val) {
-  var url = new URL(window.location.href);
-  if (key === 'q') { url.searchParams.delete('q'); }
-  else {
-    var vals = url.searchParams.getAll(key).filter(function(v){ return v !== val; });
-    url.searchParams.delete(key);
-    vals.forEach(function(v){ url.searchParams.append(key, v); });
+  var params = getFilterParams();
+  if (key === 'q') {
+    params.delete('q');
+    var input = document.getElementById('catalog-search-input');
+    if (input) input.value = '';
+  } else {
+    var vals = params.getAll(key).filter(function(v){ return v !== val; });
+    params.delete(key);
+    vals.forEach(function(v){ params.append(key, v); });
+    // Снять галочку в форме
+    document.querySelectorAll('input[name="'+key+'"][value="'+val+'"]').forEach(function(cb){
+      cb.checked = false;
+      cb.closest('label') && cb.closest('label').classList.remove('sel');
+    });
   }
-  url.searchParams.delete('page');
-  window.location.href = url.toString();
+  params.delete('page');
+  loadCatalog(params);
 }
+
+function bindPagination() {
+  document.querySelectorAll('#catalog-results .page-btn[data-page]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      goToPage(parseInt(this.dataset.page));
+    });
+  });
+}
+
+// Фильтр: чекбоксы марок и категорий — AJAX вместо submit
+document.querySelectorAll('#filter-form input[type="checkbox"], #filter-form input[type="radio"]').forEach(function(inp) {
+  inp.addEventListener('change', function() {
+    var params = getFilterParams();
+    params.delete('page');
+    loadCatalog(params);
+  });
+});
+
+// Цена — применить по кнопке (уже есть кнопка "Применить")
+document.querySelector('#filter-form .btn-apply') && document.querySelector('#filter-form .btn-apply').addEventListener('click', function(e) {
+  e.preventDefault();
+  var params = getFilterParams();
+  params.delete('page');
+  loadCatalog(params);
+});
+
+// Сброс
+document.querySelector('#filter-form .btn-reset') && document.querySelector('#filter-form .btn-reset').addEventListener('click', function(e) {
+  e.preventDefault();
+  var q = document.getElementById('catalog-search-input');
+  var params = new URLSearchParams();
+  if (q && q.value) params.set('q', q.value);
+  document.getElementById('filter-form').reset();
+  loadCatalog(params);
+});
+
+// Поиск — AJAX submit
+var searchForm = document.getElementById('search-form');
+if (searchForm) {
+  searchForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var q = document.getElementById('catalog-search-input').value.trim();
+    var params = getFilterParams();
+    if (q) params.set('q', q); else params.delete('q');
+    params.delete('page');
+    loadCatalog(params);
+  });
+}
+
+// История браузера (кнопка Назад)
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.params) {
+    loadCatalog(new URLSearchParams(e.state.params), false);
+  }
+});
+
+// Навесить пагинацию при первой загрузке
+bindPagination();
 
 // Live search suggest
 (function() {

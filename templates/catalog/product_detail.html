@@ -273,19 +273,17 @@
         </div>
 
         <!-- Количество и кнопки -->
-        <form method="POST" action="{% url 'cart:add' product.id %}">
-          {% csrf_token %}
-          <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-            <div class="qty-control">
-              <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
-              <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-input" id="qty-input">
-              <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
-            </div>
-            <button type="submit" class="btn-kameks-primary flex-grow-1" style="font-size:1rem;padding:12px;">
-              <i class="bi bi-cart-plus me-2"></i>Добавить в корзину
-            </button>
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+          <div class="qty-control">
+            <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+            <input type="number" value="1" min="1" max="{{ product.stock }}" class="qty-input" id="qty-input">
+            <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
           </div>
-        </form>
+          <button type="button" id="detail-add-to-cart" class="btn-kameks-primary flex-grow-1" style="font-size:1rem;padding:12px;"
+                  data-product-id="{{ product.id }}" data-stock="{{ product.stock }}">
+            <i class="bi bi-cart-plus me-2"></i>Добавить в корзину
+          </button>
+        </div>
 
         <div class="d-flex gap-2">
           {% if user.is_authenticated %}
@@ -457,10 +455,48 @@ function setMainImage(url, thumb) {
 }
 
 function changeQty(delta) {
-  const input = document.getElementById('qty-input');
-  const val = parseInt(input.value) + delta;
-  const max = parseInt(input.max) || 9999;
+  var input = document.getElementById('qty-input');
+  var val = parseInt(input.value) + delta;
+  var max = parseInt(input.max) || 9999;
   input.value = Math.max(1, Math.min(val, max));
 }
+
+(function() {
+  var btn = document.getElementById('detail-add-to-cart');
+  if (!btn) return;
+  var pid = btn.dataset.productId;
+  var stock = parseInt(btn.dataset.stock) || 0;
+
+  btn.addEventListener('click', function() {
+    {% if not user.is_authenticated %}
+    window.location.href = '{% url "accounts:login" %}?next={{ request.path }}';
+    return;
+    {% endif %}
+    var qty = Math.min(parseInt(document.getElementById('qty-input').value) || 1, stock);
+    var csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    btn.disabled = true;
+    fetch('/cart/add/' + pid + '/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'quantity=' + qty + '&override=false',
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      if (data.success) {
+        document.querySelectorAll('.cart-badge').forEach(function(el) {
+          el.textContent = data.cart_total;
+          el.style.display = data.cart_total > 0 ? '' : 'none';
+        });
+        if (window.KAMEKS && window.KAMEKS.showToast) {
+          window.KAMEKS.showToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
+        }
+      } else if (data.redirect) {
+        window.location.href = data.redirect;
+      }
+    })
+    .catch(function() { btn.disabled = false; });
+  });
+})();
 </script>
 {% endblock %}

@@ -136,6 +136,86 @@ def by_brand(request, slug):
     })
 
 
+def catalog_ajax(request):
+    """Возвращает HTML с товарами и пагинацией для AJAX-запросов каталога."""
+    from django.template.loader import render_to_string
+    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('images', 'brands')
+
+    brand_slugs = request.GET.getlist('brand')
+    category_slugs = request.GET.getlist('category')
+    min_price = request.GET.get('min_price', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
+    in_stock = request.GET.get('in_stock')
+    original = request.GET.get('original', '')
+    search_q = request.GET.get('q', '').strip()
+    sort = request.GET.get('sort', 'popular')
+
+    if search_q:
+        products = products.filter(
+            Q(name__icontains=search_q) |
+            Q(sku__icontains=search_q) |
+            Q(oem_number__icontains=search_q)
+        )
+
+    current_brands = Brand.objects.none()
+    current_categories = Category.objects.none()
+
+    if brand_slugs:
+        current_brands = Brand.objects.filter(slug__in=brand_slugs, is_active=True)
+        products = products.filter(brands__slug__in=brand_slugs).distinct()
+
+    if category_slugs:
+        current_categories = Category.objects.filter(slug__in=category_slugs, is_active=True)
+        all_cat_ids = set()
+        for cat in current_categories:
+            all_cat_ids.add(cat.pk)
+            children = list(cat.children.filter(is_active=True).values_list('pk', flat=True))
+            all_cat_ids.update(children)
+            grandchildren = Category.objects.filter(
+                parent__pk__in=children, is_active=True
+            ).values_list('pk', flat=True)
+            all_cat_ids.update(grandchildren)
+        products = products.filter(category__pk__in=all_cat_ids)
+
+    if min_price:
+        try:
+            products = products.filter(price__gte=float(min_price))
+        except ValueError:
+            pass
+    if max_price:
+        try:
+            products = products.filter(price__lte=float(max_price))
+        except ValueError:
+            pass
+
+    if in_stock:
+        products = products.filter(stock__gt=0)
+    if original == '1':
+        products = products.filter(is_original=True)
+    elif original == '0':
+        products = products.filter(is_original=False)
+
+    order = SORT_MAP.get(sort, '-created_at')
+    products = products.order_by(order)
+
+    paginator = Paginator(products, 12)
+    products_page = paginator.get_page(request.GET.get('page'))
+
+    html = render_to_string('catalog/partials/products_grid.html', {
+        'products': products_page,
+        'request': request,
+    }, request=request)
+
+    return JsonResponse({
+        'html': html,
+        'total': paginator.count,
+        'page': products_page.number,
+        'num_pages': paginator.num_pages,
+        'has_next': products_page.has_next(),
+        'has_previous': products_page.has_previous(),
+    })
+
+
 def search_suggest(request):
     q = request.GET.get('q', '').strip()
     if len(q) < 2:

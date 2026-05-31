@@ -151,57 +151,67 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const cartItems = window.KAMEKS_CART || {};
-  document.querySelectorAll('.cart-widget[data-product-id]').forEach(widget => {
-    const pid = widget.dataset.productId;
-    const savedQty = parseInt(cartItems[pid] || 0, 10);
-    if (savedQty > 0) setWidgetQty(widget, savedQty);
 
-    widget.querySelector('.btn-cart-add').addEventListener('click', function () {
-      cartPost(`/cart/add/${pid}/`, 'quantity=1')
-        .then(data => {
-          if (data.success) {
-            setWidgetQty(widget, data.item_quantity);
-            updateCartBadges(data.cart_total);
-            showToast('Товар добавлен в корзину');
-          }
-        })
-        .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
-    });
+  function initCartWidgets(root) {
+    var scope = root || document;
+    scope.querySelectorAll('.cart-widget[data-product-id]').forEach(function(widget) {
+      var pid = widget.dataset.productId;
+      var savedQty = parseInt(cartItems[pid] || 0, 10);
+      if (savedQty > 0) setWidgetQty(widget, savedQty);
 
-    widget.querySelector('.cart-counter-plus').addEventListener('click', function () {
-      cartPost(`/cart/add/${pid}/`, 'quantity=1')
-        .then(data => {
-          if (data.success) {
-            setWidgetQty(widget, data.item_quantity);
-            updateCartBadges(data.cart_total);
-          }
-        })
-        .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
-    });
-
-    widget.querySelector('.cart-counter-minus').addEventListener('click', function () {
-      const current = parseInt(widget.querySelector('.cart-counter-qty').textContent, 10);
-      if (current <= 1) {
-        cartPost(`/cart/remove/${pid}/`, '')
-          .then(data => {
+      widget.querySelector('.btn-cart-add').addEventListener('click', function() {
+        cartPost('/cart/add/' + pid + '/', 'quantity=1')
+          .then(function(data) {
             if (data.success) {
-              setWidgetQty(widget, 0);
+              setWidgetQty(widget, data.item_quantity);
               updateCartBadges(data.cart_total);
+              showToast('Товар добавлен в корзину');
             }
           })
           .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
-      } else {
-        cartPost(`/cart/add/${pid}/`, `quantity=${current - 1}&override=true`)
-          .then(data => {
+      });
+
+      widget.querySelector('.cart-counter-plus').addEventListener('click', function() {
+        cartPost('/cart/add/' + pid + '/', 'quantity=1')
+          .then(function(data) {
             if (data.success) {
               setWidgetQty(widget, data.item_quantity);
               updateCartBadges(data.cart_total);
             }
           })
           .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
-      }
+      });
+
+      widget.querySelector('.cart-counter-minus').addEventListener('click', function() {
+        var current = parseInt(widget.querySelector('.cart-counter-qty').textContent, 10);
+        if (current <= 1) {
+          cartPost('/cart/remove/' + pid + '/', '')
+            .then(function(data) {
+              if (data.success) {
+                setWidgetQty(widget, 0);
+                updateCartBadges(data.cart_total);
+              }
+            })
+            .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
+        } else {
+          cartPost('/cart/add/' + pid + '/', 'quantity=' + (current - 1) + '&override=true')
+            .then(function(data) {
+              if (data.success) {
+                setWidgetQty(widget, data.item_quantity);
+                updateCartBadges(data.cart_total);
+              }
+            })
+            .catch(function(e) { if (e && e.message !== 'unauthenticated') showToast('Ошибка. Попробуйте ещё раз.', 'danger'); });
+        }
+      });
     });
-  });
+  }
+
+  // Инициализируем при первой загрузке и экспортируем для AJAX-перезагрузок
+  initCartWidgets(document);
+  window.KAMEKS = window.KAMEKS || {};
+  window.KAMEKS.initCartWidgets = function(root) { initCartWidgets(root); };
+  window.KAMEKS.showToast = function(msg, type) { showToast(msg, type); };
 
   // --- Toast уведомление ---
   function showToast(message, type = 'success') {

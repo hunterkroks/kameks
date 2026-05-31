@@ -5,6 +5,7 @@ app_name = 'catalog'
 
 urlpatterns = [
     path('', views.catalog, name='catalog'),
+    path('ajax/', views.catalog_ajax, name='catalog_ajax'),
     path('search-suggest/', views.search_suggest, name='search_suggest'),
     path('brand/<slug:slug>/', views.by_brand, name='by_brand'),
     path('<slug:slug>/', views.product_detail, name='product'),

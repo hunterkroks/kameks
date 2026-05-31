@@ -1,0 +1,93 @@
+{% load static %}
+<!-- Сетка -->
+<div class="catalog-grid" id="gridView">
+  {% for product in products %}
+  {% include 'includes/product_card.html' with product=product %}
+  {% endfor %}
+</div>
+
+<!-- Список -->
+<div class="catalog-list-view" id="listView" style="display:none;">
+  {% for product in products %}
+  <a href="{{ product.get_absolute_url }}" class="prod-list-item text-decoration-none">
+    <div class="list-img">
+      {% with product.get_main_image as img %}
+        {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+        {% else %}<i class="bi bi-image"></i>{% endif %}
+      {% endwith %}
+    </div>
+    <div class="list-info">
+      <div class="list-art">{{ product.sku }}{% if product.brands.exists %} · {% for b in product.brands.all %}{{ b.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</div>
+      <div class="list-name">{{ product.name }}</div>
+      {% with product.brands.all as pbr %}
+      {% if pbr %}
+      <div class="prod-compat mt-1">
+        {% for b in pbr %}<span class="compat-tag">{{ b.name }}</span>{% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      <div class="mt-2">
+        {% if product.in_stock %}
+        <span class="stock-badge-ok"><i class="bi bi-check-circle-fill me-1"></i>В наличии · {{ product.stock }} шт.</span>
+        {% else %}
+        <span class="stock-badge-ord"><i class="bi bi-x-circle me-1"></i>Под заказ</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="list-price-block">
+      <div class="list-price">{{ product.current_price|floatformat:0 }} ₽</div>
+      {% if product.discount_price %}
+      <div class="list-price-old">{{ product.price|floatformat:0 }} ₽</div>
+      {% endif %}
+      <div class="cart-widget" data-product-id="{{ product.id }}" onclick="event.preventDefault();event.stopPropagation();">
+        <button class="btn-add-to-cart btn-cart-add" type="button">
+          <i class="bi bi-cart-plus me-1"></i>В корзину
+        </button>
+        <div class="cart-counter" style="display:none;">
+          <button class="cart-counter-btn cart-counter-minus" type="button">−</button>
+          <span class="cart-counter-qty">1</span>
+          <button class="cart-counter-btn cart-counter-plus" type="button">+</button>
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if products.has_other_pages %}
+<div class="catalog-pagination" id="catalog-pagination">
+  {% if products.has_previous %}
+  <button class="page-btn" data-page="{{ products.previous_page_number }}">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+  {% endif %}
+
+  {% for num in products.paginator.page_range %}
+    {% if products.number == num %}
+    <button class="page-btn active">{{ num }}</button>
+    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+    <button class="page-btn" data-page="{{ num }}">{{ num }}</button>
+    {% elif num == 1 or num == products.paginator.num_pages %}
+    <button class="page-btn" data-page="{{ num }}">{{ num }}</button>
+    {% elif num == products.number|add:'-3' or num == products.number|add:'3' %}
+    <button class="page-btn dots" disabled>…</button>
+    {% endif %}
+  {% endfor %}
+
+  {% if products.has_next %}
+  <button class="page-btn" data-page="{{ products.next_page_number }}">
+    <i class="bi bi-chevron-right"></i>
+  </button>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if not products %}
+<div class="products-empty">
+  <i class="bi bi-search"></i>
+  <h4>Товары не найдены</h4>
+  <p>Попробуйте изменить параметры фильтра или поискать по другому запросу</p>
+  <a href="/catalog/" class="btn-kameks-outline text-decoration-none mt-3">Сбросить все фильтры</a>
+</div>
+{% endif %}
