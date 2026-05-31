@@ -58,11 +58,13 @@ def parse_price(raw):
 
 def parse_xml(file_obj):
     """
-    Парсит XML CommerceML 2.05.
+    Парсит XML двух форматов:
+      1. CommerceML 2.05 (корень КоммерческаяИнформация или Каталог → Товары/Товар)
+      2. Прайс-лист (корень pricelist → category/item с атрибутами)
     Возвращает dict:
       {
         'categories': {id: {'name': ..., 'parent_id': ...}},
-        'products': [{'sku', 'name', 'price', 'stock', 'category_id', 'category_name'}, ...]
+        'products': [{'sku', 'name', 'price', 'stock', 'stock_present', 'category_id', 'category_name'}, ...]
       }
     """
     try:
@@ -71,17 +73,19 @@ def parse_xml(file_obj):
         raise ValueError(f'Некорректный XML: {e}')
 
     root = tree.getroot()
+    local_tag = root.tag.split('}')[-1] if '}' in root.tag else root.tag
 
-    # Ищем блок Каталог (может быть прямым дочерним или через КоммерческаяИнформация)
+    if local_tag == 'pricelist':
+        return _parse_pricelist(root)
+
+    # CommerceML: корень КоммерческаяИнформация или Каталог
     catalog = _find(root, 'Каталог') or root
 
-    # Парсим категории из Классификатор/Группы
     categories = {}
     classifier = _find(catalog, 'Классификатор')
     if classifier is not None:
         _parse_groups(_find(classifier, 'Группы'), categories, parent_id=None)
 
-    # Парсим товары
     products = []
     товары = _find(catalog, 'Товары')
     if товары is None:
@@ -93,6 +97,29 @@ def parse_xml(file_obj):
             products.append(item)
 
     return {'categories': categories, 'products': products}
+
+
+def _parse_pricelist(root):
+    """Парсит формат <pricelist><category name="..."><item article="..." name="..." price="..."/></category></pricelist>"""
+    products = []
+    for category_el in root.findall('category'):
+        category_name = category_el.get('name', '').strip() or None
+        for item_el in category_el.findall('item'):
+            sku = (item_el.get('article') or '').strip()
+            name = (item_el.get('name') or '').strip()
+            if not name:
+                continue
+            price = parse_price(item_el.get('price') or '')
+            products.append({
+                'sku': sku,
+                'name': name,
+                'price': price,
+                'stock': None,
+                'stock_present': False,
+                'category_id': None,
+                'category_name': category_name,
+            })
+    return {'categories': {}, 'products': products}
 
 
 def _parse_groups(groups_el, result, parent_id):
