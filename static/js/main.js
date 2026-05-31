@@ -382,10 +382,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebar) sidebar.classList.toggle('show');
   };
 
-  // ─── Каталог: бренд-чипсы (клик по лейблу = submit формы) ───────────────
+  // ─── Каталог: бренд-чипсы — визуальное обновление при клике ─────────────
   document.querySelectorAll('.brand-chip').forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      chip.classList.toggle('sel', chip.querySelector('input').checked);
+    var inp = chip.querySelector('input');
+    if (inp) inp.addEventListener('change', function () {
+      chip.classList.toggle('sel', inp.checked);
     });
   });
 
