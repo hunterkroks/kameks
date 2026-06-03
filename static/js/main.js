@@ -229,25 +229,32 @@ document.addEventListener('DOMContentLoaded', function () {
   window.KAMEKS = window.KAMEKS || {};
   window.KAMEKS.initCartWidgets = function(root) { initCartWidgets(root); };
   window.KAMEKS.showToast = function(msg, type) { showToast(msg, type); };
+  window.KAMEKS.updateCartBadges = function(total) { updateCartBadges(total); };
 
   // --- Toast уведомление ---
-  function showToast(message, type = 'success') {
-    let container = document.getElementById('toast-container');
+  var _toastTimers = {};
+  function showToast(message, type) {
+    type = type || 'success';
+    // Не показываем дубль того же сообщения, пока предыдущий ещё виден
+    if (_toastTimers[message]) return;
+
+    var container = document.getElementById('toast-container');
     if (!container) {
       container = document.createElement('div');
       container.id = 'toast-container';
       container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
       document.body.appendChild(container);
     }
-    const toast = document.createElement('div');
-    const bg = type === 'success' ? '#1B3A5C' : '#CC2B2B';
-    toast.style.cssText = `background:${bg};color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:280px;`;
+    var toast = document.createElement('div');
+    var bg = type === 'success' ? '#1B3A5C' : '#CC2B2B';
+    toast.style.cssText = 'background:' + bg + ';color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:280px;';
     toast.textContent = message;
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '1'; }, 10);
-    setTimeout(() => {
+    setTimeout(function() { toast.style.opacity = '1'; }, 10);
+    _toastTimers[message] = setTimeout(function() {
       toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 300);
+      setTimeout(function() { toast.remove(); }, 300);
+      delete _toastTimers[message];
     }, 3000);
   }
 

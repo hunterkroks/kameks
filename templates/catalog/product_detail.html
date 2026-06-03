@@ -449,6 +449,7 @@ function pdSetMainImage(url, thumb) {
   var stock = parseInt(btn.dataset.stock) || 0;
   var icon  = document.getElementById('pd-cart-icon');
   var label = document.getElementById('pd-cart-label');
+  var busy  = false;   // блокировка повторных кликов до возврата в default
 
   function setState(state) {
     if (state === 'adding') {
@@ -463,6 +464,7 @@ function pdSetMainImage(url, thumb) {
       btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
     } else {
       btn.disabled = false;
+      busy = false;
       icon.className = 'bi bi-cart-plus me-2';
       label.textContent = 'Добавить в корзину';
       btn.style.background = '';
@@ -474,12 +476,10 @@ function pdSetMainImage(url, thumb) {
     window.location.href = '{% url "accounts:login" %}?next={{ request.path }}';
     return;
     {% endif %}
-    if (stock > 0) {
-      var qty = parseInt(document.getElementById('pd-qty-input').value) || 1;
-      qty = Math.min(qty, stock);
-    } else {
-      var qty = 1;
-    }
+    if (busy) return;
+    busy = true;
+    var qty = parseInt(document.getElementById('pd-qty-input').value) || 1;
+    if (stock > 0) qty = Math.min(qty, stock);
     var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
     setState('adding');
     fetch('/cart/add/' + pid + '/', {
@@ -494,10 +494,9 @@ function pdSetMainImage(url, thumb) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.success) {
-        document.querySelectorAll('.cart-badge').forEach(function(el) {
-          el.textContent = data.cart_total;
-          el.style.display = data.cart_total > 0 ? '' : 'none';
-        });
+        if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
+          window.KAMEKS.updateCartBadges(data.cart_total);
+        }
         if (window.KAMEKS && window.KAMEKS.showToast) {
           window.KAMEKS.showToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
         }
