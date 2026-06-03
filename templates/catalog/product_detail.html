@@ -441,59 +441,46 @@ function pdSetMainImage(url, thumb) {
   });
 })();
 
-// ── Кнопка "В корзину" — 3 состояния + AJAX ──────────────
+// ── Кнопка "В корзину" — блокировка, остаток, badge, toast ──
 (function() {
   var btn   = document.getElementById('detail-add-to-cart');
   if (!btn) return;
-  var pid   = btn.dataset.productId;
-  var stock = parseInt(btn.dataset.stock) || 0;
-  var icon  = document.getElementById('pd-cart-icon');
-  var label = document.getElementById('pd-cart-label');
-  var busy  = false;
-  var toastShown = false;  // дедупликация toast на этой странице
+  var pid        = btn.dataset.productId;
+  var stockLeft  = parseInt(btn.dataset.stock) || 0;  // остаток — обновляется из ответа
+  var inCart     = 0;   // сколько уже в корзине (накапливаем)
+  var icon       = document.getElementById('pd-cart-icon');
+  var label      = document.getElementById('pd-cart-label');
+  var busy       = false;
+  var doneTimer  = null;
 
-  function setState(state) {
-    if (state === 'adding') {
-      btn.disabled = true;
-      icon.className = 'bi bi-arrow-repeat pd-spin me-2';
-      label.textContent = 'Добавляем...';
-      btn.style.background = '';
-    } else if (state === 'done') {
-      // кнопка НЕ разблокируется — busy остаётся true до 'default'
-      btn.disabled = false;
-      icon.className = 'bi bi-check-lg me-2';
-      label.textContent = 'Добавлено';
-      btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
-    } else {
-      busy = false;
-      btn.disabled = false;
-      icon.className = 'bi bi-cart-plus me-2';
-      label.textContent = 'Добавить в корзину';
-      btn.style.background = '';
-    }
-  }
-
-  function pdUpdateBadge(total) {
-    // используем общую функцию если доступна, иначе обновляем напрямую
+  function updateCartBadge(total) {
     if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
       window.KAMEKS.updateCartBadges(total);
       return;
     }
-    document.querySelectorAll('.cart-badge').forEach(function(el) {
-      el.textContent = total;
-      el.style.display = total > 0 ? '' : 'none';
-    });
+    var badges = document.querySelectorAll('.cart-badge');
+    if (badges.length) {
+      badges.forEach(function(el) {
+        el.textContent = total;
+        el.style.display = total > 0 ? '' : 'none';
+      });
+    } else if (total > 0) {
+      document.querySelectorAll('a.navbar-icon-btn').forEach(function(link) {
+        if (link.href && link.href.includes('/cart/')) {
+          var badge = document.createElement('span');
+          badge.className = 'cart-badge';
+          badge.textContent = total;
+          link.appendChild(badge);
+        }
+      });
+    }
   }
 
-  function pdShowToast(msg) {
-    if (toastShown) return;
-    toastShown = true;
-    setTimeout(function() { toastShown = false; }, 3200);
+  function showToast(msg) {
     if (window.KAMEKS && window.KAMEKS.showToast) {
       window.KAMEKS.showToast(msg);
       return;
     }
-    // fallback если main.js ещё не инициализирован
     var c = document.getElementById('toast-container');
     if (!c) {
       c = document.createElement('div');
@@ -509,6 +496,46 @@ function pdSetMainImage(url, thumb) {
     setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
+  function setMaxed() {
+    // достигнут лимит остатка — блокируем навсегда (до перезагрузки)
+    busy = true;
+    btn.disabled = true;
+    icon.className = 'bi bi-slash-circle me-2';
+    label.textContent = 'Нет больше в наличии';
+    btn.style.background = 'linear-gradient(180deg,#555,#444)';
+    btn.style.cursor = 'not-allowed';
+  }
+
+  function setDone(itemQty) {
+    // показываем "Добавлено" и через 2с возвращаемся, если нет лимита
+    if (doneTimer) clearTimeout(doneTimer);
+    btn.disabled = false;
+    icon.className = 'bi bi-check-lg me-2';
+    label.textContent = 'Добавлено (' + itemQty + ' шт.)';
+    btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
+    doneTimer = setTimeout(function() {
+      if (stockLeft > 0 && inCart < stockLeft) {
+        // можно добавить ещё
+        busy = false;
+        btn.disabled = false;
+        icon.className = 'bi bi-cart-plus me-2';
+        label.textContent = 'Добавить ещё';
+        btn.style.background = '';
+        btn.style.cursor = '';
+      } else if (stockLeft > 0) {
+        setMaxed();
+      } else {
+        // товар под заказ — не ограничиваем
+        busy = false;
+        btn.disabled = false;
+        icon.className = 'bi bi-cart-plus me-2';
+        label.textContent = 'Добавить в корзину';
+        btn.style.background = '';
+        btn.style.cursor = '';
+      }
+    }, 2000);
+  }
+
   btn.addEventListener('click', function() {
     {% if not user.is_authenticated %}
     window.location.href = '{% url "accounts:login" %}?next={{ request.path }}';
@@ -516,10 +543,19 @@ function pdSetMainImage(url, thumb) {
     {% endif %}
     if (busy) return;
     busy = true;
-    var qty = parseInt(document.getElementById('pd-qty-input').value) || 1;
-    if (stock > 0) qty = Math.min(qty, stock);
+
+    var qtyInput = document.getElementById('pd-qty-input');
+    var qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+    // не давать добавить больше остатка
+    if (stockLeft > 0) qty = Math.min(qty, stockLeft - inCart);
+    if (qty <= 0) { setMaxed(); return; }
+
     var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
-    setState('adding');
+    btn.disabled = true;
+    icon.className = 'bi bi-arrow-repeat pd-spin me-2';
+    label.textContent = 'Добавляем...';
+    btn.style.background = '';
+
     fetch('/cart/add/' + pid + '/', {
       method: 'POST',
       headers: {
@@ -532,18 +568,35 @@ function pdSetMainImage(url, thumb) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.success) {
-        pdUpdateBadge(data.cart_total);
-        pdShowToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
-        setState('done');
-        setTimeout(function() { setState('default'); }, 2200);
+        inCart     = data.item_quantity;             // сколько теперь в корзине
+        stockLeft  = data.stock !== undefined ? data.stock : stockLeft;  // актуальный остаток из БД
+        updateCartBadge(data.cart_total);
+        showToast('Добавлено в корзину: ' + inCart + ' шт.');
+        setDone(inCart);
+        if (stockLeft > 0 && inCart >= stockLeft) {
+          // сразу блокируем если исчерпали остаток
+          if (doneTimer) clearTimeout(doneTimer);
+          setTimeout(setMaxed, 2000);
+        }
       } else if (data.redirect) {
         window.location.href = data.redirect;
-        setState('default');
+        busy = false;
+        btn.disabled = false;
       } else {
-        setState('default');
+        busy = false;
+        btn.disabled = false;
+        icon.className = 'bi bi-cart-plus me-2';
+        label.textContent = 'Добавить в корзину';
+        btn.style.background = '';
       }
     })
-    .catch(function() { setState('default'); });
+    .catch(function() {
+      busy = false;
+      btn.disabled = false;
+      icon.className = 'bi bi-cart-plus me-2';
+      label.textContent = 'Добавить в корзину';
+      btn.style.background = '';
+    });
   });
 })();
 

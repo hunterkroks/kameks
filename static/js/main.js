@@ -100,14 +100,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function updateCartBadges(total) {
-    document.querySelectorAll('.cart-badge').forEach(el => {
-      el.textContent = total;
-      el.style.display = total > 0 ? '' : 'none';
-    });
-    if (total > 0 && !document.querySelector('.cart-badge')) {
-      document.querySelectorAll('a.navbar-icon-btn').forEach(link => {
+    var badges = document.querySelectorAll('.cart-badge');
+    if (badges.length > 0) {
+      badges.forEach(function(el) {
+        el.textContent = total;
+        el.style.display = total > 0 ? '' : 'none';
+      });
+    } else if (total > 0) {
+      // badge ещё не существует — создаём
+      document.querySelectorAll('a.navbar-icon-btn').forEach(function(link) {
         if (link.href && link.href.includes('/cart/')) {
-          const badge = document.createElement('span');
+          var badge = document.createElement('span');
           badge.className = 'cart-badge';
           badge.textContent = total;
           link.appendChild(badge);
