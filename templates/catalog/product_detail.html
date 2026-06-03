@@ -4,485 +4,496 @@
 {% block title %}{{ product.name }} ({{ product.sku }}) | КАМЭКС{% endblock %}
 {% block meta_description %}Купить {{ product.name }}, артикул {{ product.sku }}{% if product.oem_number %}, OEM {{ product.oem_number }}{% endif %}. Цена {{ product.current_price }} ₽. Доставка по России.{% endblock %}
 
-{% block extra_css %}
-<style>
-  .gallery-main {
-    aspect-ratio: 1;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    cursor: zoom-in;
-  }
-  .gallery-main img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s; }
-  .gallery-main:hover img { transform: scale(1.05); }
-
-  .gallery-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .gallery-thumb {
-    width: 70px;
-    height: 70px;
-    border: 2px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color var(--transition);
-    background: var(--color-bg-secondary);
-    flex-shrink: 0;
-  }
-  .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-accent-blue); }
-  .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-  .product-price-block {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 24px;
-  }
-  .product-price-main {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--color-accent-orange);
-    line-height: 1;
-  }
-  .product-price-old {
-    font-size: 1rem;
-    color: var(--color-text-muted);
-    text-decoration: line-through;
-    margin-left: 10px;
-  }
-  .product-discount-badge {
-    background: var(--color-accent-red);
-    color: #fff;
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 4px;
-    margin-left: 10px;
-  }
-
-  .spec-table { width: 100%; border-collapse: collapse; }
-  .spec-table tr { border-bottom: 1px solid var(--color-border); }
-  .spec-table tr:last-child { border-bottom: none; }
-  .spec-table td {
-    padding: 10px 0;
-    font-size: 0.9rem;
-    vertical-align: top;
-  }
-  .spec-table td:first-child {
-    color: var(--color-text-muted);
-    width: 45%;
-    padding-right: 16px;
-  }
-  .spec-table td:last-child { color: var(--color-text-primary); font-weight: 500; }
-
-  .tab-nav-kameks { border-bottom: 1px solid var(--color-border); margin-bottom: 20px; }
-  .tab-nav-kameks .nav-link {
-    color: var(--color-text-muted);
-    border: none;
-    border-bottom: 3px solid transparent;
-    padding: 10px 18px;
-    font-weight: 500;
-    border-radius: 0;
-    background: none;
-  }
-  .tab-nav-kameks .nav-link.active {
-    color: var(--color-accent-blue);
-    border-bottom-color: var(--color-accent-blue);
-    background: none;
-  }
-  .tab-nav-kameks .nav-link:hover { color: var(--color-white); background: none; }
-
-  .analogue-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 0.88rem;
-  }
-  .analogue-row:last-child { border-bottom: none; }
-  .analogue-brand { color: var(--color-accent-blue); font-weight: 600; width: 35%; }
-  .analogue-num  { color: var(--color-text-primary); font-family: monospace; font-size: 0.95rem; }
-
-  .qty-control {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    width: fit-content;
-  }
-  .qty-btn {
-    background: var(--color-bg-primary);
-    border: none;
-    color: var(--color-text-secondary);
-    width: 38px;
-    height: 42px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all var(--transition);
-  }
-  .qty-btn:hover { background: var(--color-accent-blue); color: #fff; }
-  .qty-input {
-    width: 56px;
-    height: 42px;
-    background: var(--color-bg-secondary);
-    border: none;
-    border-left: 1px solid var(--color-border);
-    border-right: 1px solid var(--color-border);
-    color: var(--color-text-primary);
-    text-align: center;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  .qty-input:focus { outline: none; }
-</style>
-{% endblock %}
-
 {% block content %}
 
-<!-- Хлебные крошки -->
-<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+<!-- ═══════════════════════════════════════════
+     ХЛЕБНЫЕ КРОШКИ
+     ═══════════════════════════════════════════ -->
+<div class="pd-breadcrumb-strip">
   <div class="container">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'catalog:catalog' %}" style="color:var(--color-accent-blue);">Каталог</a></li>
-        <li class="breadcrumb-item"><a href="{{ product.category.get_absolute_url }}" style="color:var(--color-accent-blue);">{{ product.category.name }}</a></li>
-        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">{{ product.name|truncatechars:50 }}</li>
-      </ol>
+    <nav class="pd-breadcrumb">
+      <a href="{% url 'main:index' %}">Главная</a>
+      <span class="pd-bc-sep">›</span>
+      <a href="{% url 'catalog:catalog' %}">Каталог</a>
+      {% if product.category %}
+        {% if product.category.parent %}
+          <span class="pd-bc-sep">›</span>
+          <a href="{{ product.category.parent.get_absolute_url }}">{{ product.category.parent.name }}</a>
+        {% endif %}
+        <span class="pd-bc-sep">›</span>
+        <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+      {% endif %}
+      <span class="pd-bc-sep">›</span>
+      <span class="pd-bc-current">{{ product.name|truncatechars:55 }}</span>
     </nav>
   </div>
 </div>
 
-<div class="container py-4">
-  <div class="row g-4">
+<div class="container pd-outer">
 
-    <!-- ========== ЛЕВАЯ КОЛОНКА: Галерея ========== -->
-    <div class="col-lg-5">
+  <!-- ═══════════════════════════════════════════
+       ОСНОВНОЙ БЛОК: ФОТО + ИНФО
+       ═══════════════════════════════════════════ -->
+  <div class="pd-card pd-main-grid">
+
+    <!-- ──────────────── ЛЕВАЯ КОЛОНКА: ФОТО ──────────────── -->
+    <div class="pd-gallery-col">
+
+      <!-- Бейджи -->
+      <div class="pd-badges">
+        {% if product.is_original %}
+        <span class="pd-badge pd-badge-original">ОРИГИНАЛ</span>
+        {% endif %}
+        {% if product.is_new %}
+        <span class="pd-badge pd-badge-new">НОВИНКА</span>
+        {% endif %}
+        {% if product.is_bestseller %}
+        <span class="pd-badge pd-badge-hit">ХИТ</span>
+        {% endif %}
+      </div>
 
       <!-- Главное фото -->
-      <div class="gallery-main" id="gallery-main">
+      <div class="pd-photo-main" id="pd-photo-main">
         {% with product.get_main_image as main_img %}
           {% if main_img %}
-          <img src="{{ main_img.image.url }}" alt="{{ product.name }}" id="gallery-main-img">
-          {% elif product.category.image %}
-          <img src="{{ product.category.image.url }}" alt="{{ product.category.name }}"
-               id="gallery-main-img" style="opacity:0.55;filter:grayscale(20%);">
+          <img src="{{ main_img.image.url }}" alt="{{ product.name }}" id="pd-main-img" loading="eager">
           {% else %}
-          <div class="d-flex align-items-center justify-content-center h-100"
-               style="color:var(--color-text-muted);font-size:4rem;">
-            <i class="bi bi-image"></i>
+          <div class="pd-photo-placeholder">
+            {% if product.category.icon %}
+            <i class="bi {{ product.category.icon }}"></i>
+            {% else %}
+            <i class="bi bi-box-seam"></i>
+            {% endif %}
           </div>
           {% endif %}
         {% endwith %}
       </div>
 
-      <!-- Миниатюры -->
+      <!-- Миниатюры — только если больше одного фото -->
       {% if product.images.count > 1 %}
-      <div class="gallery-thumbs">
+      <div class="pd-thumbs">
         {% for img in product.images.all %}
-        <div class="gallery-thumb {% if img.is_main %}active{% endif %}"
-             onclick="setMainImage('{{ img.image.url }}', this)">
+        <div class="pd-thumb {% if img.is_main %}active{% endif %}"
+             onclick="pdSetMainImage('{{ img.image.url }}', this)">
           <img src="{{ img.image.url }}" alt="">
         </div>
         {% endfor %}
       </div>
       {% endif %}
 
-      <!-- Бейджи -->
-      <div class="mt-3 d-flex flex-wrap gap-2">
-        {% if product.is_original %}
-        <span style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#27ae60;padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;">
-          <i class="bi bi-patch-check-fill me-1"></i>Оригинальная запчасть
-        </span>
-        {% else %}
-        <span style="background:rgba(46,134,222,0.15);border:1px solid rgba(46,134,222,0.4);color:var(--color-accent-blue);padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;">
-          <i class="bi bi-check-circle me-1"></i>Аналог
-        </span>
-        {% endif %}
-        {% if product.is_bestseller %}
-        <span style="background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);color:var(--color-accent-orange);padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;">
-          <i class="bi bi-fire me-1"></i>Хит продаж
-        </span>
-        {% endif %}
-        {% if product.is_new %}
-        <span style="background:rgba(46,134,222,0.15);border:1px solid rgba(46,134,222,0.4);color:var(--color-accent-light);padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;">
-          <i class="bi bi-stars me-1"></i>Новинка
-        </span>
-        {% endif %}
+      <!-- Ссылка запросить фото — только если нет фото -->
+      {% with product.get_main_image as main_img %}
+      {% if not main_img %}
+      <div class="pd-request-photo">
+        <i class="bi bi-camera me-1"></i>
+        Нет фото?
+        <a href="{% url 'main:contacts' %}">Запросить фото у менеджера</a>
+      </div>
+      {% endif %}
+      {% endwith %}
+
+    </div><!-- /pd-gallery-col -->
+
+    <!-- ──────────────── ПРАВАЯ КОЛОНКА: ИНФО ──────────────── -->
+    <div class="pd-info-col">
+
+      <!-- Артикул + производитель -->
+      <div class="pd-sku-row">
+        <div class="pd-sku-wrap">
+          <span class="pd-sku-label">Артикул:</span>
+          <span class="pd-sku-value" id="pd-sku" title="Нажмите, чтобы скопировать">{{ product.sku }}</span>
+          <span class="pd-sku-copied" id="pd-sku-copied">Скопировано ✓</span>
+        </div>
+        {% with product.attributes.filter(name="Производитель").first as mfr %}{% endwith %}
+        {% for attr in product.attributes.all %}{% if attr.name == "Производитель" %}
+        <span class="pd-mfr-badge">{{ attr.value }}</span>
+        {% endif %}{% endfor %}
       </div>
 
-    </div><!-- /col-lg-5 -->
+      <!-- Название -->
+      <h1 class="pd-title">{{ product.name }}</h1>
 
-    <!-- ========== ПРАВАЯ КОЛОНКА: Информация ========== -->
-    <div class="col-lg-7">
-
-      <!-- Заголовок -->
-      <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:6px;">
-        Артикул: <strong style="color:var(--color-white);font-family:monospace;">{{ product.sku }}</strong>
-        {% if product.oem_number %}
-        &nbsp;&nbsp;|&nbsp;&nbsp;OEM: <strong style="color:var(--color-white);font-family:monospace;">{{ product.oem_number }}</strong>
-        {% endif %}
-      </p>
-      <h1 style="font-size:1.6rem;font-weight:700;line-height:1.3;margin-bottom:14px;">{{ product.name }}</h1>
-
-      <!-- Применимость -->
+      <!-- Марки автомобилей -->
       {% if product.brands.exists %}
-      <div class="mb-3" style="font-size:0.88rem;color:var(--color-text-muted);">
-        <i class="bi bi-truck me-1" style="color:var(--color-accent-blue);"></i>
-        Применяется на:
+      <div class="pd-brands-row">
+        <span class="pd-brands-label">Применяется на:</span>
         {% for brand in product.brands.all %}
-          <a href="{% url 'catalog:by_brand' brand.slug %}" style="color:var(--color-accent-blue);text-decoration:none;">{{ brand.name }}</a>{% if not forloop.last %}, {% endif %}
+        <a href="{% url 'catalog:catalog' %}?brand={{ brand.slug }}" class="pd-brand-tag">{{ brand.name }}</a>
         {% endfor %}
       </div>
       {% endif %}
 
-      {% if product.car_models.exists %}
-      <div class="mb-3" style="font-size:0.85rem;">
-        <span style="color:var(--color-text-muted);">Модели: </span>
-        {% for model in product.car_models.all %}
-          <span style="background:var(--color-bg-primary);border:1px solid var(--color-border);border-radius:4px;padding:2px 8px;font-size:0.78rem;margin-right:4px;">{{ model }}</span>
-        {% endfor %}
-      </div>
-      {% endif %}
+      <!-- Блок цены и наличия -->
+      <div class="pd-price-block {% if not product.in_stock %}pd-price-block--order{% endif %}">
 
-      <!-- Блок цены и заказа -->
-      <div class="product-price-block mt-3">
-
-        <!-- Наличие -->
-        <div class="mb-3">
+        <!-- Статус наличия -->
+        <div class="pd-stock-row">
           {% if product.in_stock %}
-          <span style="color:#27ae60;font-weight:600;font-size:0.92rem;">
-            <i class="bi bi-check-circle-fill me-1"></i>В наличии — {{ product.stock }} шт.
-          </span>
+          <span class="pd-stock-dot pd-stock-dot--ok"></span>
+          <span class="pd-stock-text pd-stock-text--ok">В наличии</span>
+          <span class="pd-stock-sub">— {{ product.stock }} шт. на складе · отгрузка сегодня</span>
           {% else %}
-          <span style="color:var(--color-accent-red);font-weight:600;font-size:0.92rem;">
-            <i class="bi bi-clock me-1"></i>Под заказ — уточните срок у менеджера
-          </span>
+          <span class="pd-stock-dot pd-stock-dot--order"></span>
+          <span class="pd-stock-text pd-stock-text--order">Под заказ</span>
+          <span class="pd-stock-sub">— срок уточняйте</span>
           {% endif %}
         </div>
 
         <!-- Цена -->
-        <div class="d-flex align-items-baseline mb-4">
-          <span class="product-price-main">{{ product.current_price|floatformat:0 }} ₽</span>
+        <div class="pd-price-row">
+          <span class="pd-price-main">{{ product.current_price|floatformat:0 }} ₽</span>
           {% if product.discount_price %}
-          <span class="product-price-old">{{ product.price|floatformat:0 }} ₽</span>
-          <span class="product-discount-badge">−{{ product.discount_percent }}%</span>
+          <span class="pd-price-old">{{ product.price|floatformat:0 }} ₽</span>
+          <span class="pd-price-disc">−{{ product.discount_percent }}%</span>
           {% endif %}
         </div>
+        <div class="pd-price-wholesale">
+          От 5 шт. — скидка.
+          <a href="{% url 'main:contacts' %}">Уточнить оптовую цену →</a>
+        </div>
 
-        <!-- Количество и кнопки -->
-        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-          <div class="qty-control">
-            <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
-            <input type="number" value="1" min="1" max="{{ product.stock }}" class="qty-input" id="qty-input">
-            <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+        <!-- Кнопки покупки -->
+        <div class="pd-buy-row">
+          <!-- Количество -->
+          <div class="pd-qty">
+            <button type="button" class="pd-qty-btn" id="pd-qty-minus">−</button>
+            <input type="number" value="1" min="1" max="{{ product.stock|default:9999 }}"
+                   class="pd-qty-input" id="pd-qty-input">
+            <button type="button" class="pd-qty-btn" id="pd-qty-plus">+</button>
           </div>
-          <button type="button" id="detail-add-to-cart" class="btn-kameks-primary flex-grow-1" style="font-size:1rem;padding:12px;"
+          <!-- В корзину -->
+          <button type="button" id="detail-add-to-cart" class="pd-btn-cart"
                   data-product-id="{{ product.id }}" data-stock="{{ product.stock }}">
-            <i class="bi bi-cart-plus me-2"></i>Добавить в корзину
+            <i class="bi bi-cart-plus me-2" id="pd-cart-icon"></i>
+            <span id="pd-cart-label">Добавить в корзину</span>
+          </button>
+          <!-- Купить в 1 клик -->
+          <button type="button" class="pd-btn-oneclik">
+            <i class="bi bi-lightning-charge me-1"></i>Купить в 1 клик
           </button>
         </div>
 
-        <div class="d-flex gap-2">
+        <!-- Строка действий -->
+        <div class="pd-actions-row">
           {% if user.is_authenticated %}
-          <button class="btn-kameks-outline flex-grow-1" style="padding:10px;" onclick="toggleFavorite(this, {{ product.id }})">
+          <button class="pd-action-btn" id="pd-fav-btn" onclick="pdToggleFavorite(this, {{ product.id }})">
             <i class="bi bi-heart me-1"></i>В избранное
           </button>
           {% else %}
-          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn-kameks-outline flex-grow-1 text-decoration-none text-center" style="padding:10px;">
+          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="pd-action-btn">
             <i class="bi bi-heart me-1"></i>В избранное
           </a>
           {% endif %}
-          <a href="tel:+78001234567" class="btn-kameks-outline flex-grow-1 text-decoration-none text-center" style="padding:10px;">
+          <button class="pd-action-btn">
+            <i class="bi bi-bar-chart-steps me-1"></i>Сравнить
+          </button>
+          <button class="pd-action-btn" onclick="pdShare()">
+            <i class="bi bi-share me-1"></i>Поделиться
+          </button>
+          <a href="tel:+78001234567" class="pd-action-btn">
             <i class="bi bi-telephone me-1"></i>Уточнить наличие
           </a>
         </div>
 
-        <!-- Гарантии -->
-        <div class="mt-3 pt-3 d-flex flex-wrap gap-3" style="border-top:1px solid var(--color-border);">
-          <span style="font-size:0.78rem;color:var(--color-text-muted);">
-            <i class="bi bi-shield-check me-1" style="color:#27ae60;"></i>Гарантия 12 мес.
-          </span>
-          <span style="font-size:0.78rem;color:var(--color-text-muted);">
-            <i class="bi bi-truck me-1" style="color:var(--color-accent-blue);"></i>Доставка по России
-          </span>
-          <span style="font-size:0.78rem;color:var(--color-text-muted);">
-            <i class="bi bi-arrow-return-left me-1" style="color:var(--color-accent-orange);"></i>Возврат 14 дней
-          </span>
-        </div>
+      </div><!-- /pd-price-block -->
 
-      </div><!-- /.product-price-block -->
-    </div><!-- /col-lg-7 -->
-  </div><!-- /row -->
-
-  <!-- ======================================================
-       ТАБЫ: Описание / Характеристики / Применимость / Аналоги
-       ====================================================== -->
-  <div class="mt-5">
-    <ul class="nav tab-nav-kameks" id="productTabs">
-      <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-desc">
-          Описание
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-specs">
-          Характеристики
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-apply">
-          Применимость
-          {% if product.car_models.exists %}
-          <span style="background:var(--color-accent-blue);color:#fff;font-size:0.7rem;padding:1px 7px;border-radius:10px;margin-left:4px;">{{ product.car_models.count }}</span>
-          {% endif %}
-        </button>
-      </li>
-      {% if product.analogues.exists %}
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analogues">
-          Аналоги
-          <span style="background:var(--color-accent-blue);color:#fff;font-size:0.7rem;padding:1px 7px;border-radius:10px;margin-left:4px;">{{ product.analogues.count }}</span>
-        </button>
-      </li>
-      {% endif %}
-    </ul>
-
-    <div class="tab-content">
-
-      <!-- Описание -->
-      <div class="tab-pane fade show active" id="tab-desc">
-        {% if product.description %}
-        <div style="color:var(--color-text-secondary);line-height:1.8;font-size:0.95rem;">
-          {{ product.description|linebreaks }}
-        </div>
-        {% else %}
-        <p style="color:var(--color-text-muted);">Описание товара отсутствует.</p>
-        {% endif %}
-      </div>
-
-      <!-- Характеристики -->
-      <div class="tab-pane fade" id="tab-specs">
-        <table class="spec-table">
-          <tr><td>Артикул</td><td><code style="color:var(--color-accent-blue);">{{ product.sku }}</code></td></tr>
-          {% if product.oem_number %}
-          <tr><td>OEM-номер</td><td><code style="color:var(--color-accent-blue);">{{ product.oem_number }}</code></td></tr>
-          {% endif %}
-          <tr><td>Категория</td><td>{{ product.category.name }}</td></tr>
-          <tr><td>Тип</td><td>{% if product.is_original %}Оригинал{% else %}Аналог{% endif %}</td></tr>
-          {% if product.weight %}
-          <tr><td>Вес</td><td>{{ product.weight }} кг</td></tr>
-          {% endif %}
-          {% if product.specifications %}
-          {% for line in product.specifications.splitlines %}
-            {% if line %}
-            <tr>
-              <td colspan="2" style="color:var(--color-text-secondary);">{{ line }}</td>
-            </tr>
-            {% endif %}
-          {% endfor %}
-          {% endif %}
-        </table>
-      </div>
-
-      <!-- Применимость -->
-      <div class="tab-pane fade" id="tab-apply">
-        {% if product.car_models.exists %}
-        <div class="row g-2">
-          {% for model in product.car_models.all %}
-          <div class="col-md-3 col-6">
-            <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:0.88rem;">
-              <i class="bi bi-truck me-2" style="color:var(--color-accent-blue);"></i>{{ model }}
-            </div>
+      <!-- Доставка -->
+      <div class="pd-delivery-grid">
+        <div class="pd-delivery-cell">
+          <div class="pd-delivery-icon"><i class="bi bi-truck"></i></div>
+          <div>
+            <div class="pd-delivery-title">Доставка</div>
+            <div class="pd-delivery-sub">От 1 дня · СДЭК, ПЭК<br>Бесплатно от 50 000 ₽</div>
           </div>
-          {% endfor %}
         </div>
-        {% else %}
-        <p style="color:var(--color-text-muted);">Информация о применимости не указана.</p>
-        {% endif %}
+        <div class="pd-delivery-cell">
+          <div class="pd-delivery-icon"><i class="bi bi-shop"></i></div>
+          <div>
+            <div class="pd-delivery-title">Самовывоз</div>
+            <div class="pd-delivery-sub">г. Набережные Челны<br>пр. Мира, 5</div>
+          </div>
+        </div>
+        <div class="pd-delivery-cell">
+          <div class="pd-delivery-icon"><i class="bi bi-credit-card"></i></div>
+          <div>
+            <div class="pd-delivery-title">Оплата</div>
+            <div class="pd-delivery-sub">Нал / Безнал<br>Счёт для юр. лиц</div>
+          </div>
+        </div>
+        <div class="pd-delivery-cell">
+          <div class="pd-delivery-icon"><i class="bi bi-arrow-return-left"></i></div>
+          <div>
+            <div class="pd-delivery-title">Возврат</div>
+            <div class="pd-delivery-sub">14 дней<br>Гарантия 12 мес.</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Аналоги -->
-      {% if product.analogues.exists %}
-      <div class="tab-pane fade" id="tab-analogues">
-        <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:16px;">
-          Взаимозаменяемые артикулы от других производителей
-        </p>
-        {% for analogue in product.analogues.all %}
-        <div class="analogue-row">
-          <span class="analogue-brand">{{ analogue.brand_name }}</span>
-          <span class="analogue-num">{{ analogue.part_number }}</span>
-          <a href="{% url 'catalog:catalog' %}?q={{ analogue.part_number }}"
-             style="font-size:0.78rem;color:var(--color-text-muted);text-decoration:none;">
-            Найти в каталоге →
-          </a>
+      <!-- Полоска гарантий -->
+      <div class="pd-guarantees">
+        <div class="pd-guarantee-item">
+          <i class="bi bi-patch-check"></i>
+          <span>Оригинал с завода</span>
         </div>
+        <div class="pd-guarantee-item">
+          <i class="bi bi-shield-check"></i>
+          <span>Гарантия 12 мес.</span>
+        </div>
+        <div class="pd-guarantee-item">
+          <i class="bi bi-arrow-return-left"></i>
+          <span>Возврат 14 дней</span>
+        </div>
+        <div class="pd-guarantee-item">
+          <i class="bi bi-clock"></i>
+          <span>Подбор за 30 мин.</span>
+        </div>
+      </div>
+
+    </div><!-- /pd-info-col -->
+  </div><!-- /pd-main-grid -->
+
+  <!-- ═══════════════════════════════════════════
+       ТАБЫ
+       ═══════════════════════════════════════════ -->
+  <div class="pd-card pd-tabs-card">
+
+    <div class="pd-tab-nav">
+      <button class="pd-tab-btn active" data-tab="specs">Характеристики</button>
+      <button class="pd-tab-btn" data-tab="apply">Применимость</button>
+      <button class="pd-tab-btn" data-tab="analogues">OEM и аналоги</button>
+      <button class="pd-tab-btn" data-tab="desc">Описание</button>
+    </div>
+
+    <!-- Таб: Характеристики -->
+    <div class="pd-tab-pane active" id="pd-tab-specs">
+      <table class="pd-spec-table">
+        <tr>
+          <td>Артикул</td>
+          <td><span class="pd-spec-mono">{{ product.sku }}</span></td>
+        </tr>
+        {% if product.oem_number %}
+        <tr>
+          <td>OEM-номер</td>
+          <td><span class="pd-spec-mono">{{ product.oem_number }}</span></td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td>Категория</td>
+          <td>
+            {% if product.category.parent %}{{ product.category.parent.name }} → {% endif %}{{ product.category.name }}
+          </td>
+        </tr>
+        <tr>
+          <td>Тип</td>
+          <td>
+            {% if product.is_original %}
+            <span class="pd-type-badge pd-type-original">Оригинал</span>
+            {% else %}
+            <span class="pd-type-badge pd-type-analogue">Аналог</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% if product.weight %}
+        <tr>
+          <td>Вес</td>
+          <td>{{ product.weight }} кг</td>
+        </tr>
+        {% endif %}
+        {% for attr in product.attributes.all %}
+        <tr>
+          <td>{{ attr.name }}</td>
+          <td>{{ attr.value }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Таб: Применимость -->
+    <div class="pd-tab-pane" id="pd-tab-apply">
+      {% if product.brands.exists %}
+      <div class="pd-apply-grid">
+        {% for brand in product.brands.all %}
+        <a href="{% url 'catalog:catalog' %}?brand={{ brand.slug }}" class="pd-apply-card">
+          <div class="pd-apply-brand">{{ brand.name }}</div>
+          <div class="pd-apply-link">Все запчасти для {{ brand.name }} →</div>
+        </a>
         {% endfor %}
       </div>
+      {% else %}
+      <p class="pd-tab-empty">Информация о применимости будет дополнена.</p>
       {% endif %}
+    </div>
 
-    </div><!-- /.tab-content -->
-  </div>
-
-  <!-- ========== ПОХОЖИЕ ТОВАРЫ ========== -->
-  {% if related %}
-  <div class="mt-5">
-    <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:20px;">
-      Похожие товары
-      <span style="color:var(--color-text-muted);font-size:0.85rem;font-weight:400;margin-left:8px;">из категории «{{ product.category.name }}»</span>
-    </h3>
-    <div class="row g-3">
-      {% for item in related %}
-      <div class="col-6 col-md-4 col-lg-3">
-        {% include 'includes/product_card.html' with product=item %}
+    <!-- Таб: OEM и аналоги -->
+    <div class="pd-tab-pane" id="pd-tab-analogues">
+      {% if product.analogues.exists %}
+      <div class="pd-tab-section-label">Аналоги и кросс-номера:</div>
+      <div class="pd-oem-tags">
+        {% for analogue in product.analogues.all %}
+        <a href="{% url 'catalog:catalog' %}?q={{ analogue.part_number }}"
+           class="pd-oem-tag" title="{{ analogue.brand_name }}">
+          {{ analogue.part_number }}
+        </a>
+        {% endfor %}
       </div>
+      {% else %}
+      <p class="pd-tab-empty">Кросс-номера будут дополнены.</p>
+      {% endif %}
+    </div>
+
+    <!-- Таб: Описание -->
+    <div class="pd-tab-pane" id="pd-tab-desc">
+      {% if product.description %}
+      <div class="pd-description">{{ product.description|linebreaks }}</div>
+      {% else %}
+      <p class="pd-tab-empty">Описание товара будет дополнено. Уточняйте у менеджера.</p>
+      {% endif %}
+    </div>
+
+  </div><!-- /pd-tabs-card -->
+
+  <!-- ═══════════════════════════════════════════
+       ПОХОЖИЕ ТОВАРЫ
+       ═══════════════════════════════════════════ -->
+  {% if related %}
+  <div class="pd-related">
+    <h2 class="pd-related-title">С этим товаром часто покупают</h2>
+    <div class="pd-related-grid">
+      {% for item in related %}
+      {% include 'includes/product_card.html' with product=item %}
       {% endfor %}
     </div>
   </div>
   {% endif %}
 
-</div><!-- /container -->
+  <!-- ═══════════════════════════════════════════
+       CTA-БАННЕР
+       ═══════════════════════════════════════════ -->
+  <div class="pd-cta-banner">
+    <div class="pd-cta-content">
+      <div class="pd-cta-text">
+        <div class="pd-cta-title">Нужна другая модификация?</div>
+        <div class="pd-cta-sub">Менеджер подберёт аналог за 30 минут</div>
+      </div>
+      <div class="pd-cta-btns">
+        <a href="{% url 'main:contacts' %}" class="pd-cta-btn-white">Оставить заявку</a>
+        <a href="tel:+78001234567" class="pd-cta-btn-outline">Позвонить</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pd-outer -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function setMainImage(url, thumb) {
-  document.getElementById('gallery-main-img').src = url;
-  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+// ── Галерея ──────────────────────────────────────────────
+function pdSetMainImage(url, thumb) {
+  var img = document.getElementById('pd-main-img');
+  if (img) img.src = url;
+  document.querySelectorAll('.pd-thumb').forEach(function(t) { t.classList.remove('active'); });
   thumb.classList.add('active');
 }
 
-function changeQty(delta) {
-  var input = document.getElementById('qty-input');
-  var val = parseInt(input.value) + delta;
-  var max = parseInt(input.max) || 9999;
-  input.value = Math.max(1, Math.min(val, max));
-}
-
+// ── Копирование артикула ──────────────────────────────────
 (function() {
-  var btn = document.getElementById('detail-add-to-cart');
+  var skuEl    = document.getElementById('pd-sku');
+  var copiedEl = document.getElementById('pd-sku-copied');
+  if (!skuEl) return;
+  skuEl.addEventListener('click', function() {
+    var text = skuEl.textContent.trim();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() { pdShowCopied(copiedEl); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      pdShowCopied(copiedEl);
+    }
+  });
+  function pdShowCopied(el) {
+    el.classList.add('visible');
+    setTimeout(function() { el.classList.remove('visible'); }, 1500);
+  }
+})();
+
+// ── Количество ───────────────────────────────────────────
+(function() {
+  var input   = document.getElementById('pd-qty-input');
+  var btnMinus = document.getElementById('pd-qty-minus');
+  var btnPlus  = document.getElementById('pd-qty-plus');
+  if (!input) return;
+  var maxStock = parseInt(input.max) || 9999;
+
+  btnMinus.addEventListener('click', function() {
+    var v = parseInt(input.value) || 1;
+    input.value = Math.max(1, v - 1);
+  });
+  btnPlus.addEventListener('click', function() {
+    var v = parseInt(input.value) || 1;
+    input.value = Math.min(maxStock || 9999, v + 1);
+  });
+  input.addEventListener('change', function() {
+    var v = parseInt(input.value) || 1;
+    input.value = Math.max(1, Math.min(v, maxStock || 9999));
+  });
+})();
+
+// ── Кнопка "В корзину" — 3 состояния + AJAX ──────────────
+(function() {
+  var btn   = document.getElementById('detail-add-to-cart');
   if (!btn) return;
-  var pid = btn.dataset.productId;
+  var pid   = btn.dataset.productId;
   var stock = parseInt(btn.dataset.stock) || 0;
+  var icon  = document.getElementById('pd-cart-icon');
+  var label = document.getElementById('pd-cart-label');
+
+  function setState(state) {
+    if (state === 'adding') {
+      btn.disabled = true;
+      icon.className = 'bi bi-arrow-repeat pd-spin me-2';
+      label.textContent = 'Добавляем...';
+      btn.style.background = '';
+    } else if (state === 'done') {
+      btn.disabled = false;
+      icon.className = 'bi bi-check-lg me-2';
+      label.textContent = 'Добавлено';
+      btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
+    } else {
+      btn.disabled = false;
+      icon.className = 'bi bi-cart-plus me-2';
+      label.textContent = 'Добавить в корзину';
+      btn.style.background = '';
+    }
+  }
 
   btn.addEventListener('click', function() {
     {% if not user.is_authenticated %}
     window.location.href = '{% url "accounts:login" %}?next={{ request.path }}';
     return;
     {% endif %}
-    var qty = Math.min(parseInt(document.getElementById('qty-input').value) || 1, stock);
-    var csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
-    btn.disabled = true;
+    if (stock > 0) {
+      var qty = parseInt(document.getElementById('pd-qty-input').value) || 1;
+      qty = Math.min(qty, stock);
+    } else {
+      var qty = 1;
+    }
+    var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+    setState('adding');
     fetch('/cart/add/' + pid + '/', {
       method: 'POST',
-      headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded'},
+      headers: {
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       body: 'quantity=' + qty + '&override=false',
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      btn.disabled = false;
       if (data.success) {
         document.querySelectorAll('.cart-badge').forEach(function(el) {
           el.textContent = data.cart_total;
@@ -491,12 +502,72 @@ function changeQty(delta) {
         if (window.KAMEKS && window.KAMEKS.showToast) {
           window.KAMEKS.showToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
         }
+        setState('done');
+        setTimeout(function() { setState('default'); }, 2200);
       } else if (data.redirect) {
         window.location.href = data.redirect;
+        setState('default');
+      } else {
+        setState('default');
       }
     })
-    .catch(function() { btn.disabled = false; });
+    .catch(function() { setState('default'); });
   });
+})();
+
+// ── Табы ─────────────────────────────────────────────────
+(function() {
+  var btns  = document.querySelectorAll('.pd-tab-btn');
+  var panes = document.querySelectorAll('.pd-tab-pane');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = 'pd-tab-' + this.dataset.tab;
+      btns.forEach(function(b) { b.classList.remove('active'); });
+      panes.forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      var pane = document.getElementById(target);
+      if (pane) pane.classList.add('active');
+    });
+  });
+})();
+
+// ── Избранное (sessionStorage, визуальное) ────────────────
+function pdToggleFavorite(btn, productId) {
+  var key  = 'fav_' + productId;
+  var icon = btn.querySelector('i');
+  if (sessionStorage.getItem(key)) {
+    sessionStorage.removeItem(key);
+    icon.className = 'bi bi-heart me-1';
+    btn.classList.remove('pd-action-btn--active');
+  } else {
+    sessionStorage.setItem(key, '1');
+    icon.className = 'bi bi-heart-fill me-1';
+    btn.classList.add('pd-action-btn--active');
+  }
+}
+
+// ── Поделиться ────────────────────────────────────────────
+function pdShare() {
+  if (navigator.share) {
+    navigator.share({ title: document.title, url: window.location.href });
+  } else {
+    navigator.clipboard && navigator.clipboard.writeText(window.location.href);
+    if (window.KAMEKS && window.KAMEKS.showToast) {
+      window.KAMEKS.showToast('Ссылка скопирована');
+    }
+  }
+}
+
+// ── Восстановить избранное при загрузке ──────────────────
+(function() {
+  var favBtn = document.getElementById('pd-fav-btn');
+  if (!favBtn) return;
+  var pid = '{{ product.id }}';
+  if (sessionStorage.getItem('fav_' + pid)) {
+    var icon = favBtn.querySelector('i');
+    if (icon) icon.className = 'bi bi-heart-fill me-1';
+    favBtn.classList.add('pd-action-btn--active');
+  }
 })();
 </script>
 {% endblock %}
