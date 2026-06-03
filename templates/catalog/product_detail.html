@@ -104,7 +104,6 @@
           <span class="pd-sku-value" id="pd-sku" title="Нажмите, чтобы скопировать">{{ product.sku }}</span>
           <span class="pd-sku-copied" id="pd-sku-copied">Скопировано ✓</span>
         </div>
-        {% with product.attributes.filter(name="Производитель").first as mfr %}{% endwith %}
         {% for attr in product.attributes.all %}{% if attr.name == "Производитель" %}
         <span class="pd-mfr-badge">{{ attr.value }}</span>
         {% endif %}{% endfor %}
