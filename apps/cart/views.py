@@ -20,7 +20,9 @@ def cart_add(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id, is_active=True)
     quantity = int(request.POST.get('quantity', 1))
-    override = bool(request.POST.get('override', False))
+    # ВАЖНО: bool('false') == True в Python, поэтому парсим строку явно
+    override_raw = str(request.POST.get('override', '')).lower()
+    override = override_raw in ('true', '1', 'yes', 'on')
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
