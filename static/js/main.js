@@ -100,23 +100,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function updateCartBadges(total) {
-    var badges = document.querySelectorAll('.cart-badge');
-    if (badges.length > 0) {
-      badges.forEach(function(el) {
-        el.textContent = total;
-        el.style.display = total > 0 ? '' : 'none';
-      });
-    } else if (total > 0) {
-      // badge ещё не существует — создаём
-      document.querySelectorAll('a.navbar-icon-btn').forEach(function(link) {
-        if (link.href && link.href.includes('/cart/')) {
-          var badge = document.createElement('span');
-          badge.className = 'cart-badge';
-          badge.textContent = total;
-          link.appendChild(badge);
-        }
-      });
+    // Основной badge в шапке — всегда есть в DOM (id="navbar-cart-badge")
+    var main = document.getElementById('navbar-cart-badge');
+    if (main) {
+      main.textContent = total;
+      main.style.display = total > 0 ? '' : 'none';
     }
+    // Дополнительные .cart-badge если есть (виджеты на других страницах)
+    document.querySelectorAll('.cart-badge:not(#navbar-cart-badge)').forEach(function(el) {
+      el.textContent = total;
+      el.style.display = total > 0 ? '' : 'none';
+    });
   }
 
   function setWidgetQty(widget, qty) {

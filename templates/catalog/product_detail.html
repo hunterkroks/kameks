@@ -455,21 +455,16 @@ function pdSetMainImage(url, thumb) {
 
   // ── Обновить badge в шапке ──
   function updateBadge(total) {
-    var badges = document.querySelectorAll('.cart-badge');
-    if (badges.length) {
-      badges.forEach(function(el) {
-        el.textContent = total;
-        el.style.display = total > 0 ? '' : 'none';
-      });
-    } else if (total > 0) {
-      document.querySelectorAll('a.navbar-icon-btn').forEach(function(link) {
-        if (link.href && link.href.includes('/cart/')) {
-          var b = document.createElement('span');
-          b.className = 'cart-badge';
-          b.textContent = total;
-          link.appendChild(b);
-        }
-      });
+    // Используем общую функцию из main.js если доступна
+    if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
+      window.KAMEKS.updateCartBadges(total);
+      return;
+    }
+    // Fallback: напрямую по id (badge всегда есть в DOM)
+    var badge = document.getElementById('navbar-cart-badge');
+    if (badge) {
+      badge.textContent = total;
+      badge.style.display = total > 0 ? '' : 'none';
     }
   }
 

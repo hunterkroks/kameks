@@ -56,11 +56,10 @@
         </a>
 
         <!-- Корзина -->
-        <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" title="Корзина">
+        <a href="{% url 'cart:detail' %}" class="navbar-icon-btn position-relative" id="navbar-cart-link" title="Корзина">
           <i class="bi bi-cart2 fs-5"></i>
-          {% if cart %}
-          <span class="cart-badge">{{ cart|length }}</span>
-          {% endif %}
+          <span class="cart-badge" id="navbar-cart-badge"
+                style="{% if not cart %}display:none{% endif %}">{{ cart|length }}</span>
         </a>
 
         <!-- Личный кабинет -->
