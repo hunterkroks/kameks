@@ -4,292 +4,402 @@
 {% block title %}Корзина | КАМЭКС{% endblock %}
 
 {% block content %}
-<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+<!-- Хлебные крошки -->
+<div class="cart-bc-strip">
   <div class="container">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
-        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">Корзина</li>
-      </ol>
+    <nav class="cart-bc">
+      <a href="{% url 'main:index' %}">Главная</a>
+      <span class="cart-bc-sep">›</span>
+      <span class="cart-bc-current">Корзина</span>
     </nav>
   </div>
 </div>
 
-<div class="container py-4">
-  <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:24px;">
-    <i class="bi bi-cart3 me-2" style="color:var(--color-accent-blue);"></i>Корзина
-  </h1>
+<div class="container cart-page">
 
-  {% if not user.is_authenticated %}
-  <div style="text-align:center;padding:80px 0;">
-    <i class="bi bi-lock" style="font-size:3.5rem;display:block;margin-bottom:16px;color:var(--color-accent-blue);"></i>
-    <h4 style="color:var(--color-text-secondary);margin-bottom:10px;">Войдите в аккаунт</h4>
-    <p style="color:var(--color-text-muted);margin-bottom:24px;">Чтобы просматривать корзину и оформлять заказы</p>
-    <a href="{% url 'accounts:login' %}?next=/cart/" class="btn-kameks-primary text-decoration-none">
+{% if not user.is_authenticated %}
+  <!-- Гость: нужен вход -->
+  <div class="cart-empty">
+    <i class="bi bi-lock cart-empty-ico"></i>
+    <h2 class="cart-empty-title">Войдите в аккаунт</h2>
+    <p class="cart-empty-sub">Чтобы просматривать корзину и оформлять заказы</p>
+    <a href="{% url 'accounts:login' %}?next=/cart/" class="cart-empty-btn">
       <i class="bi bi-person me-2"></i>Войти в аккаунт
     </a>
   </div>
-  {% elif cart|length %}
-  <div class="row g-4">
 
-    <!-- Список товаров -->
-    <div class="col-lg-8">
-      <div id="cart-items" style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+{% elif cart_items %}
 
-        {% for item in cart %}
-        <div id="cart-row-{{ item.product.id }}"
-             style="padding:16px 20px;border-bottom:1px solid var(--color-border);"
-             class="d-flex gap-3 align-items-start cart-item-row">
-
-          <!-- Фото -->
-          <div style="width:80px;height:80px;flex-shrink:0;background:var(--color-bg-primary);border:1px solid var(--color-border);border-radius:var(--radius-sm);overflow:hidden;">
-            {% with item.product.get_main_image as img %}
-              {% if img %}
-              <img src="{{ img.image.url }}" alt="" style="width:100%;height:100%;object-fit:cover;">
-              {% else %}
-              <div class="d-flex align-items-center justify-content-center h-100" style="color:var(--color-text-muted);font-size:1.8rem;">
-                <i class="bi bi-image"></i>
-              </div>
-              {% endif %}
-            {% endwith %}
-          </div>
-
-          <!-- Информация -->
-          <div class="flex-grow-1">
-            <a href="{{ item.product.get_absolute_url }}" style="color:var(--color-text-primary);text-decoration:none;font-weight:600;font-size:0.95rem;">
-              {{ item.product.name }}
-            </a>
-            <div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:3px;">
-              Арт.: {{ item.product.sku }}
-            </div>
-            {% if item.product.stock > 0 %}
-            <div style="font-size:0.75rem;color:#27ae60;margin-top:2px;">
-              В наличии: {{ item.product.stock }} шт.
-            </div>
-            {% endif %}
-            <div class="d-flex align-items-center gap-1 mt-2">
-              <!-- Кнопки количества (AJAX) -->
-              <button class="qty-btn"
-                      data-product-id="{{ item.product.id }}"
-                      data-action="minus"
-                      data-add-url="{% url 'cart:add' item.product.id %}"
-                      data-current="{{ item.quantity }}"
-                      data-stock="{{ item.product.stock }}"
-                      style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">−</button>
-              <span id="qty-{{ item.product.id }}" style="width:32px;text-align:center;font-weight:600;">{{ item.quantity }}</span>
-              <button class="qty-btn"
-                      data-product-id="{{ item.product.id }}"
-                      data-action="plus"
-                      data-add-url="{% url 'cart:add' item.product.id %}"
-                      data-current="{{ item.quantity }}"
-                      data-stock="{{ item.product.stock }}"
-                      style="background:var(--color-bg-primary);border:1px solid var(--color-border);color:var(--color-text-secondary);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">+</button>
-              <span style="color:var(--color-text-muted);font-size:0.82rem;margin-left:4px;">× {{ item.price|floatformat:0 }} ₽</span>
-            </div>
-          </div>
-
-          <!-- Цена и удалить -->
-          <div class="text-end" style="flex-shrink:0;">
-            <div id="total-{{ item.product.id }}" style="font-size:1.1rem;font-weight:700;color:var(--color-accent-orange);">
-              {{ item.total_price|floatformat:0 }} ₽
-            </div>
-            <button class="remove-btn mt-2"
-                    data-product-id="{{ item.product.id }}"
-                    data-remove-url="{% url 'cart:remove' item.product.id %}"
-                    style="background:none;border:none;color:var(--color-text-muted);font-size:0.8rem;cursor:pointer;padding:0;"
-                    onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color=''">
-              <i class="bi bi-trash me-1"></i>Удалить
-            </button>
-          </div>
-
-        </div>
-        {% endfor %}
-
-      </div>
-
-      <div class="mt-3">
-        <a href="{% url 'catalog:catalog' %}" style="color:var(--color-accent-blue);text-decoration:none;font-size:0.88rem;">
-          <i class="bi bi-arrow-left me-1"></i>Продолжить покупки
-        </a>
+  <!-- ════════ ШАПКА КОРЗИНЫ ════════ -->
+  <div class="cart-head">
+    <div class="cart-head-left">
+      <span class="cart-head-icon"><i class="bi bi-cart3"></i></span>
+      <div>
+        <h1 class="cart-head-title">Корзина</h1>
+        <span class="cart-head-badge" id="cart-head-badge">
+          {{ unique_items_count }} {% if unique_items_count == 1 %}товар{% else %}товара{% endif %} · {{ items_count }} шт.
+        </span>
       </div>
     </div>
+    <div class="cart-head-actions">
+      {% if user.is_authenticated %}
+      <button type="button" class="cart-head-btn" id="cart-save-all" disabled title="Корзина сохраняется автоматически">
+        <i class="bi bi-bookmark-heart me-1"></i>Сохранить корзину
+      </button>
+      {% endif %}
+      <button type="button" class="cart-head-btn cart-head-btn--danger" id="cart-clear-btn">
+        <i class="bi bi-trash3 me-1"></i>Очистить
+      </button>
+    </div>
+  </div>
 
-    <!-- Итог -->
-    <div class="col-lg-4">
-      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;position:sticky;top:80px;">
-        <h5 style="font-weight:700;margin-bottom:20px;">Итого</h5>
+  <!-- ════════ ПРОГРЕСС ДО БЕСПЛАТНОЙ ДОСТАВКИ ════════ -->
+  <div class="cart-freeship" id="cart-freeship">
+    {% if free_delivery_reached %}
+    <div class="cart-freeship-done">
+      <i class="bi bi-check-circle-fill me-2"></i>У вас бесплатная доставка по России!
+    </div>
+    {% else %}
+    <div class="cart-freeship-text">
+      <i class="bi bi-truck me-2"></i>До бесплатной доставки осталось добавить товаров на
+      <b id="cart-freeship-remaining">{{ free_delivery_remaining|floatformat:0 }} ₽</b>
+    </div>
+    <div class="cart-freeship-bar">
+      <div class="cart-freeship-fill" id="cart-freeship-fill" style="width:{{ free_delivery_progress }}%;"></div>
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;color:var(--color-text-secondary);">
-          <span>Товаров:</span>
-          <span id="summary-count">{{ cart|length }} поз.</span>
-        </div>
-        <div class="d-flex justify-content-between mb-3" style="font-size:0.9rem;color:var(--color-text-secondary);">
-          <span>Стоимость товаров:</span>
-          <span id="summary-price">{{ cart.get_total_price|floatformat:0 }} ₽</span>
-        </div>
-        <div class="d-flex justify-content-between mb-3" style="font-size:0.9rem;color:var(--color-text-muted);">
-          <span>Доставка:</span>
-          <span>рассчитывается при оформлении</span>
+  <!-- ════════ ОСНОВНОЙ ГРИД ════════ -->
+  <div class="cart-grid">
+
+    <!-- ──── ЛЕВО: СПИСОК ТОВАРОВ ──── -->
+    <div class="cart-main">
+      <div class="cart-items-card">
+        <div class="cart-items-thead">
+          <span>Товар</span>
+          <span class="cart-th-price">Цена</span>
+          <span class="cart-th-qty">Количество</span>
+          <span class="cart-th-sum">Сумма</span>
+          <span></span>
         </div>
 
-        <div style="border-top:1px solid var(--color-border);padding-top:16px;margin-bottom:20px;">
-          <div class="d-flex justify-content-between">
-            <span style="font-weight:700;font-size:1rem;">Итого:</span>
-            <span id="summary-total" style="font-weight:800;font-size:1.4rem;color:var(--color-accent-orange);">
-              {{ cart.get_total_price|floatformat:0 }} ₽
-            </span>
+        <div id="cart-items">
+        {% for item in cart_items %}
+          <div class="cart-row" id="cart-row-{{ item.product.id }}">
+            <!-- Фото -->
+            <a href="{{ item.product.get_absolute_url }}" class="cart-row-photo">
+              {% if item.product.is_bestseller %}<span class="cart-row-badge cart-row-badge--hit">ХИТ</span>
+              {% elif item.product.is_new %}<span class="cart-row-badge cart-row-badge--new">НОВ</span>{% endif %}
+              {% with item.product.get_main_image as img %}
+                {% if img %}
+                <img src="{{ img.image.url }}" alt="">
+                {% else %}
+                <span class="cart-row-photo-ph"><i class="bi {% if item.product.category.icon %}{{ item.product.category.icon }}{% else %}bi-box-seam{% endif %}"></i></span>
+                {% endif %}
+              {% endwith %}
+            </a>
+
+            <!-- Информация -->
+            <div class="cart-row-info">
+              <a href="{{ item.product.get_absolute_url }}" class="cart-row-name">{{ item.product.name }}</a>
+              <div class="cart-row-meta">
+                <span class="cart-row-sku">{{ item.product.sku }}</span>
+                {% if item.manufacturer %}<span class="cart-row-mfr">{{ item.manufacturer.value }}</span>{% endif %}
+                {% for brand in item.brands %}<span class="cart-row-brand">{{ brand.name }}</span>{% endfor %}
+              </div>
+              <div class="cart-row-stock" style="color:{{ item.stock_color }};">
+                <i class="bi bi-circle-fill"></i> {{ item.stock_label }}
+              </div>
+              <button type="button" class="cart-row-savelater"
+                      data-product-id="{{ item.product.id }}"
+                      data-url="{% url 'cart:save_later' item.product.id %}">
+                <i class="bi bi-star me-1"></i>Отложить на потом
+              </button>
+            </div>
+
+            <!-- Цена -->
+            <div class="cart-row-price">
+              <div class="cart-row-price-val">{{ item.price|floatformat:0 }} ₽</div>
+              <div class="cart-row-price-sub">за шт.</div>
+            </div>
+
+            <!-- Количество -->
+            <div class="cart-row-qty">
+              <button class="qty-btn" data-product-id="{{ item.product.id }}" data-action="minus"
+                      data-add-url="{% url 'cart:add' item.product.id %}"
+                      data-current="{{ item.quantity }}" data-stock="{{ item.product.stock }}">−</button>
+              <span id="qty-{{ item.product.id }}" class="cart-row-qty-val">{{ item.quantity }}</span>
+              <button class="qty-btn" data-product-id="{{ item.product.id }}" data-action="plus"
+                      data-add-url="{% url 'cart:add' item.product.id %}"
+                      data-current="{{ item.quantity }}" data-stock="{{ item.product.stock }}">+</button>
+            </div>
+
+            <!-- Сумма -->
+            <div class="cart-row-sum" id="total-{{ item.product.id }}">{{ item.total|floatformat:0 }} ₽</div>
+
+            <!-- Удалить -->
+            <button class="cart-row-remove remove-btn" title="Удалить"
+                    data-product-id="{{ item.product.id }}"
+                    data-remove-url="{% url 'cart:remove' item.product.id %}">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        {% endfor %}
+        </div>
+
+        <!-- Нижняя строка действий -->
+        <div class="cart-items-foot">
+          <a href="{% url 'catalog:catalog' %}" class="cart-continue">
+            <i class="bi bi-arrow-left me-1"></i>Продолжить покупки
+          </a>
+          <div class="cart-items-foot-actions">
+            <a href="{% url 'cart:download_spec' %}" class="cart-foot-btn">
+              <i class="bi bi-file-earmark-pdf me-1"></i>Скачать спецификацию (PDF)
+            </a>
+            <button type="button" class="cart-foot-btn" id="cart-email-spec-btn">
+              <i class="bi bi-envelope me-1"></i>Отправить на email
+            </button>
           </div>
         </div>
+      </div>
 
-        <a href="{% url 'orders:checkout' %}" class="btn-kameks-primary text-decoration-none d-block text-center" style="font-size:1rem;padding:13px;">
-          <i class="bi bi-credit-card me-2"></i>Оформить заказ
+      <!-- ──── ОТЛОЖЕННЫЕ ТОВАРЫ ──── -->
+      <div id="cart-saved-block" style="{% if not saved_items %}display:none;{% endif %}">
+        <h3 class="cart-section-title">
+          <i class="bi bi-star me-2"></i>Отложенные товары
+          <span class="cart-section-count" id="cart-saved-count">{{ saved_items|length }}</span>
+        </h3>
+        <div class="cart-saved-grid" id="cart-saved-grid">
+          {% for saved in saved_items %}
+          <div class="cart-saved-card" id="saved-{{ saved.id }}">
+            <a href="{{ saved.product.get_absolute_url }}" class="cart-saved-photo">
+              {% with saved.product.get_main_image as img %}
+                {% if img %}<img src="{{ img.image.url }}" alt="">
+                {% else %}<span class="cart-saved-ph"><i class="bi bi-box-seam"></i></span>{% endif %}
+              {% endwith %}
+            </a>
+            <div class="cart-saved-info">
+              <a href="{{ saved.product.get_absolute_url }}" class="cart-saved-name">{{ saved.product.name|truncatechars:48 }}</a>
+              <div class="cart-saved-price">{{ saved.product.current_price|floatformat:0 }} ₽</div>
+              <button type="button" class="cart-saved-restore"
+                      data-saved-id="{{ saved.id }}"
+                      data-url="{% url 'cart:restore' saved.id %}">
+                <i class="bi bi-arrow-up me-1"></i>В корзину
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ──── РЕКОМЕНДАЦИИ ──── -->
+      {% if recommended_products %}
+      <div class="cart-reco">
+        <h3 class="cart-section-title"><i class="bi bi-lightbulb me-2"></i>С этими товарами часто покупают</h3>
+        <div class="cart-reco-grid">
+          {% for p in recommended_products %}
+          <div class="cart-reco-card">
+            <a href="{{ p.get_absolute_url }}" class="cart-reco-photo">
+              {% with p.get_main_image as img %}
+                {% if img %}<img src="{{ img.image.url }}" alt="">
+                {% else %}<span class="cart-reco-ph"><i class="bi bi-box-seam"></i></span>{% endif %}
+              {% endwith %}
+            </a>
+            <div class="cart-reco-sku">{{ p.sku }}</div>
+            <a href="{{ p.get_absolute_url }}" class="cart-reco-name">{{ p.name|truncatechars:46 }}</a>
+            <div class="cart-reco-price">{{ p.current_price|floatformat:0 }} ₽</div>
+            <button type="button" class="cart-reco-add reco-add-btn"
+                    data-product-id="{{ p.id }}"
+                    data-url="{% url 'cart:add' p.id %}">
+              <i class="bi bi-cart-plus me-1"></i>В корзину
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ──── ПРАВО: САЙДБАР ──── -->
+    <aside class="cart-side">
+
+      <!-- Промокод -->
+      <div class="cart-side-card">
+        <div class="cart-side-title"><i class="bi bi-ticket-perforated me-2"></i>Промокод</div>
+        <div id="cart-promo-form" style="{% if applied_promo %}display:none;{% endif %}">
+          <div class="cart-promo-row">
+            <input type="text" id="cart-promo-input" placeholder="Введите код" class="cart-promo-input">
+            <button type="button" id="cart-promo-apply" class="cart-promo-btn">Применить</button>
+          </div>
+          <div id="cart-promo-error" class="cart-promo-error" style="display:none;"></div>
+        </div>
+        <div id="cart-promo-applied" class="cart-promo-applied" style="{% if not applied_promo %}display:none;{% endif %}">
+          <span><i class="bi bi-check-circle-fill me-1"></i>Скидка <b id="cart-promo-pct">{{ discount_percent }}</b>% применена</span>
+          <button type="button" id="cart-promo-remove" class="cart-promo-remove" title="Отменить"><i class="bi bi-x"></i></button>
+        </div>
+      </div>
+
+      <!-- Доставка -->
+      <div class="cart-side-card">
+        <div class="cart-side-title"><i class="bi bi-truck me-2"></i>Способ доставки</div>
+        <div class="cart-delivery-list" id="cart-delivery-list">
+          <label class="cart-delivery-opt {% if selected_delivery == 'pickup' %}sel{% endif %}" data-method="pickup">
+            <input type="radio" name="delivery" value="pickup" {% if selected_delivery == 'pickup' %}checked{% endif %}>
+            <span class="cart-delivery-main">
+              <span class="cart-delivery-name">Самовывоз</span>
+              <span class="cart-delivery-desc">г. Набережные Челны · сегодня</span>
+            </span>
+            <span class="cart-delivery-cost">бесплатно</span>
+          </label>
+          <label class="cart-delivery-opt {% if selected_delivery == 'cdek' %}sel{% endif %}" data-method="cdek">
+            <input type="radio" name="delivery" value="cdek" {% if selected_delivery == 'cdek' %}checked{% endif %}>
+            <span class="cart-delivery-main">
+              <span class="cart-delivery-name">СДЭК</span>
+              <span class="cart-delivery-desc">2–4 дня</span>
+            </span>
+            <span class="cart-delivery-cost" data-base="450">{% if free_delivery_reached %}бесплатно{% else %}450 ₽{% endif %}</span>
+          </label>
+          <label class="cart-delivery-opt {% if selected_delivery == 'dellin' %}sel{% endif %}" data-method="dellin">
+            <input type="radio" name="delivery" value="dellin" {% if selected_delivery == 'dellin' %}checked{% endif %}>
+            <span class="cart-delivery-main">
+              <span class="cart-delivery-name">ТК «Деловые Линии»</span>
+              <span class="cart-delivery-desc">3–5 дней</span>
+            </span>
+            <span class="cart-delivery-cost" data-base="680">{% if free_delivery_reached %}бесплатно{% else %}680 ₽{% endif %}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Итого -->
+      <div class="cart-total-card">
+        <div class="cart-total-decor"></div>
+        <div class="cart-total-label">ИТОГО ПО ЗАКАЗУ</div>
+
+        <div class="cart-total-row">
+          <span>Товары (<span id="cart-total-count">{{ items_count }}</span> шт.)</span>
+          <span id="cart-total-items">{{ items_total|floatformat:0 }} ₽</span>
+        </div>
+        <div class="cart-total-row cart-total-row--discount" id="cart-total-discount-row"
+             style="{% if not discount %}display:none;{% endif %}">
+          <span>Скидка по промокоду</span>
+          <span id="cart-total-discount">−{{ discount|floatformat:0 }} ₽</span>
+        </div>
+        <div class="cart-total-row">
+          <span>Доставка</span>
+          <span id="cart-total-delivery">{% if delivery_cost %}{{ delivery_cost|floatformat:0 }} ₽{% else %}бесплатно{% endif %}</span>
+        </div>
+
+        <div class="cart-total-divider"></div>
+
+        <div class="cart-total-final">
+          <span>К оплате:</span>
+          <span id="cart-total-final">{{ total|floatformat:0 }} ₽</span>
+        </div>
+        <div class="cart-total-save" id="cart-total-save" style="{% if not discount %}display:none;{% endif %}">
+          <i class="bi bi-arrow-down"></i> Вы экономите <span id="cart-total-save-val">{{ discount|floatformat:0 }}</span> ₽
+        </div>
+
+        <a href="{% url 'orders:checkout' %}" class="cart-checkout-btn">
+          <i class="bi bi-lock-fill me-2"></i>Оформить заказ <i class="bi bi-arrow-right ms-1"></i>
         </a>
-
-        <div class="mt-3 text-center" style="font-size:0.75rem;color:var(--color-text-muted);">
+        <div class="cart-total-trust">
           <i class="bi bi-shield-lock me-1"></i>Безопасная оплата
           &nbsp;·&nbsp;
           <i class="bi bi-arrow-return-left me-1"></i>Возврат 14 дней
         </div>
-      </div>
-    </div>
 
+        {% if total_weight > 0 %}
+        <div class="cart-total-weight">
+          <i class="bi bi-box-seam me-1"></i>Общий вес заказа: ~{{ total_weight|floatformat:1 }} кг
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- B2B -->
+      <div class="cart-b2b-card">
+        <span class="cart-b2b-badge">B2B</span>
+        <div class="cart-b2b-title">Покупаете как юр. лицо?</div>
+        <p class="cart-b2b-desc">Выставим счёт на оплату с НДС и подготовим закрывающие документы.</p>
+        <button type="button" class="cart-b2b-btn" id="cart-invoice-btn">
+          <i class="bi bi-file-earmark-text me-1"></i>Запросить счёт <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+
+    </aside>
   </div>
 
-  {% else %}
-  <div id="cart-empty-state" style="text-align:center;padding:80px 0;color:var(--color-text-muted);">
-    <i class="bi bi-cart-x" style="font-size:4rem;display:block;margin-bottom:16px;"></i>
-    <h4 style="color:var(--color-text-secondary);margin-bottom:10px;">Корзина пуста</h4>
-    <p style="margin-bottom:24px;">Добавьте товары из каталога</p>
-    <a href="{% url 'catalog:catalog' %}" class="btn-kameks-primary text-decoration-none">
-      <i class="bi bi-grid me-1"></i>Перейти в каталог
+{% else %}
+  <!-- Пустая корзина -->
+  <div class="cart-empty" id="cart-empty-state">
+    <i class="bi bi-cart-x cart-empty-ico"></i>
+    <h2 class="cart-empty-title">Корзина пуста</h2>
+    <p class="cart-empty-sub">Добавьте товары из каталога</p>
+    <a href="{% url 'catalog:catalog' %}" class="cart-empty-btn">
+      <i class="bi bi-grid me-2"></i>Перейти в каталог
     </a>
   </div>
-  {% endif %}
+{% endif %}
 
 </div>
 
+<!-- ════════ МОДАЛКИ ════════ -->
+<!-- Email спецификация -->
+<div class="cart-modal-overlay" id="modal-email" style="display:none;">
+  <div class="cart-modal-card">
+    <button type="button" class="cart-modal-close" data-close>&times;</button>
+    <div id="modal-email-form">
+      <h3 class="cart-modal-title">Отправить спецификацию</h3>
+      <p class="cart-modal-sub">Пришлём список товаров на вашу почту</p>
+      <input type="email" id="modal-email-input" class="cart-modal-input" placeholder="email@example.com">
+      <div class="cart-modal-error" id="modal-email-error" style="display:none;"></div>
+      <button type="button" class="cart-modal-submit" id="modal-email-submit">Отправить</button>
+    </div>
+    <div id="modal-email-success" class="cart-modal-success" style="display:none;">
+      <div class="cart-modal-success-ico"><i class="bi bi-check-circle-fill"></i></div>
+      <h3 class="cart-modal-title">Отправлено!</h3>
+      <p class="cart-modal-sub">Проверьте почту.</p>
+      <button type="button" class="cart-modal-submit" data-close>Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- B2B счёт -->
+<div class="cart-modal-overlay" id="modal-invoice" style="display:none;">
+  <div class="cart-modal-card">
+    <button type="button" class="cart-modal-close" data-close>&times;</button>
+    <div id="modal-invoice-form">
+      <h3 class="cart-modal-title">Запросить счёт</h3>
+      <p class="cart-modal-sub">Заполните реквизиты — выставим счёт в течение часа</p>
+      <input type="text"  id="inv-company" class="cart-modal-input" placeholder="Название компании">
+      <input type="text"  id="inv-inn"     class="cart-modal-input" placeholder="ИНН">
+      <input type="email" id="inv-email"   class="cart-modal-input" placeholder="Email">
+      <input type="tel"   id="inv-phone"   class="cart-modal-input" placeholder="+7 (___) ___-__-__">
+      <textarea id="inv-comment" class="cart-modal-input" rows="2" placeholder="Комментарий (необязательно)"></textarea>
+      <div class="cart-modal-error" id="modal-invoice-error" style="display:none;"></div>
+      <button type="button" class="cart-modal-submit" id="modal-invoice-submit">Отправить заявку</button>
+    </div>
+    <div id="modal-invoice-success" class="cart-modal-success" style="display:none;">
+      <div class="cart-modal-success-ico"><i class="bi bi-check-circle-fill"></i></div>
+      <h3 class="cart-modal-title">Заявка принята!</h3>
+      <p class="cart-modal-sub">Менеджер выставит счёт и свяжется с вами.</p>
+      <button type="button" class="cart-modal-submit" data-close>Закрыть</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-(function () {
-  const csrfToken = '{{ csrf_token }}';
-
-  function fmt(num) {
-    return Math.round(num).toLocaleString('ru-RU') + ' ₽';
-  }
-
-  function updateSummary(cartTotal, grandTotal) {
-    const countEl = document.getElementById('summary-count');
-    const priceEl = document.getElementById('summary-price');
-    const totalEl = document.getElementById('summary-total');
-    const navBadge = document.querySelector('.cart-badge');
-    if (countEl) countEl.textContent = cartTotal + ' поз.';
-    if (priceEl) priceEl.textContent = fmt(grandTotal);
-    if (totalEl) totalEl.textContent = fmt(grandTotal);
-    if (navBadge) navBadge.textContent = cartTotal;
-  }
-
-  function syncQtyButtons(productId, qty, stock) {
-    document.querySelectorAll(`.qty-btn[data-product-id="${productId}"]`).forEach(btn => {
-      btn.dataset.current = qty;
-      if (btn.dataset.action === 'plus') {
-        btn.disabled = qty >= stock;
-        btn.style.opacity = qty >= stock ? '0.4' : '1';
-      }
-      if (btn.dataset.action === 'minus') {
-        btn.disabled = qty <= 1;
-        btn.style.opacity = qty <= 1 ? '0.4' : '1';
-      }
-    });
-  }
-
-  // Init button states on load
-  document.querySelectorAll('.qty-btn').forEach(btn => {
-    const qty = parseInt(btn.dataset.current);
-    const stock = parseInt(btn.dataset.stock);
-    const pid = btn.dataset.productId;
-    syncQtyButtons(pid, qty, stock);
-  });
-
-  // Quantity change
-  document.querySelectorAll('.qty-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-      const productId = this.dataset.productId;
-      const action = this.dataset.action;
-      const url = this.dataset.addUrl;
-      const stock = parseInt(this.dataset.stock);
-      let qty = parseInt(document.getElementById('qty-' + productId).textContent);
-
-      if (action === 'plus') qty = Math.min(qty + 1, stock);
-      else qty = Math.max(qty - 1, 1);
-
-      // Optimistic UI
-      document.getElementById('qty-' + productId).textContent = qty;
-      syncQtyButtons(productId, qty, stock);
-
-      try {
-        const fd = new FormData();
-        fd.append('csrfmiddlewaretoken', csrfToken);
-        fd.append('quantity', qty);
-        fd.append('override', 'true');
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: {'X-Requested-With': 'XMLHttpRequest'},
-          body: fd,
-        });
-        const data = await resp.json();
-        if (data.success) {
-          const itemTotal = document.getElementById('total-' + productId);
-          if (itemTotal) itemTotal.textContent = fmt(data.item_total);
-          updateSummary(data.cart_total, data.cart_grand_total);
-          syncQtyButtons(productId, data.item_quantity, data.stock);
-          document.getElementById('qty-' + productId).textContent = data.item_quantity;
-        }
-      } catch (e) {
-        console.error('Cart update failed', e);
-      }
-    });
-  });
-
-  // Remove item
-  document.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-      const productId = this.dataset.productId;
-      const url = this.dataset.removeUrl;
-      const row = document.getElementById('cart-row-' + productId);
-
-      // Animate out
-      row.style.transition = 'opacity 0.25s, max-height 0.3s';
-      row.style.opacity = '0';
-      row.style.overflow = 'hidden';
-      setTimeout(() => { row.style.maxHeight = row.offsetHeight + 'px'; }, 10);
-      setTimeout(() => { row.style.maxHeight = '0'; row.style.padding = '0'; }, 30);
-
-      try {
-        const fd = new FormData();
-        fd.append('csrfmiddlewaretoken', csrfToken);
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: {'X-Requested-With': 'XMLHttpRequest'},
-          body: fd,
-        });
-        const data = await resp.json();
-        setTimeout(() => {
-          row.remove();
-          updateSummary(data.cart_total, data.cart_grand_total);
-
-          // If cart is now empty — reload to show empty state
-          if (document.querySelectorAll('.cart-item-row').length === 0) {
-            window.location.reload();
-          }
-        }, 320);
-      } catch (e) {
-        // Restore on error
-        row.style.opacity = '1';
-        row.style.maxHeight = '';
-        row.style.padding = '';
-        console.error('Remove failed', e);
-      }
-    });
-  });
-})();
+window.CART_URLS = {
+  applyPromo:  '{% url "cart:apply_promo" %}',
+  removePromo: '{% url "cart:remove_promo" %}',
+  setDelivery: '{% url "cart:set_delivery" %}',
+  emailSpec:   '{% url "cart:email_spec" %}',
+  requestInvoice: '{% url "cart:request_invoice" %}',
+};
+window.CART_FREE_THRESHOLD = {{ free_delivery_threshold }};
 </script>
+<script src="{% static 'js/cart.js' %}"></script>
 {% endblock %}
