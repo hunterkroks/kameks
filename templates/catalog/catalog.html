@@ -210,8 +210,10 @@ var AJAX_URL = '{% url "catalog:catalog_ajax" %}';
 // Словари slug→name для тегов активных фильтров
 var BRAND_NAMES = { {% for b in brands %}"{{ b.slug }}": "{{ b.name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %} };
 var CAT_NAMES = {};
-{% for section in menu_cats %}{% for sub in section.children.all %}CAT_NAMES["{{ sub.slug }}"] = "{{ sub.name|escapejs }}";
-{% endfor %}{% endfor %}
+{% for section in menu_cats %}CAT_NAMES["{{ section.slug }}"] = "{{ section.name|escapejs }}";
+{% for sub in section.children.all %}CAT_NAMES["{{ sub.slug }}"] = "{{ sub.name|escapejs }}";
+{% for leaf in sub.children.all %}CAT_NAMES["{{ leaf.slug }}"] = "{{ leaf.name|escapejs }}";
+{% endfor %}{% endfor %}{% endfor %}
 
 // Состояние фильтров — инициализируется из Django, безопасно через json_script
 var filterState = {

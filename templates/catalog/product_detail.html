@@ -168,7 +168,7 @@
             <span id="pd-cart-label">Добавить в корзину</span>
           </button>
           <!-- Купить в 1 клик -->
-          <button type="button" class="pd-btn-oneclik">
+          <button type="button" class="pd-btn-oneclik" id="pd-oneclick-btn">
             <i class="bi bi-lightning-charge me-1"></i>Купить в 1 клик
           </button>
         </div>
@@ -386,6 +386,85 @@
   </div>
 
 </div><!-- /pd-outer -->
+
+<!-- ═══════════════════════════════════════════
+     МОДАЛКА «Купить в 1 клик»
+     ═══════════════════════════════════════════ -->
+<div id="quick-order-overlay"
+     style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.5);
+            align-items:center;justify-content:center;padding:16px;">
+  <div id="quick-order-card" role="dialog" aria-modal="true" aria-labelledby="quick-order-title"
+       style="background:#fff;width:100%;max-width:420px;border-radius:14px;padding:28px;
+              position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+
+    <button type="button" id="quick-order-close" aria-label="Закрыть"
+            style="position:absolute;top:14px;right:16px;background:none;border:none;
+                   font-size:26px;line-height:1;color:#9A968E;cursor:pointer;">&times;</button>
+
+    <!-- Форма -->
+    <div id="quick-order-form-wrap">
+      <h3 id="quick-order-title"
+          style="margin:0 0 4px;font-size:1.3rem;font-weight:700;color:#1B3A5C;">Быстрый заказ</h3>
+      <p style="margin:0 0 18px;font-size:0.82rem;color:#78776F;">
+        Оставьте контакты — перезвоним в течение 30 минут
+      </p>
+
+      <div style="background:#F6F4F0;border-radius:8px;padding:12px 14px;margin-bottom:18px;">
+        <div style="font-weight:600;font-size:0.92rem;color:#2A2A2A;line-height:1.3;">
+          {{ product.name|truncatechars:70 }}
+        </div>
+        <div style="font-size:0.78rem;color:#78776F;margin-top:3px;">
+          Артикул: {{ product.sku }}
+        </div>
+        <div style="font-size:1.05rem;font-weight:700;color:#1B3A5C;margin-top:6px;">
+          {{ product.current_price|floatformat:0 }} ₽
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <input type="text" id="quick-order-name" placeholder="Ваше имя"
+               style="width:100%;border:1px solid #E2DFD9;border-radius:6px;padding:10px 13px;
+                      font-size:0.95rem;outline:none;transition:border-color .15s;">
+      </div>
+      <div style="margin-bottom:18px;">
+        <input type="tel" id="quick-order-phone" placeholder="+7 (___) ___-__-__"
+               style="width:100%;border:1px solid #E2DFD9;border-radius:6px;padding:10px 13px;
+                      font-size:0.95rem;outline:none;transition:border-color .15s;">
+      </div>
+
+      <div id="quick-order-error"
+           style="display:none;color:#CC2B2B;font-size:0.82rem;margin-bottom:12px;"></div>
+
+      <button type="button" id="quick-order-submit"
+              style="width:100%;border:none;border-radius:8px;padding:13px;cursor:pointer;
+                     color:#fff;font-size:0.98rem;font-weight:600;
+                     background:linear-gradient(180deg,#2A4E7A,#1B3A5C);">
+        Отправить заявку
+      </button>
+    </div>
+
+    <!-- Успех -->
+    <div id="quick-order-success" style="display:none;text-align:center;padding:10px 0;">
+      <div style="font-size:48px;color:#1A7035;line-height:1;margin-bottom:12px;">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <h3 style="margin:0 0 8px;font-size:1.2rem;font-weight:700;color:#1B3A5C;">Заявка принята!</h3>
+      <p style="margin:0 0 20px;font-size:0.9rem;color:#555;">
+        Перезвоним в течение 30 минут.
+      </p>
+      <button type="button" id="quick-order-done"
+              style="width:100%;border:none;border-radius:8px;padding:13px;cursor:pointer;
+                     color:#fff;font-size:0.98rem;font-weight:600;
+                     background:linear-gradient(180deg,#2A4E7A,#1B3A5C);">
+        Закрыть
+      </button>
+    </div>
+
+  </div>
+</div>
+<style>
+  #quick-order-name:focus, #quick-order-phone:focus { border-color:#1B3A5C !important; }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -627,6 +706,107 @@ function pdSetMainImage(url, thumb) {
       }
     })
     .catch(function() { toast('Ошибка соединения', true); setError(); });
+  });
+})();
+
+// ── Модалка «Купить в 1 клик» ─────────────────────────────
+(function() {
+  var openBtn  = document.getElementById('pd-oneclick-btn');
+  var overlay  = document.getElementById('quick-order-overlay');
+  if (!openBtn || !overlay) return;
+
+  var card     = document.getElementById('quick-order-card');
+  var closeBtn = document.getElementById('quick-order-close');
+  var doneBtn  = document.getElementById('quick-order-done');
+  var submit   = document.getElementById('quick-order-submit');
+  var nameEl   = document.getElementById('quick-order-name');
+  var phoneEl  = document.getElementById('quick-order-phone');
+  var errEl    = document.getElementById('quick-order-error');
+  var formWrap = document.getElementById('quick-order-form-wrap');
+  var successW = document.getElementById('quick-order-success');
+  var pid      = '{{ product.id }}';
+
+  function openModal() {
+    formWrap.style.display = '';
+    successW.style.display = 'none';
+    errEl.style.display = 'none';
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(function() { nameEl.focus(); }, 50);
+  }
+  function closeModal() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  if (doneBtn) doneBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.style.display === 'flex') closeModal();
+  });
+
+  // Маска телефона +7 (___) ___-__-__
+  phoneEl.addEventListener('input', function() {
+    var d = phoneEl.value.replace(/\D/g, '');
+    if (d.startsWith('8')) d = '7' + d.slice(1);
+    if (!d.startsWith('7')) d = '7' + d;
+    d = d.slice(0, 11);
+    var out = '+7';
+    if (d.length > 1) out += ' (' + d.slice(1, 4);
+    if (d.length >= 4) out += ') ' + d.slice(4, 7);
+    if (d.length >= 7) out += '-' + d.slice(7, 9);
+    if (d.length >= 9) out += '-' + d.slice(9, 11);
+    phoneEl.value = out;
+  });
+
+  submit.addEventListener('click', function() {
+    var name  = nameEl.value.trim();
+    var phone = phoneEl.value.trim();
+    var digits = phone.replace(/\D/g, '');
+    if (!name) { errEl.textContent = 'Укажите ваше имя'; errEl.style.display = ''; return; }
+    if (digits.length < 11) { errEl.textContent = 'Укажите корректный телефон'; errEl.style.display = ''; return; }
+    errEl.style.display = 'none';
+
+    var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+    submit.disabled = true;
+    submit.textContent = 'Отправляем...';
+
+    var body = new URLSearchParams();
+    body.set('name', name);
+    body.set('phone', phone);
+    body.set('product_id', pid);
+
+    fetch('{% url "orders:quick_order" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    })
+    .then(function(r) { return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res) {
+      submit.disabled = false;
+      submit.textContent = 'Отправить заявку';
+      if (res.ok && res.data.success) {
+        formWrap.style.display = 'none';
+        successW.style.display = '';
+      } else {
+        errEl.textContent = (res.data && res.data.error) || 'Ошибка. Попробуйте ещё раз.';
+        errEl.style.display = '';
+      }
+    })
+    .catch(function() {
+      submit.disabled = false;
+      submit.textContent = 'Отправить заявку';
+      errEl.textContent = 'Ошибка соединения. Попробуйте ещё раз.';
+      errEl.style.display = '';
+    });
   });
 })();
 
