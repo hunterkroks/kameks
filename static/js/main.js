@@ -99,6 +99,12 @@ document.addEventListener('DOMContentLoaded', function () {
     return document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
   }
 
+  // Универсальный счётчик корзины в шапке. Вызывается из всех мест
+  // (карточки каталога, детальная страница) с cart_total_items из ответа сервера.
+  function updateCartCounter(count) {
+    updateCartBadges(count);
+  }
+
   function updateCartBadges(total) {
     // Основной badge в шапке — всегда есть в DOM (id="navbar-cart-badge")
     var main = document.getElementById('navbar-cart-badge');
@@ -227,6 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.KAMEKS.initCartWidgets = function(root) { initCartWidgets(root); };
   window.KAMEKS.showToast = function(msg, type) { showToast(msg, type); };
   window.KAMEKS.updateCartBadges = function(total) { updateCartBadges(total); };
+  window.KAMEKS.updateCartCounter = function(count) { updateCartCounter(count); };
 
   // --- Toast уведомление ---
   function showToast(message, type) {

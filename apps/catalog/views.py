@@ -104,9 +104,15 @@ def product_detail(request, slug):
     related = Product.objects.filter(
         category=product.category, is_active=True
     ).exclude(pk=product.pk)[:4]
+
+    from apps.cart.cart import Cart
+    cart = Cart(request)
+    in_cart_qty = cart.cart.get(str(product.id), {}).get('quantity', 0)
+
     return render(request, 'catalog/product_detail.html', {
         'product': product,
         'related': related,
+        'in_cart_qty': in_cart_qty,
     })
 
 

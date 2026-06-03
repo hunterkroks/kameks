@@ -162,7 +162,8 @@
           </div>
           <!-- В корзину -->
           <button type="button" id="detail-add-to-cart" class="pd-btn-cart"
-                  data-product-id="{{ product.id }}" data-stock="{{ product.stock }}">
+                  data-product-id="{{ product.id }}" data-stock="{{ product.stock }}"
+                  data-in-cart="{{ in_cart_qty }}">
             <i class="bi bi-cart-plus me-2" id="pd-cart-icon"></i>
             <span id="pd-cart-label">Добавить в корзину</span>
           </button>
@@ -170,6 +171,12 @@
           <button type="button" class="pd-btn-oneclik">
             <i class="bi bi-lightning-charge me-1"></i>Купить в 1 клик
           </button>
+        </div>
+
+        <!-- Сколько уже в корзине -->
+        <div class="pd-in-cart-note" id="pd-in-cart-note"
+             style="{% if not in_cart_qty %}display:none;{% endif %}margin-top:8px;font-size:13px;color:#1A7035;font-weight:600;">
+          <i class="bi bi-cart-check me-1"></i>В корзине: <span id="pd-in-cart-qty">{{ in_cart_qty }}</span> шт.
         </div>
 
         <!-- Строка действий -->
@@ -183,9 +190,6 @@
             <i class="bi bi-heart me-1"></i>В избранное
           </a>
           {% endif %}
-          <button class="pd-action-btn">
-            <i class="bi bi-bar-chart-steps me-1"></i>Сравнить
-          </button>
           <button class="pd-action-btn" onclick="pdShare()">
             <i class="bi bi-share me-1"></i>Поделиться
           </button>
@@ -425,7 +429,7 @@ function pdSetMainImage(url, thumb) {
   var btnMinus = document.getElementById('pd-qty-minus');
   var btnPlus  = document.getElementById('pd-qty-plus');
   if (!input) return;
-  var maxStock = parseInt(input.max) || 9999;
+  function curMax() { return parseInt(input.max) || 9999; }
 
   btnMinus.addEventListener('click', function() {
     var v = parseInt(input.value) || 1;
@@ -433,11 +437,11 @@ function pdSetMainImage(url, thumb) {
   });
   btnPlus.addEventListener('click', function() {
     var v = parseInt(input.value) || 1;
-    input.value = Math.min(maxStock || 9999, v + 1);
+    input.value = Math.min(curMax(), v + 1);
   });
   input.addEventListener('change', function() {
     var v = parseInt(input.value) || 1;
-    input.value = Math.max(1, Math.min(v, maxStock || 9999));
+    input.value = Math.max(1, Math.min(v, curMax()));
   });
 })();
 
@@ -447,20 +451,30 @@ function pdSetMainImage(url, thumb) {
   if (!btn) return;
   var pid      = btn.dataset.productId;
   var stock    = parseInt(btn.dataset.stock) || 0;  // 0 = под заказ (не ограничиваем)
-  var inCart   = 0;   // накапливается из ответов сервера
+  var inCart   = parseInt(btn.dataset.inCart) || 0; // уже в корзине (с сервера)
   var icon     = document.getElementById('pd-cart-icon');
   var label    = document.getElementById('pd-cart-label');
+  var qtyEl    = document.getElementById('pd-qty-input');
+  var note     = document.getElementById('pd-in-cart-note');
+  var noteQty  = document.getElementById('pd-in-cart-qty');
   var busy     = false;
   var timer    = null;
 
+  // available_to_add: сколько ещё можно положить (для "под заказ" — без лимита)
+  function availableToAdd() {
+    return stock > 0 ? Math.max(0, stock - inCart) : 9999;
+  }
+
   // ── Обновить badge в шапке ──
   function updateBadge(total) {
-    // Используем общую функцию из main.js если доступна
+    if (window.KAMEKS && window.KAMEKS.updateCartCounter) {
+      window.KAMEKS.updateCartCounter(total);
+      return;
+    }
     if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
       window.KAMEKS.updateCartBadges(total);
       return;
     }
-    // Fallback: напрямую по id (badge всегда есть в DOM)
     var badge = document.getElementById('navbar-cart-badge');
     if (badge) {
       badge.textContent = total;
@@ -468,8 +482,27 @@ function pdSetMainImage(url, thumb) {
     }
   }
 
-  // ── Toast без дедупликации ──
-  function toast(msg) {
+  // ── Заметка "В корзине: N шт." ──
+  function updateNote() {
+    if (!note) return;
+    if (inCart > 0) {
+      if (noteQty) noteQty.textContent = inCart;
+      note.style.display = '';
+    } else {
+      note.style.display = 'none';
+    }
+  }
+
+  // ── Обновить поле количества (max = available, value → 1) ──
+  function resetQtyInput() {
+    if (!qtyEl) return;
+    var avail = availableToAdd();
+    qtyEl.max = avail > 0 ? avail : 1;
+    qtyEl.value = avail > 0 ? Math.min(1, avail) || 1 : 1;
+  }
+
+  // ── Toast ──
+  function toast(msg, isError) {
     var c = document.getElementById('toast-container');
     if (!c) {
       c = document.createElement('div');
@@ -478,60 +511,70 @@ function pdSetMainImage(url, thumb) {
       document.body.appendChild(c);
     }
     var t = document.createElement('div');
-    t.style.cssText = 'background:#1B3A5C;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:300px;';
+    var bg = isError ? '#CC2B2B' : '#1B3A5C';
+    t.style.cssText = 'background:' + bg + ';color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:300px;';
     t.textContent = msg;
     c.appendChild(t);
     setTimeout(function() { t.style.opacity = '1'; }, 10);
     setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
-  // ── Визуальные состояния ──
+  // ── Текст кнопки в покое (зависит от состояния корзины/стока) ──
+  function applyIdleState() {
+    busy = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (availableToAdd() <= 0) {
+      setMaxed();
+      return;
+    }
+    btn.disabled = false;
+    btn.style.cursor = '';
+    btn.style.background = '';
+    btn.style.color = '';
+    icon.className = 'bi bi-cart-plus me-2';
+    label.textContent = inCart > 0 ? 'Добавить ещё' : 'Добавить в корзину';
+  }
+
+  // ── Состояния ──
   function setAdding() {
     busy = true;
     btn.disabled = true;
     icon.className = 'bi bi-arrow-repeat pd-spin me-2';
     label.textContent = 'Добавляем...';
     btn.style.background = '';
-    btn.style.cursor = '';
   }
 
   function setDone() {
-    btn.disabled = false;
+    busy = true;
+    btn.disabled = true;
     icon.className = 'bi bi-check-lg me-2';
-    label.textContent = 'В корзине ' + inCart + ' шт.';
+    label.textContent = 'Добавлено';
     btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
     if (timer) clearTimeout(timer);
-    timer = setTimeout(function() {
-      var canAdd = (stock === 0) || (inCart < stock);
-      if (canAdd) {
-        busy = false;
-        btn.disabled = false;
-        icon.className = 'bi bi-cart-plus me-2';
-        label.textContent = 'Добавить ещё';
-        btn.style.background = '';
-      } else {
-        setMaxed();
-      }
-    }, 2000);
+    timer = setTimeout(applyIdleState, 1500);
   }
 
   function setMaxed() {
     busy = true;
     btn.disabled = true;
+    if (timer) { clearTimeout(timer); timer = null; }
     icon.className = 'bi bi-check-circle me-2';
-    label.textContent = 'Весь остаток в корзине (' + inCart + ' шт.)';
-    btn.style.background = 'linear-gradient(180deg,#555,#3a3a3a)';
+    label.textContent = 'Максимум в корзине';
+    btn.style.background = '#E0DDD8';
+    btn.style.color = '#78776F';
     btn.style.cursor = 'not-allowed';
   }
 
   function setError() {
     busy = false;
-    btn.disabled = false;
-    icon.className = 'bi bi-cart-plus me-2';
-    label.textContent = 'Добавить в корзину';
-    btn.style.background = '';
-    btn.style.cursor = '';
+    if (timer) { clearTimeout(timer); timer = null; }
+    applyIdleState();
   }
+
+  // ── Инициализация при загрузке ──
+  resetQtyInput();
+  updateNote();
+  applyIdleState();
 
   // ── Клик ──
   btn.addEventListener('click', function() {
@@ -541,15 +584,11 @@ function pdSetMainImage(url, thumb) {
     {% endif %}
     if (busy) return;
 
-    var qtyEl = document.getElementById('pd-qty-input');
-    var qty   = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1) || 1);
+    var avail = availableToAdd();
+    if (avail <= 0) { setMaxed(); return; }
 
-    // Ограничиваем: нельзя добавить больше чем (остаток − уже в корзине)
-    if (stock > 0) {
-      var canAdd = stock - inCart;
-      if (canAdd <= 0) { setMaxed(); return; }
-      qty = Math.min(qty, canAdd);
-    }
+    var qty = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1) || 1);
+    qty = Math.min(qty, avail);
 
     var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
     setAdding();
@@ -563,22 +602,31 @@ function pdSetMainImage(url, thumb) {
       },
       body: 'quantity=' + qty + '&override=false',
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.success) {
-        inCart = data.item_quantity;
+    .then(function(r) { return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      var data = res.data;
+      if (res.ok && data.success) {
+        inCart = data.cart_quantity;
         if (data.stock !== undefined) stock = data.stock;
-        updateBadge(data.cart_total);
+        updateBadge(data.cart_total_items);
+        updateNote();
+        resetQtyInput();
         toast('Добавлено в корзину — ' + inCart + ' шт.');
         setDone();
+      } else if (data.error === 'stock_exceeded') {
+        if (data.cart_quantity !== undefined) inCart = data.cart_quantity;
+        updateNote();
+        resetQtyInput();
+        toast(data.message || 'Недостаточно товара на складе', true);
+        applyIdleState();
       } else if (data.redirect) {
         window.location.href = data.redirect;
-        setError();
       } else {
+        toast('Не удалось добавить товар', true);
         setError();
       }
     })
-    .catch(function() { setError(); });
+    .catch(function() { toast('Ошибка соединения', true); setError(); });
   });
 })();
 
