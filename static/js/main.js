@@ -235,12 +235,8 @@ document.addEventListener('DOMContentLoaded', function () {
   window.KAMEKS.updateCartBadges = function(total) { updateCartBadges(total); };
 
   // --- Toast уведомление ---
-  var _toastTimers = {};
   function showToast(message, type) {
     type = type || 'success';
-    // Не показываем дубль того же сообщения, пока предыдущий ещё виден
-    if (_toastTimers[message]) return;
-
     var container = document.getElementById('toast-container');
     if (!container) {
       container = document.createElement('div');
@@ -254,10 +250,9 @@ document.addEventListener('DOMContentLoaded', function () {
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(function() { toast.style.opacity = '1'; }, 10);
-    _toastTimers[message] = setTimeout(function() {
+    setTimeout(function() {
       toast.style.opacity = '0';
       setTimeout(function() { toast.remove(); }, 300);
-      delete _toastTimers[message];
     }, 3000);
   }
 

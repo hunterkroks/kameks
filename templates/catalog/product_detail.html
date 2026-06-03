@@ -441,23 +441,20 @@ function pdSetMainImage(url, thumb) {
   });
 })();
 
-// ── Кнопка "В корзину" — блокировка, остаток, badge, toast ──
+// ── Кнопка "В корзину" ───────────────────────────────────
 (function() {
-  var btn   = document.getElementById('detail-add-to-cart');
+  var btn  = document.getElementById('detail-add-to-cart');
   if (!btn) return;
-  var pid        = btn.dataset.productId;
-  var stockLeft  = parseInt(btn.dataset.stock) || 0;  // остаток — обновляется из ответа
-  var inCart     = 0;   // сколько уже в корзине (накапливаем)
-  var icon       = document.getElementById('pd-cart-icon');
-  var label      = document.getElementById('pd-cart-label');
-  var busy       = false;
-  var doneTimer  = null;
+  var pid      = btn.dataset.productId;
+  var stock    = parseInt(btn.dataset.stock) || 0;  // 0 = под заказ (не ограничиваем)
+  var inCart   = 0;   // накапливается из ответов сервера
+  var icon     = document.getElementById('pd-cart-icon');
+  var label    = document.getElementById('pd-cart-label');
+  var busy     = false;
+  var timer    = null;
 
-  function updateCartBadge(total) {
-    if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
-      window.KAMEKS.updateCartBadges(total);
-      return;
-    }
+  // ── Обновить badge в шапке ──
+  function updateBadge(total) {
     var badges = document.querySelectorAll('.cart-badge');
     if (badges.length) {
       badges.forEach(function(el) {
@@ -467,20 +464,17 @@ function pdSetMainImage(url, thumb) {
     } else if (total > 0) {
       document.querySelectorAll('a.navbar-icon-btn').forEach(function(link) {
         if (link.href && link.href.includes('/cart/')) {
-          var badge = document.createElement('span');
-          badge.className = 'cart-badge';
-          badge.textContent = total;
-          link.appendChild(badge);
+          var b = document.createElement('span');
+          b.className = 'cart-badge';
+          b.textContent = total;
+          link.appendChild(b);
         }
       });
     }
   }
 
-  function showToast(msg) {
-    if (window.KAMEKS && window.KAMEKS.showToast) {
-      window.KAMEKS.showToast(msg);
-      return;
-    }
+  // ── Toast без дедупликации ──
+  function toast(msg) {
     var c = document.getElementById('toast-container');
     if (!c) {
       c = document.createElement('div');
@@ -489,114 +483,107 @@ function pdSetMainImage(url, thumb) {
       document.body.appendChild(c);
     }
     var t = document.createElement('div');
-    t.style.cssText = 'background:#1B3A5C;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:280px;';
+    t.style.cssText = 'background:#1B3A5C;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:300px;';
     t.textContent = msg;
     c.appendChild(t);
     setTimeout(function() { t.style.opacity = '1'; }, 10);
     setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
-  function setMaxed() {
-    // достигнут лимит остатка — блокируем навсегда (до перезагрузки)
+  // ── Визуальные состояния ──
+  function setAdding() {
     busy = true;
     btn.disabled = true;
-    icon.className = 'bi bi-slash-circle me-2';
-    label.textContent = 'Нет больше в наличии';
-    btn.style.background = 'linear-gradient(180deg,#555,#444)';
-    btn.style.cursor = 'not-allowed';
+    icon.className = 'bi bi-arrow-repeat pd-spin me-2';
+    label.textContent = 'Добавляем...';
+    btn.style.background = '';
+    btn.style.cursor = '';
   }
 
-  function setDone(itemQty) {
-    // показываем "Добавлено" и через 2с возвращаемся, если нет лимита
-    if (doneTimer) clearTimeout(doneTimer);
+  function setDone() {
     btn.disabled = false;
     icon.className = 'bi bi-check-lg me-2';
-    label.textContent = 'Добавлено (' + itemQty + ' шт.)';
+    label.textContent = 'В корзине ' + inCart + ' шт.';
     btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
-    doneTimer = setTimeout(function() {
-      if (stockLeft > 0 && inCart < stockLeft) {
-        // можно добавить ещё
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function() {
+      var canAdd = (stock === 0) || (inCart < stock);
+      if (canAdd) {
         busy = false;
         btn.disabled = false;
         icon.className = 'bi bi-cart-plus me-2';
         label.textContent = 'Добавить ещё';
         btn.style.background = '';
-        btn.style.cursor = '';
-      } else if (stockLeft > 0) {
-        setMaxed();
       } else {
-        // товар под заказ — не ограничиваем
-        busy = false;
-        btn.disabled = false;
-        icon.className = 'bi bi-cart-plus me-2';
-        label.textContent = 'Добавить в корзину';
-        btn.style.background = '';
-        btn.style.cursor = '';
+        setMaxed();
       }
     }, 2000);
   }
 
+  function setMaxed() {
+    busy = true;
+    btn.disabled = true;
+    icon.className = 'bi bi-check-circle me-2';
+    label.textContent = 'Весь остаток в корзине (' + inCart + ' шт.)';
+    btn.style.background = 'linear-gradient(180deg,#555,#3a3a3a)';
+    btn.style.cursor = 'not-allowed';
+  }
+
+  function setError() {
+    busy = false;
+    btn.disabled = false;
+    icon.className = 'bi bi-cart-plus me-2';
+    label.textContent = 'Добавить в корзину';
+    btn.style.background = '';
+    btn.style.cursor = '';
+  }
+
+  // ── Клик ──
   btn.addEventListener('click', function() {
     {% if not user.is_authenticated %}
     window.location.href = '{% url "accounts:login" %}?next={{ request.path }}';
     return;
     {% endif %}
     if (busy) return;
-    busy = true;
 
-    var qtyInput = document.getElementById('pd-qty-input');
-    var qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
-    // не давать добавить больше остатка
-    if (stockLeft > 0) qty = Math.min(qty, stockLeft - inCart);
-    if (qty <= 0) { setMaxed(); return; }
+    var qtyEl = document.getElementById('pd-qty-input');
+    var qty   = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1) || 1);
+
+    // Ограничиваем: нельзя добавить больше чем (остаток − уже в корзине)
+    if (stock > 0) {
+      var canAdd = stock - inCart;
+      if (canAdd <= 0) { setMaxed(); return; }
+      qty = Math.min(qty, canAdd);
+    }
 
     var csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
-    btn.disabled = true;
-    icon.className = 'bi bi-arrow-repeat pd-spin me-2';
-    label.textContent = 'Добавляем...';
-    btn.style.background = '';
+    setAdding();
 
     fetch('/cart/add/' + pid + '/', {
       method: 'POST',
       headers: {
         'X-CSRFToken': csrf,
         'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'quantity=' + qty + '&override=false',
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.success) {
-        inCart     = data.item_quantity;             // сколько теперь в корзине
-        stockLeft  = data.stock !== undefined ? data.stock : stockLeft;  // актуальный остаток из БД
-        updateCartBadge(data.cart_total);
-        showToast('Добавлено в корзину: ' + inCart + ' шт.');
-        setDone(inCart);
-        if (stockLeft > 0 && inCart >= stockLeft) {
-          // сразу блокируем если исчерпали остаток
-          if (doneTimer) clearTimeout(doneTimer);
-          setTimeout(setMaxed, 2000);
-        }
+        inCart = data.item_quantity;
+        if (data.stock !== undefined) stock = data.stock;
+        updateBadge(data.cart_total);
+        toast('Добавлено в корзину — ' + inCart + ' шт.');
+        setDone();
       } else if (data.redirect) {
         window.location.href = data.redirect;
-        busy = false;
-        btn.disabled = false;
+        setError();
       } else {
-        busy = false;
-        btn.disabled = false;
-        icon.className = 'bi bi-cart-plus me-2';
-        label.textContent = 'Добавить в корзину';
-        btn.style.background = '';
+        setError();
       }
     })
-    .catch(function() {
-      busy = false;
-      btn.disabled = false;
-      icon.className = 'bi bi-cart-plus me-2';
-      label.textContent = 'Добавить в корзину';
-      btn.style.background = '';
-    });
+    .catch(function() { setError(); });
   });
 })();
 
