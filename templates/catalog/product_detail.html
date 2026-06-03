@@ -449,7 +449,8 @@ function pdSetMainImage(url, thumb) {
   var stock = parseInt(btn.dataset.stock) || 0;
   var icon  = document.getElementById('pd-cart-icon');
   var label = document.getElementById('pd-cart-label');
-  var busy  = false;   // блокировка повторных кликов до возврата в default
+  var busy  = false;
+  var toastShown = false;  // дедупликация toast на этой странице
 
   function setState(state) {
     if (state === 'adding') {
@@ -458,17 +459,54 @@ function pdSetMainImage(url, thumb) {
       label.textContent = 'Добавляем...';
       btn.style.background = '';
     } else if (state === 'done') {
+      // кнопка НЕ разблокируется — busy остаётся true до 'default'
       btn.disabled = false;
       icon.className = 'bi bi-check-lg me-2';
       label.textContent = 'Добавлено';
       btn.style.background = 'linear-gradient(180deg,#1A7035,#145A28,#0E4020)';
     } else {
-      btn.disabled = false;
       busy = false;
+      btn.disabled = false;
       icon.className = 'bi bi-cart-plus me-2';
       label.textContent = 'Добавить в корзину';
       btn.style.background = '';
     }
+  }
+
+  function pdUpdateBadge(total) {
+    // используем общую функцию если доступна, иначе обновляем напрямую
+    if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
+      window.KAMEKS.updateCartBadges(total);
+      return;
+    }
+    document.querySelectorAll('.cart-badge').forEach(function(el) {
+      el.textContent = total;
+      el.style.display = total > 0 ? '' : 'none';
+    });
+  }
+
+  function pdShowToast(msg) {
+    if (toastShown) return;
+    toastShown = true;
+    setTimeout(function() { toastShown = false; }, 3200);
+    if (window.KAMEKS && window.KAMEKS.showToast) {
+      window.KAMEKS.showToast(msg);
+      return;
+    }
+    // fallback если main.js ещё не инициализирован
+    var c = document.getElementById('toast-container');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'toast-container';
+      c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+      document.body.appendChild(c);
+    }
+    var t = document.createElement('div');
+    t.style.cssText = 'background:#1B3A5C;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.3s ease;max-width:280px;';
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(function() { t.style.opacity = '1'; }, 10);
+    setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
   btn.addEventListener('click', function() {
@@ -494,12 +532,8 @@ function pdSetMainImage(url, thumb) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.success) {
-        if (window.KAMEKS && window.KAMEKS.updateCartBadges) {
-          window.KAMEKS.updateCartBadges(data.cart_total);
-        }
-        if (window.KAMEKS && window.KAMEKS.showToast) {
-          window.KAMEKS.showToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
-        }
+        pdUpdateBadge(data.cart_total);
+        pdShowToast('Товар добавлен в корзину (' + data.item_quantity + ' шт.)');
         setState('done');
         setTimeout(function() { setState('default'); }, 2200);
       } else if (data.redirect) {
