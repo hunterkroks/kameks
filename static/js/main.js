@@ -452,3 +452,136 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
 });
+
+/* ─── CHECKOUT & ORDER SUCCESS ─── */
+(function () {
+  'use strict';
+
+  function phoneMask(input) {
+    function format(v) {
+      var d = v.replace(/\D/g, '');
+      if (d.startsWith('8')) d = '7' + d.slice(1);
+      if (!d.startsWith('7')) d = '7' + d;
+      d = d.slice(0, 11);
+      var out = '+7';
+      if (d.length > 1) out += ' (' + d.slice(1, 4);
+      if (d.length >= 4) out += ') ' + d.slice(4, 7);
+      if (d.length >= 7) out += '-' + d.slice(7, 9);
+      if (d.length >= 9) out += '-' + d.slice(9, 11);
+      return out;
+    }
+    input.addEventListener('input', function () {
+      input.value = format(input.value);
+    });
+    input.addEventListener('focus', function () {
+      if (!input.value) input.value = '+7 ';
+    });
+  }
+  document.querySelectorAll('.js-phone').forEach(phoneMask);
+  document.querySelectorAll('.js-inn').forEach(function (el) {
+    el.addEventListener('input', function () {
+      el.value = el.value.replace(/\D/g, '').slice(0, 12);
+    });
+  });
+
+  // --- Переключение ФЛ / ЮЛ ---
+  var buyerToggle = document.getElementById('buyer-toggle');
+  if (buyerToggle) {
+    var btInput = document.getElementById('buyer-type-input');
+    var flBlock = document.getElementById('buyer-fl');
+    var ulBlock = document.getElementById('buyer-ul');
+    buyerToggle.querySelectorAll('.tbt-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        buyerToggle.querySelectorAll('.tbt-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var type = btn.getAttribute('data-buyer');
+        btInput.value = type;
+        if (type === 'ul') {
+          flBlock.style.display = 'none';
+          ulBlock.style.display = '';
+        } else {
+          flBlock.style.display = '';
+          ulBlock.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  // --- Выбор radio-карточек ---
+  document.querySelectorAll('.opt-list').forEach(function (list) {
+    list.querySelectorAll('.checkout-opt-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        list.querySelectorAll('.checkout-opt-card').forEach(function (c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        var radio = card.querySelector('input[type=radio]');
+        if (radio) radio.checked = true;
+        // адрес для доставки
+        if (list.getAttribute('data-group') === 'delivery') {
+          var addr = document.getElementById('address-block');
+          if (addr) {
+            if (card.getAttribute('data-delivery') === 'pickup') {
+              addr.style.display = 'none';
+            } else {
+              addr.style.display = '';
+              addr.classList.add('slide-down');
+            }
+          }
+        }
+      });
+    });
+  });
+
+  // --- Отправка формы: копируем ЮЛ-поля в основные, валидация ---
+  var form = document.getElementById('checkout-form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      var type = document.getElementById('buyer-type-input').value;
+      if (type === 'ul') {
+        var ulName = form.querySelector('.js-ul-name');
+        var ulPhone = form.querySelector('.js-ul-phone');
+        var ulEmail = form.querySelector('.js-ul-email');
+        form.querySelector('[name=full_name]').value = ulName ? ulName.value : '';
+        form.querySelector('input[name=phone]').value = ulPhone ? ulPhone.value : '';
+        form.querySelector('input[name=email]').value = ulEmail ? ulEmail.value : '';
+        var inn = (form.querySelector('[name=inn]').value || '').replace(/\D/g, '');
+        if (inn.length !== 10 && inn.length !== 12) {
+          e.preventDefault();
+          alert('ИНН должен содержать 10 или 12 цифр');
+          return;
+        }
+      }
+    });
+  }
+
+  // --- Копирование номера заказа ---
+  var copyBtn = document.getElementById('copy-order');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var num = copyBtn.getAttribute('data-number');
+      var done = function () {
+        copyBtn.innerHTML = '<i class="bi bi-check2"></i>';
+        setTimeout(function () { copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1800);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(num).then(done, done);
+      } else {
+        var t = document.createElement('textarea');
+        t.value = num; document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(t); done();
+      }
+    });
+  }
+
+  // --- Раскрытие деталей заказа ---
+  var dt = document.getElementById('details-toggle');
+  if (dt) {
+    dt.addEventListener('click', function () {
+      var body = document.getElementById('details-body');
+      var open = body.style.display === 'none';
+      body.style.display = open ? '' : 'none';
+      dt.classList.toggle('open', open);
+      dt.querySelector('span').textContent = open ? 'Скрыть детали заказа' : 'Показать детали заказа';
+    });
+  }
+})();

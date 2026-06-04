@@ -102,6 +102,12 @@ class Product(models.Model):
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['category']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['sku']),
+        ]
 
     def __str__(self):
         return f'{self.sku} — {self.name}'

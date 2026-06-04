@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 from apps.catalog.models import Product
@@ -8,6 +9,7 @@ User = get_user_model()
 class Order(models.Model):
     STATUS_NEW = 'new'
     STATUS_CONFIRMED = 'confirmed'
+    STATUS_PAID = 'paid'
     STATUS_SHIPPED = 'shipped'
     STATUS_DELIVERED = 'delivered'
     STATUS_CANCELLED = 'cancelled'
@@ -15,50 +17,84 @@ class Order(models.Model):
     STATUS_CHOICES = [
         (STATUS_NEW, 'Новый'),
         (STATUS_CONFIRMED, 'Подтверждён'),
+        (STATUS_PAID, 'Оплачен'),
         (STATUS_SHIPPED, 'Отправлен'),
         (STATUS_DELIVERED, 'Доставлен'),
         (STATUS_CANCELLED, 'Отменён'),
     ]
 
+    BUYER_TYPE_CHOICES = [
+        ('fl', 'Физическое лицо'),
+        ('ul', 'Юридическое лицо'),
+    ]
+
     DELIVERY_PICKUP = 'pickup'
+    DELIVERY_CDEK = 'cdek'
+    DELIVERY_DL = 'dl'
     DELIVERY_COURIER = 'courier'
-    DELIVERY_TC = 'transport_company'
 
     DELIVERY_CHOICES = [
         (DELIVERY_PICKUP, 'Самовывоз'),
-        (DELIVERY_COURIER, 'Курьер'),
-        (DELIVERY_TC, 'Транспортная компания'),
+        (DELIVERY_CDEK, 'СДЭК'),
+        (DELIVERY_DL, 'Деловые Линии'),
+        (DELIVERY_COURIER, 'Курьер по городу'),
     ]
 
-    PAYMENT_CASH = 'cash'
     PAYMENT_CARD = 'card'
+    PAYMENT_SBP = 'sbp'
+    PAYMENT_ON_DELIVERY = 'on_delivery'
     PAYMENT_INVOICE = 'invoice'
 
     PAYMENT_CHOICES = [
-        (PAYMENT_CASH, 'Наличные'),
-        (PAYMENT_CARD, 'Банковская карта'),
-        (PAYMENT_INVOICE, 'Счёт (для юр. лиц)'),
+        (PAYMENT_CARD, 'Картой онлайн'),
+        (PAYMENT_SBP, 'СБП'),
+        (PAYMENT_ON_DELIVERY, 'При получении'),
+        (PAYMENT_INVOICE, 'Безналичный расчёт (счёт)'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                              related_name='orders', verbose_name='Пользователь')
-    # Контактные данные (дублируем на случай гостевого заказа)
-    first_name = models.CharField('Имя', max_length=100)
-    last_name = models.CharField('Фамилия', max_length=100)
-    phone = models.CharField('Телефон', max_length=20)
-    email = models.EmailField('Email')
-    company = models.CharField('Компания', max_length=200, blank=True)
+    session_key = models.CharField('Ключ сессии', max_length=40, blank=True, db_index=True)
 
-    delivery_type = models.CharField('Способ доставки', max_length=30, choices=DELIVERY_CHOICES, default=DELIVERY_PICKUP)
-    delivery_address = models.TextField('Адрес доставки', blank=True)
+    buyer_type = models.CharField('Тип покупателя', max_length=2,
+                                  choices=BUYER_TYPE_CHOICES, default='fl')
+
+    # Контактные данные / поля ФЛ
+    full_name = models.CharField('ФИО', max_length=200, default='')
+    phone = models.CharField('Телефон', max_length=20, default='')
+    email = models.EmailField('Email', default='')
+
+    # Поля ЮЛ
+    company_name = models.CharField('Название компании', max_length=255, blank=True)
+    inn = models.CharField('ИНН', max_length=12, blank=True)
+    kpp = models.CharField('КПП', max_length=9, blank=True)
+
+    # Доставка
+    delivery_method = models.CharField('Способ доставки', max_length=20,
+                                       choices=DELIVERY_CHOICES, default=DELIVERY_PICKUP)
     delivery_city = models.CharField('Город', max_length=100, blank=True)
+    delivery_address = models.CharField('Адрес доставки', max_length=500, blank=True)
+    delivery_cost = models.DecimalField('Стоимость доставки', max_digits=10, decimal_places=2, default=0)
 
-    payment_type = models.CharField('Способ оплаты', max_length=20, choices=PAYMENT_CHOICES, default=PAYMENT_CARD)
+    # Оплата
+    payment_method = models.CharField('Способ оплаты', max_length=20,
+                                      choices=PAYMENT_CHOICES, default=PAYMENT_CARD)
 
-    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    # Суммы
+    items_total = models.DecimalField('Сумма товаров', max_digits=12, decimal_places=2, default=0)
+    discount = models.DecimalField('Скидка', max_digits=10, decimal_places=2, default=0)
+    promo_code = models.CharField('Промокод', max_length=30, blank=True)
+    total = models.DecimalField('Итого', max_digits=12, decimal_places=2, default=0)
+
     comment = models.TextField('Комментарий к заказу', blank=True)
+    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
 
-    total_price = models.DecimalField('Итого', max_digits=12, decimal_places=2, default=0)
+    order_number = models.CharField('Номер заказа', max_length=20, unique=True, blank=True)
+    invoice_file = models.CharField('Файл счёта', max_length=300, blank=True)
+
+    subscribe_news = models.BooleanField('Подписка на акции', default=False)
+
+    # Интеграция (сохранено из прежней модели)
     exported_to_1c = models.BooleanField('Выгружен в 1С', default=False)
     exported_at = models.DateTimeField('Дата выгрузки в 1С', null=True, blank=True)
     stock_deducted = models.BooleanField('Остаток списан', default=False)
@@ -72,7 +108,13 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Заказ #{self.pk} от {self.first_name} {self.last_name}'
+        return f'Заказ {self.order_number or self.pk} от {self.full_name}'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.order_number:
+            self.order_number = f'К-{datetime.now().year}-{self.pk:05d}'
+            super().save(update_fields=['order_number'])
 
     def get_total_cost(self):
         return sum(item.get_cost() for item in self.items.all())

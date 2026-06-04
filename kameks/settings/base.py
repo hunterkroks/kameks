@@ -89,3 +89,11 @@ CART_SESSION_ID = 'cart'
 
 # Email (настраивается в dev/prod)
 DEFAULT_FROM_EMAIL = 'noreply@kameks.ru'
+
+# Кэш
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'kameks-cache',
+    }
+}

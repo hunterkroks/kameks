@@ -4,138 +4,295 @@
 {% block title %}Оформление заказа | КАМЭКС{% endblock %}
 
 {% block content %}
-<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
-  <div class="container">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
-        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'cart:detail' %}" style="color:var(--color-accent-blue);">Корзина</a></li>
-        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">Оформление заказа</li>
-      </ol>
-    </nav>
-  </div>
-</div>
-
 <div class="container py-4">
-  <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:24px;">Оформление заказа</h1>
 
-  <form method="POST">
+  <h1 class="checkout-title">Оформление заказа</h1>
+
+  <!-- Прогресс -->
+  <div class="checkout-progress">
+    <div class="cp-step done">
+      <span class="cp-dot"><i class="bi bi-check-lg"></i></span>
+      <span class="cp-label">Корзина</span>
+    </div>
+    <span class="cp-line done"></span>
+    <div class="cp-step active">
+      <span class="cp-dot">2</span>
+      <span class="cp-label">Оформление</span>
+    </div>
+    <span class="cp-line"></span>
+    <div class="cp-step">
+      <span class="cp-dot">3</span>
+      <span class="cp-label">Заказ оформлен</span>
+    </div>
+  </div>
+
+  <form method="POST" id="checkout-form" novalidate>
     {% csrf_token %}
-    <div class="row g-4">
+    <div class="checkout-grid">
 
-      <!-- Левая колонка: форма -->
-      <div class="col-lg-7">
+      <!-- ЛЕВО -->
+      <div class="checkout-main">
 
-        <!-- Контактные данные -->
-        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;">
-          <h5 style="font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
-            <i class="bi bi-person me-2" style="color:var(--color-accent-blue);"></i>Контактные данные
-          </h5>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Имя *</label>
-              {{ form.first_name }}
-              {% if form.first_name.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.first_name.errors.0 }}</div>{% endif %}
+        <!-- Блок 1: тип покупателя -->
+        <div class="checkout-block">
+          <div class="checkout-block-head"><span class="cb-num">1</span> Тип покупателя</div>
+
+          <div class="toggle-buyer-type" id="buyer-toggle">
+            <button type="button" class="tbt-btn {% if form_data.buyer_type != 'ul' %}active{% endif %}" data-buyer="fl">Физическое лицо</button>
+            <button type="button" class="tbt-btn {% if form_data.buyer_type == 'ul' %}active{% endif %}" data-buyer="ul">Юридическое лицо</button>
+          </div>
+          <input type="hidden" name="buyer_type" id="buyer-type-input" value="{{ form_data.buyer_type|default:'fl' }}">
+
+          <!-- ФЛ -->
+          <div class="buyer-fields" id="buyer-fl" {% if form_data.buyer_type == 'ul' %}style="display:none;"{% endif %}>
+            <div class="field-grid">
+              <div class="field-full">
+                <label class="ck-label">ФИО <span class="req">*</span></label>
+                <input type="text" name="full_name" class="ck-input" placeholder="Иванов Иван Иванович" value="{{ form_data.full_name|default:'' }}">
+                {% if errors.full_name %}<div class="ck-err">{{ errors.full_name }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="ck-label">Телефон <span class="req">*</span></label>
+                <input type="text" name="phone" class="ck-input js-phone" placeholder="+7 (___) ___-__-__" value="{{ form_data.phone|default:'' }}">
+                {% if errors.phone %}<div class="ck-err">{{ errors.phone }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="ck-label">Email <span class="req">*</span></label>
+                <input type="email" name="email" class="ck-input" placeholder="you@mail.ru" value="{{ form_data.email|default:'' }}">
+                {% if errors.email %}<div class="ck-err">{{ errors.email }}</div>{% endif %}
+              </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Фамилия *</label>
-              {{ form.last_name }}
-              {% if form.last_name.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.last_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- ЮЛ -->
+          <div class="buyer-fields" id="buyer-ul" {% if form_data.buyer_type != 'ul' %}style="display:none;"{% endif %}>
+            <div class="field-grid">
+              <div class="field-full">
+                <label class="ck-label">Название компании <span class="req">*</span></label>
+                <input type="text" name="company_name" class="ck-input" placeholder="ООО «Название»" value="{{ form_data.company_name|default:'' }}">
+                {% if errors.company_name %}<div class="ck-err">{{ errors.company_name }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="ck-label">ИНН <span class="req">*</span></label>
+                <input type="text" name="inn" class="ck-input js-inn" inputmode="numeric" maxlength="12" placeholder="10 или 12 цифр" value="{{ form_data.inn|default:'' }}">
+                {% if errors.inn %}<div class="ck-err">{{ errors.inn }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="ck-label">КПП</label>
+                <input type="text" name="kpp" class="ck-input" inputmode="numeric" maxlength="9" placeholder="9 цифр" value="{{ form_data.kpp|default:'' }}">
+              </div>
+              <div>
+                <label class="ck-label">Контактное лицо <span class="req">*</span></label>
+                <input type="text" name="ul_full_name" class="ck-input js-ul-name" placeholder="Иванов Иван" value="{% if form_data.buyer_type == 'ul' %}{{ form_data.full_name|default:'' }}{% endif %}">
+              </div>
+              <div>
+                <label class="ck-label">Телефон <span class="req">*</span></label>
+                <input type="text" name="ul_phone" class="ck-input js-phone js-ul-phone" placeholder="+7 (___) ___-__-__" value="{% if form_data.buyer_type == 'ul' %}{{ form_data.phone|default:'' }}{% endif %}">
+              </div>
+              <div class="field-full">
+                <label class="ck-label">Email для счетов <span class="req">*</span></label>
+                <input type="email" name="ul_email" class="ck-input js-ul-email" placeholder="buh@company.ru" value="{% if form_data.buyer_type == 'ul' %}{{ form_data.email|default:'' }}{% endif %}">
+              </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Телефон *</label>
-              {{ form.phone }}
-              {% if form.phone.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.phone.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Email *</label>
-              {{ form.email }}
-              {% if form.email.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.email.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-12">
-              <label class="form-label">Компания (для юр. лиц)</label>
-              {{ form.company }}
+            <div class="ck-tip"><i class="bi bi-info-circle"></i> После оформления заказа автоматически сгенерируется счёт на оплату, который придёт на указанный email.</div>
+          </div>
+        </div>
+
+        <!-- Блок 2: доставка -->
+        <div class="checkout-block">
+          <div class="checkout-block-head"><span class="cb-num">2</span> Способ получения</div>
+
+          {% if has_free_delivery %}
+          <div class="free-banner ok"><i class="bi bi-check-circle-fill"></i> У вас бесплатная доставка</div>
+          {% else %}
+          <div class="free-banner">🎁 Бесплатная доставка по России при заказе от {{ free_delivery_threshold|floatformat:0 }} ₽</div>
+          {% endif %}
+
+          <div class="opt-list" data-group="delivery">
+            <label class="checkout-opt-card {% if form_data.delivery_method == 'pickup' or not form_data.delivery_method %}selected{% endif %}" data-delivery="pickup">
+              <input type="radio" name="delivery_method" value="pickup" {% if form_data.delivery_method == 'pickup' or not form_data.delivery_method %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">Самовывоз <span class="opt-badge green">СЕГОДНЯ</span></span>
+                <span class="opt-desc">Склад: г. Набережные Челны, пр. Машиностроительный, 1. Готов к выдаче сегодня.</span>
+              </span>
+              <span class="opt-price free">бесплатно</span>
+            </label>
+
+            <label class="checkout-opt-card {% if form_data.delivery_method == 'cdek' %}selected{% endif %}" data-delivery="cdek">
+              <input type="radio" name="delivery_method" value="cdek" {% if form_data.delivery_method == 'cdek' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">СДЭК</span>
+                <span class="opt-desc">Доставка до ПВЗ, 2–4 дня</span>
+              </span>
+              <span class="opt-price">{% if has_free_delivery %}<s>{{ cdek_cost|floatformat:0 }} ₽</s> <span class="free">бесплатно</span>{% else %}{{ cdek_cost|floatformat:0 }} ₽{% endif %}</span>
+            </label>
+
+            <label class="checkout-opt-card {% if form_data.delivery_method == 'dl' %}selected{% endif %}" data-delivery="dl">
+              <input type="radio" name="delivery_method" value="dl" {% if form_data.delivery_method == 'dl' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">Деловые Линии</span>
+                <span class="opt-desc">Транспортная компания, 3–5 дней</span>
+              </span>
+              <span class="opt-price">{% if has_free_delivery %}<s>{{ dl_cost|floatformat:0 }} ₽</s> <span class="free">бесплатно</span>{% else %}{{ dl_cost|floatformat:0 }} ₽{% endif %}</span>
+            </label>
+
+            <label class="checkout-opt-card {% if form_data.delivery_method == 'courier' %}selected{% endif %}" data-delivery="courier">
+              <input type="radio" name="delivery_method" value="courier" {% if form_data.delivery_method == 'courier' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">Курьер по Челнам</span>
+                <span class="opt-desc">В течение 24 часов</span>
+              </span>
+              <span class="opt-price">{% if has_free_delivery %}<s>{{ courier_cost|floatformat:0 }} ₽</s> <span class="free">бесплатно</span>{% else %}{{ courier_cost|floatformat:0 }} ₽{% endif %}</span>
+            </label>
+          </div>
+
+          <div class="address-block" id="address-block" {% if not form_data.delivery_method or form_data.delivery_method == 'pickup' %}style="display:none;"{% endif %}>
+            <div class="field-grid">
+              <div class="field-full">
+                <label class="ck-label">Город <span class="req">*</span></label>
+                <input type="text" name="delivery_city" class="ck-input" placeholder="Начните вводить — появятся автоподсказки" value="{{ form_data.delivery_city|default:'' }}">
+                {% if errors.delivery_city %}<div class="ck-err">{{ errors.delivery_city }}</div>{% endif %}
+              </div>
+              <div class="field-full">
+                <label class="ck-label">Улица, дом, квартира</label>
+                <input type="text" name="delivery_address" class="ck-input" placeholder="ул. Примерная, д. 1, кв. 2" value="{{ form_data.delivery_address|default:'' }}">
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Доставка -->
-        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;">
-          <h5 style="font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
-            <i class="bi bi-truck me-2" style="color:var(--color-accent-blue);"></i>Доставка
-          </h5>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label">Способ доставки *</label>
-              {{ form.delivery_type }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Город</label>
-              {{ form.delivery_city }}
-            </div>
-            <div class="col-12">
-              <label class="form-label">Адрес доставки</label>
-              {{ form.delivery_address }}
-            </div>
+        <!-- Блок 3: оплата -->
+        <div class="checkout-block">
+          <div class="checkout-block-head"><span class="cb-num">3</span> Способ оплаты</div>
+          <div class="opt-list" data-group="payment">
+            <label class="checkout-opt-card {% if form_data.payment_method == 'card' or not form_data.payment_method %}selected{% endif %}">
+              <input type="radio" name="payment_method" value="card" {% if form_data.payment_method == 'card' or not form_data.payment_method %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">Онлайн картой <span class="opt-badge green">−2%</span></span>
+                <span class="opt-desc">Visa, MasterCard, МИР</span>
+              </span>
+            </label>
+            <label class="checkout-opt-card {% if form_data.payment_method == 'sbp' %}selected{% endif %}">
+              <input type="radio" name="payment_method" value="sbp" {% if form_data.payment_method == 'sbp' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">СБП</span>
+                <span class="opt-desc">Оплата по QR-коду</span>
+              </span>
+            </label>
+            <label class="checkout-opt-card {% if form_data.payment_method == 'on_delivery' %}selected{% endif %}">
+              <input type="radio" name="payment_method" value="on_delivery" {% if form_data.payment_method == 'on_delivery' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">При получении</span>
+                <span class="opt-desc">Наличными или картой курьеру / на складе</span>
+              </span>
+            </label>
+            <label class="checkout-opt-card {% if form_data.payment_method == 'invoice' %}selected{% endif %}">
+              <input type="radio" name="payment_method" value="invoice" {% if form_data.payment_method == 'invoice' %}checked{% endif %}>
+              <span class="opt-check"></span>
+              <span class="opt-body">
+                <span class="opt-title">Безналичный расчёт <span class="opt-badge blue">B2B</span></span>
+                <span class="opt-desc">Счёт для юридических лиц</span>
+              </span>
+            </label>
           </div>
         </div>
 
-        <!-- Оплата -->
-        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;margin-bottom:20px;">
-          <h5 style="font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
-            <i class="bi bi-credit-card me-2" style="color:var(--color-accent-blue);"></i>Оплата
-          </h5>
-          <label class="form-label">Способ оплаты *</label>
-          {{ form.payment_type }}
-        </div>
+        <!-- Блок 4: комментарий и согласия -->
+        <div class="checkout-block">
+          <div class="checkout-block-head"><span class="cb-num">4</span> Комментарий и согласия</div>
+          <textarea name="comment" class="ck-input ck-textarea" rows="3" placeholder="Например: «позвоните перед отправкой», «проверьте наличие аналога»">{{ form_data.comment|default:'' }}</textarea>
 
-        <!-- Комментарий -->
-        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;">
-          <h5 style="font-weight:700;margin-bottom:14px;">
-            <i class="bi bi-chat-left-text me-2" style="color:var(--color-accent-blue);"></i>Комментарий к заказу
-          </h5>
-          {{ form.comment }}
+          <label class="ck-consent">
+            <input type="checkbox" name="agree" {% if form_data.agree %}checked{% endif %}>
+            <span>Я согласен с <a href="#">обработкой персональных данных</a> и <a href="#">публичной офертой</a> <span class="req">*</span></span>
+          </label>
+          {% if errors.agree %}<div class="ck-err">{{ errors.agree }}</div>{% endif %}
+          <label class="ck-consent">
+            <input type="checkbox" name="subscribe_news" {% if form_data.subscribe_news %}checked{% endif %}>
+            <span>Получать новости об акциях и спецпредложениях</span>
+          </label>
         </div>
 
       </div>
 
-      <!-- Правая колонка: итог -->
-      <div class="col-lg-5">
-        <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:24px;position:sticky;top:80px;">
-          <h5 style="font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
-            Ваш заказ
-          </h5>
+      <!-- ПРАВО: сайдбар -->
+      <aside class="checkout-aside">
 
-          {% for item in cart %}
-          <div class="d-flex justify-content-between align-items-start mb-3" style="font-size:0.88rem;">
-            <div style="flex:1;color:var(--color-text-secondary);padding-right:10px;">
-              {{ item.product.name|truncatechars:45 }}
-              <div style="color:var(--color-text-muted);font-size:0.75rem;">× {{ item.quantity }} шт.</div>
+        <div class="mini-cart">
+          <div class="mini-cart-head">
+            <span>Ваш заказ · {{ unique_items_count }} {% if unique_items_count == 1 %}позиция{% else %}позиции{% endif %}</span>
+            <a href="{% url 'cart:detail' %}" class="mini-cart-edit">Изменить</a>
+          </div>
+          {% for item in cart_items %}
+          <div class="mini-cart-row">
+            <div class="mc-thumb">
+              {% with img=item.product.get_main_image %}
+                {% if img %}<img src="{{ img.image.url }}" alt="">{% else %}<i class="bi bi-box"></i>{% endif %}
+              {% endwith %}
+              <span class="mc-qty">{{ item.quantity }}</span>
             </div>
-            <span style="font-weight:600;white-space:nowrap;color:var(--color-text-primary);">{{ item.total_price|floatformat:0 }} ₽</span>
+            <div class="mc-info">
+              <div class="mc-name">{{ item.product.name|truncatechars:60 }}</div>
+              <div class="mc-sku">{{ item.product.sku }}</div>
+            </div>
+            <div class="mc-price">{{ item.total_price|floatformat:0 }} ₽</div>
           </div>
           {% endfor %}
+        </div>
 
-          <div style="border-top:1px solid var(--color-border);padding-top:14px;margin-top:4px;">
-            <div class="d-flex justify-content-between align-items-center">
-              <span style="font-weight:700;font-size:1.05rem;">Итого:</span>
-              <span style="font-weight:800;font-size:1.5rem;color:var(--color-accent-orange);">
-                {{ cart.get_total_price|floatformat:0 }} ₽
-              </span>
-            </div>
-            <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:4px;">без учёта стоимости доставки</div>
+        <div class="checkout-totals">
+          <div class="ct-row">
+            <span>Товары ({{ items_count }} шт.)</span>
+            <span>{{ items_total|floatformat:0 }} ₽</span>
           </div>
+          {% if discount %}
+          <div class="ct-row">
+            <span>Скидка{% if applied_promo %} ({{ applied_promo }}){% endif %}</span>
+            <span class="ct-green">−{{ discount|floatformat:0 }} ₽</span>
+          </div>
+          {% endif %}
+          <div class="ct-row" id="ct-delivery">
+            <span>Доставка</span>
+            <span>{% if delivery_cost %}{{ delivery_cost|floatformat:0 }} ₽{% else %}бесплатно{% endif %}</span>
+          </div>
+          <div class="ct-divider"></div>
+          <div class="ct-row ct-total">
+            <span>К оплате</span>
+            <span id="ct-grand">{{ total|floatformat:0 }} ₽</span>
+          </div>
+          {% if discount %}
+          <div class="ct-save">↓ Вы экономите {{ discount|floatformat:0 }} ₽</div>
+          {% endif %}
+        </div>
 
-          <button type="submit" class="btn-kameks-primary w-100 mt-4" style="font-size:1.05rem;padding:14px;">
-            <i class="bi bi-check-circle me-2"></i>Подтвердить заказ
-          </button>
+        <button type="submit" class="checkout-btn-submit">
+          <span class="shimmer"></span>
+          🔒 Подтвердить заказ →
+        </button>
 
-          <div class="mt-3" style="font-size:0.75rem;color:var(--color-text-muted);text-align:center;line-height:1.6;">
-            Нажимая кнопку, вы соглашаетесь с
-            <a href="#" style="color:var(--color-accent-blue);">условиями обработки персональных данных</a>
+        <div class="checkout-guarantees">
+          <span><i class="bi bi-shield-lock"></i> Защищённое SSL-соединение</span>
+          <span><i class="bi bi-arrow-counterclockwise"></i> Возврат в течение 14 дней</span>
+          <span><i class="bi bi-patch-check"></i> Гарантия 12 месяцев</span>
+        </div>
+
+        <div class="manager-card">
+          <div class="mgr-avatar">{{ manager_info.initials }}</div>
+          <div class="mgr-info">
+            <div class="mgr-role">{{ manager_info.role }}</div>
+            <div class="mgr-name">{{ manager_info.name }}</div>
+            <a href="tel:{{ manager_info.phone }}" class="mgr-phone">{{ manager_info.phone }}</a>
           </div>
         </div>
-      </div>
+
+      </aside>
 
     </div>
   </form>

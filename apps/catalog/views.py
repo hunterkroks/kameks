@@ -12,7 +12,7 @@ SORT_MAP = {
 
 
 def catalog(request):
-    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('images')
+    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('brands', 'images', 'attributes')
 
     brand_slugs = request.GET.getlist('brand')
     category_slugs = request.GET.getlist('category')
@@ -74,7 +74,7 @@ def catalog(request):
     order = SORT_MAP.get(sort, '-created_at')
     products = products.order_by(order)
 
-    paginator = Paginator(products, 12)
+    paginator = Paginator(products, 24)
     products_page = paginator.get_page(request.GET.get('page'))
 
     categories = Category.objects.filter(parent__isnull=True, is_active=True)
@@ -98,7 +98,7 @@ def catalog(request):
 
 def product_detail(request, slug):
     product = get_object_or_404(
-        Product.objects.select_related('category').prefetch_related('images', 'analogues', 'brands', 'car_models'),
+        Product.objects.select_related('category', 'category__parent').prefetch_related('brands', 'images', 'attributes', 'analogues', 'car_models'),
         slug=slug, is_active=True
     )
     related = Product.objects.filter(
@@ -120,12 +120,12 @@ def by_brand(request, slug):
     brand = get_object_or_404(Brand, slug=slug, is_active=True)
     products = Product.objects.filter(
         brands=brand, is_active=True
-    ).select_related('category').prefetch_related('images')
+    ).select_related('category').prefetch_related('brands', 'images', 'attributes')
 
     sort = request.GET.get('sort', 'popular')
     products = products.order_by(SORT_MAP.get(sort, '-created_at'))
 
-    paginator = Paginator(products, 12)
+    paginator = Paginator(products, 24)
     products_page = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'catalog/catalog.html', {
@@ -145,7 +145,7 @@ def by_brand(request, slug):
 def catalog_ajax(request):
     """Возвращает HTML с товарами и пагинацией для AJAX-запросов каталога."""
     from django.template.loader import render_to_string
-    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('images', 'brands')
+    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('brands', 'images', 'attributes')
 
     brand_slugs = request.GET.getlist('brand')
     category_slugs = request.GET.getlist('category')
@@ -204,7 +204,7 @@ def catalog_ajax(request):
     order = SORT_MAP.get(sort, '-created_at')
     products = products.order_by(order)
 
-    paginator = Paginator(products, 12)
+    paginator = Paginator(products, 24)
     products_page = paginator.get_page(request.GET.get('page'))
 
     html = render_to_string('catalog/partials/products_grid.html', {

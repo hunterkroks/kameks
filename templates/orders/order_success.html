@@ -1,46 +1,154 @@
 {% extends 'base.html' %}
-{% block title %}Заказ #{{ order.pk }} оформлен | КАМЭКС{% endblock %}
+{% load static %}
+
+{% block title %}Заказ {{ order.order_number }} оформлен | КАМЭКС{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6 text-center">
+<div class="container py-4">
 
-      <div style="width:90px;height:90px;background:rgba(39,174,96,0.15);border:2px solid rgba(39,174,96,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
-        <i class="bi bi-check-lg" style="font-size:2.8rem;color:#27ae60;"></i>
+  <!-- Прогресс: все шаги пройдены -->
+  <div class="checkout-progress">
+    <div class="cp-step done">
+      <span class="cp-dot"><i class="bi bi-check-lg"></i></span>
+      <span class="cp-label">Корзина</span>
+    </div>
+    <span class="cp-line done"></span>
+    <div class="cp-step done">
+      <span class="cp-dot"><i class="bi bi-check-lg"></i></span>
+      <span class="cp-label">Оформление</span>
+    </div>
+    <span class="cp-line done"></span>
+    <div class="cp-step done">
+      <span class="cp-dot"><i class="bi bi-check-lg"></i></span>
+      <span class="cp-label">Заказ оформлен</span>
+    </div>
+  </div>
+
+  <!-- Главный блок успеха -->
+  <div class="success-card">
+    <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+    <h1 class="success-title">Заказ оформлен!</h1>
+    <p class="success-sub">Спасибо за заказ! Мы свяжемся с вами в течение 30 минут для подтверждения.</p>
+
+    <div class="success-order-number">
+      <div>
+        <div class="son-label">Номер заказа:</div>
+        <div class="son-value" id="order-number">{{ order.order_number }}</div>
       </div>
+      <button type="button" class="son-copy" id="copy-order" data-number="{{ order.order_number }}" title="Скопировать">
+        <i class="bi bi-clipboard"></i>
+      </button>
+    </div>
+  </div>
 
-      <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:10px;">Заказ оформлен!</h1>
-      <p style="color:var(--color-text-secondary);font-size:1rem;margin-bottom:24px;">
-        Ваш заказ <strong style="color:var(--color-white);">#{{ order.pk }}</strong> принят в обработку.<br>
-        Наш менеджер свяжется с вами по телефону <strong style="color:var(--color-white);">{{ order.phone }}</strong> в течение 30 минут.
-      </p>
-
-      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;text-align:left;margin-bottom:28px;">
-        <div class="row g-2" style="font-size:0.88rem;">
-          <div class="col-6" style="color:var(--color-text-muted);">Номер заказа:</div>
-          <div class="col-6" style="font-weight:600;">#{{ order.pk }}</div>
-          <div class="col-6" style="color:var(--color-text-muted);">Статус:</div>
-          <div class="col-6"><span style="color:#27ae60;font-weight:600;">{{ order.get_status_display }}</span></div>
-          <div class="col-6" style="color:var(--color-text-muted);">Сумма заказа:</div>
-          <div class="col-6" style="font-weight:700;color:var(--color-accent-orange);">{{ order.total_price|floatformat:0 }} ₽</div>
-          <div class="col-6" style="color:var(--color-text-muted);">Доставка:</div>
-          <div class="col-6">{{ order.get_delivery_type_display }}</div>
+  <!-- Что дальше -->
+  <div class="success-block">
+    <div class="success-block-head">Что дальше?</div>
+    <div class="next-step">
+      <span class="ns-icon">📞</span>
+      <div>
+        <div class="ns-title">Менеджер позвонит для подтверждения</div>
+        <div class="ns-desc">В течение 30 минут в рабочее время по телефону {{ order.phone }}.</div>
+      </div>
+    </div>
+    <div class="next-step">
+      <span class="ns-icon">💳</span>
+      <div>
+        <div class="ns-title">Оплата</div>
+        <div class="ns-desc">
+          {% if is_invoice %}Счёт на оплату сформирован и отправлен на ваш email.
+          {% elif order.payment_method == 'on_delivery' %}Оплата при получении — заказ будет готов к выдаче.
+          {% else %}После подтверждения менеджер пришлёт ссылку для онлайн-оплаты.{% endif %}
         </div>
       </div>
+    </div>
+    <div class="next-step">
+      <span class="ns-icon">📦</span>
+      <div>
+        <div class="ns-title">Сборка и отправка</div>
+        <div class="ns-desc">Способ: {{ delivery_label }}. Сроки зависят от выбранного способа доставки.</div>
+      </div>
+    </div>
+    <div class="next-step">
+      <span class="ns-icon">✓</span>
+      <div>
+        <div class="ns-title">Получение</div>
+        <div class="ns-desc">Вы получите уведомление о готовности заказа.</div>
+      </div>
+    </div>
+  </div>
 
-      <div class="d-flex flex-wrap gap-3 justify-content-center">
-        <a href="{% url 'catalog:catalog' %}" class="btn-kameks-primary text-decoration-none">
-          <i class="bi bi-grid me-1"></i>Продолжить покупки
-        </a>
-        {% if user.is_authenticated %}
-        <a href="{% url 'accounts:profile' %}" class="btn-kameks-outline text-decoration-none">
-          <i class="bi bi-person me-1"></i>Мои заказы
-        </a>
+  <!-- Детали заказа -->
+  <div class="success-block">
+    <button type="button" class="details-toggle" id="details-toggle">
+      <span>Показать детали заказа</span>
+      <i class="bi bi-chevron-down"></i>
+    </button>
+    <div class="details-body" id="details-body" style="display:none;">
+      <div class="details-grid">
+        <div class="dg-cell"><span class="dg-k">Получатель</span><span class="dg-v">{{ order.full_name }}</span></div>
+        <div class="dg-cell"><span class="dg-k">Телефон</span><span class="dg-v">{{ order.phone }}</span></div>
+        <div class="dg-cell"><span class="dg-k">Email</span><span class="dg-v">{{ order.email }}</span></div>
+        {% if order.buyer_type == 'ul' %}
+        <div class="dg-cell"><span class="dg-k">Компания</span><span class="dg-v">{{ order.company_name }}</span></div>
+        <div class="dg-cell"><span class="dg-k">ИНН</span><span class="dg-v">{{ order.inn }}{% if order.kpp %} / КПП {{ order.kpp }}{% endif %}</span></div>
+        {% endif %}
+        <div class="dg-cell"><span class="dg-k">Доставка</span><span class="dg-v">{{ delivery_label }}{% if order.delivery_city %} — {{ order.delivery_city }}{% if order.delivery_address %}, {{ order.delivery_address }}{% endif %}{% endif %}</span></div>
+        <div class="dg-cell"><span class="dg-k">Оплата</span><span class="dg-v">{{ payment_label }}</span></div>
+        {% if order.comment %}
+        <div class="dg-cell dg-full"><span class="dg-k">Комментарий</span><span class="dg-v">{{ order.comment }}</span></div>
         {% endif %}
       </div>
 
+      <div class="details-items">
+        {% for item in order_items %}
+        <div class="di-row">
+          <div class="di-info">
+            <div class="di-name">{{ item.product.name }}</div>
+            <div class="di-sku">Арт.: {{ item.product.sku }}</div>
+          </div>
+          <div class="di-qty">{{ item.price|floatformat:0 }} ₽ × {{ item.quantity }}</div>
+          <div class="di-cost">{{ item.get_cost|floatformat:0 }} ₽</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="details-totals">
+        <div class="dt-row"><span>Товары</span><span>{{ order.items_total|floatformat:0 }} ₽</span></div>
+        {% if order.discount %}<div class="dt-row"><span>Скидка</span><span class="ct-green">−{{ order.discount|floatformat:0 }} ₽</span></div>{% endif %}
+        <div class="dt-row"><span>Доставка</span><span>{% if order.delivery_cost %}{{ order.delivery_cost|floatformat:0 }} ₽{% else %}бесплатно{% endif %}</span></div>
+        <div class="dt-row dt-grand"><span>К оплате</span><span>{{ order.total|floatformat:0 }} ₽</span></div>
+      </div>
     </div>
   </div>
+
+  <!-- Действия -->
+  <div class="success-actions">
+    {% if is_invoice and has_invoice_file %}
+    <a href="{% url 'orders:invoice' order.order_number %}" class="sa-btn primary">📄 Скачать счёт на оплату</a>
+    {% endif %}
+    {% if user.is_authenticated %}
+    <a href="{% url 'accounts:profile' %}" class="sa-btn">👤 В личный кабинет</a>
+    {% endif %}
+    <a href="{% url 'catalog:catalog' %}" class="sa-btn">← Продолжить покупки</a>
+  </div>
+
+  <!-- Менеджер -->
+  <div class="manager-card mgr-wide">
+    <div class="mgr-avatar">{{ manager_info.initials }}</div>
+    <div class="mgr-info">
+      <div class="mgr-role">{{ manager_info.role }}</div>
+      <div class="mgr-name">{{ manager_info.name }}</div>
+      <a href="tel:{{ manager_info.phone }}" class="mgr-phone">{{ manager_info.phone }}</a>
+    </div>
+  </div>
+
+  <!-- Полезное -->
+  <div class="useful-grid">
+    <a href="{% url 'main:delivery' %}" class="useful-card"><i class="bi bi-truck"></i><span>Доставка и оплата</span></a>
+    <a href="{% url 'main:about' %}" class="useful-card"><i class="bi bi-patch-check"></i><span>Гарантия и возврат</span></a>
+    <a href="{% url 'main:contacts' %}" class="useful-card"><i class="bi bi-headset"></i><span>Контакты</span></a>
+  </div>
+
 </div>
 {% endblock %}

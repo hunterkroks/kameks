@@ -36,7 +36,7 @@ class Cart:
 
     def __iter__(self):
         product_ids = self.cart.keys()
-        products = Product.objects.filter(id__in=product_ids).prefetch_related('images')
+        products = Product.objects.filter(id__in=product_ids).select_related('category').prefetch_related('brands', 'images', 'attributes')
         cart = self.cart.copy()
         for product in products:
             cart[str(product.id)]['product'] = product

@@ -100,7 +100,7 @@
                 <td style="padding:12px 0;color:var(--color-accent-blue);font-weight:600;">#{{ order.pk }}</td>
                 <td style="padding:12px 0;color:var(--color-text-secondary);">{{ order.created_at|date:"d.m.Y" }}</td>
                 <td style="padding:12px 0;color:var(--color-text-secondary);">{{ order.items.count }} поз.</td>
-                <td style="padding:12px 0;font-weight:700;color:var(--color-accent-orange);">{{ order.total_price|floatformat:0 }} ₽</td>
+                <td style="padding:12px 0;font-weight:700;color:var(--color-accent-orange);">{{ order.total|floatformat:0 }} ₽</td>
                 <td style="padding:12px 0;">
                   {% if order.status == 'new' %}
                   <span style="background:rgba(46,134,222,0.15);color:var(--color-accent-blue);padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">{{ order.get_status_display }}</span>
