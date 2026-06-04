@@ -89,6 +89,8 @@ CART_SESSION_ID = 'cart'
 
 # Email (настраивается в dev/prod)
 DEFAULT_FROM_EMAIL = 'noreply@kameks.ru'
+# Жёсткий таймаут на отправку письма, чтобы недоступный SMTP не вешал HTTP-запрос
+EMAIL_TIMEOUT = 5
 
 # Кэш
 CACHES = {

@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from decimal import Decimal
@@ -13,6 +14,8 @@ from django.views.decorators.http import require_POST
 from apps.cart.cart import Cart
 from apps.catalog.models import Product
 from .models import Order, OrderItem
+
+logger = logging.getLogger(__name__)
 
 
 MANAGER_INFO = {
@@ -274,9 +277,17 @@ def order_create(request):
             )
 
         if payment_method == Order.PAYMENT_INVOICE:
-            _build_invoice(order)
+            try:
+                _build_invoice(order)
+            except Exception:
+                logger.exception('Не удалось сформировать счёт для заказа %s', order.order_number)
 
-        _send_notifications(order)
+        # Отправка уведомлений не должна блокировать оформление заказа:
+        # при недоступном SMTP письмо просто не уйдёт, но заказ уже сохранён в БД.
+        try:
+            _send_notifications(order)
+        except Exception:
+            logger.exception('Не удалось отправить уведомления по заказу %s', order.order_number)
 
         cart.clear()
         request.session.pop('promo_code', None)
