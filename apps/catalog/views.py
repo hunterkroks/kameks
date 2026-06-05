@@ -96,6 +96,35 @@ def catalog(request):
     })
 
 
+def _track_recently_viewed(request, product):
+    """Записывает товар в «Недавно просмотренные», лимит 20 на пользователя/сессию."""
+    from apps.accounts.models import RecentlyViewed
+    try:
+        if request.user.is_authenticated:
+            RecentlyViewed.objects.update_or_create(
+                user=request.user, product=product,
+                defaults={'session_key': None},
+            )
+            qs = RecentlyViewed.objects.filter(user=request.user)
+        else:
+            if not request.session.session_key:
+                request.session.save()
+            session_key = request.session.session_key
+            RecentlyViewed.objects.update_or_create(
+                session_key=session_key, product=product,
+                defaults={'user': None},
+            )
+            qs = RecentlyViewed.objects.filter(session_key=session_key)
+
+        # Оставляем только 20 последних, остальные удаляем
+        extra_ids = list(qs.order_by('-viewed_at').values_list('id', flat=True)[20:])
+        if extra_ids:
+            RecentlyViewed.objects.filter(id__in=extra_ids).delete()
+    except Exception:
+        # Просмотр товара не должен падать из-за истории просмотров
+        pass
+
+
 def product_detail(request, slug):
     product = get_object_or_404(
         Product.objects.select_related('category', 'category__parent').prefetch_related('brands', 'images', 'attributes', 'analogues', 'car_models'),
@@ -108,6 +137,8 @@ def product_detail(request, slug):
     from apps.cart.cart import Cart
     cart = Cart(request)
     in_cart_qty = cart.cart.get(str(product.id), {}).get('quantity', 0)
+
+    _track_recently_viewed(request, product)
 
     return render(request, 'catalog/product_detail.html', {
         'product': product,

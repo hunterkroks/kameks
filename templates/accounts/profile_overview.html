@@ -1,0 +1,124 @@
+{% extends 'accounts/profile_base.html' %}
+{% load static %}
+{% block profile_title %}Обзор{% endblock %}
+{% block profile_crumb %}Обзор{% endblock %}
+
+{% block profile_content %}
+
+<!-- Приветствие -->
+<div class="welcome-card">
+  <div class="welcome-left">
+    <div class="welcome-title">Добро пожаловать, {{ user.first_name|default:display_name }}!</div>
+    <div class="welcome-sub">
+      {% if active_count %}У вас {{ active_count }} активных заказ{{ active_count|pluralize:"а,ов" }}{% else %}Активных заказов нет{% endif %}
+      {% if days_since_last is not None %} · Последний заказ
+        {% if days_since_last == 0 %}сегодня{% else %}{{ days_since_last }} дн. назад{% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="welcome-actions">
+    {% if last_order %}
+    <a href="{% url 'accounts:reorder' last_order.order_number %}" class="wc-btn wc-btn-primary"><i class="bi bi-arrow-repeat"></i> Повторить заказ</a>
+    {% endif %}
+    <a href="tel:{{ manager.phone }}" class="wc-btn wc-btn-outline"><i class="bi bi-chat-dots"></i> Менеджеру</a>
+  </div>
+</div>
+
+<!-- Метрики -->
+<div class="metrics-grid">
+  <div class="metric-card blue">
+    <div class="metric-label">Всего заказов</div>
+    <div class="metric-value">{{ orders_count }}</div>
+    <div class="metric-trend">+{{ orders_month }} за месяц</div>
+  </div>
+  <div class="metric-card green">
+    <div class="metric-label">Сумма покупок</div>
+    <div class="metric-value">{{ total_spent|floatformat:0 }} ₽</div>
+    <div class="metric-trend">+{{ spent_month|floatformat:0 }} ₽ за месяц</div>
+  </div>
+  <div class="metric-card bronze">
+    <div class="metric-label">Ваша скидка</div>
+    <div class="metric-value">{{ discount_percent }}%</div>
+    <div class="metric-trend">до Gold — {{ to_gold|floatformat:0 }} ₽</div>
+  </div>
+  <div class="metric-card orange">
+    <div class="metric-label">В работе</div>
+    <div class="metric-value">{{ active_count }}</div>
+    <div class="metric-trend">требуют внимания</div>
+  </div>
+</div>
+
+<!-- История заказов -->
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-box-seam"></i> История заказов</h5>
+    <a href="{% url 'accounts:profile_orders' %}" class="pb-link">Все заказы →</a>
+  </div>
+
+  <div class="filter-chips" data-filter-target="#overview-orders">
+    <button class="filter-chip active" data-filter="all">Все</button>
+    <button class="filter-chip" data-filter="active">⏳ Активные</button>
+    <button class="filter-chip" data-filter="completed">✓ Завершённые</button>
+    <button class="filter-chip" data-filter="cancelled">✕ Отменённые</button>
+    <input type="text" class="order-search" placeholder="Поиск по заказам..." data-search-target="#overview-orders">
+  </div>
+
+  <div id="overview-orders" class="orders-list">
+    {% for card in order_cards %}
+      {% include 'accounts/partials/order_card.html' %}
+    {% empty %}
+      <div class="empty-state">
+        <i class="bi bi-bag-x"></i>
+        <p>У вас ещё нет заказов</p>
+        <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none">Перейти в каталог</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Уведомления -->
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-bell"></i> Уведомления
+      {% if unread_count %}<span class="pb-badge-red">{{ unread_count }} новых</span>{% endif %}
+    </h5>
+    <a href="{% url 'accounts:profile_notifications' %}" class="pb-link">Все →</a>
+  </div>
+  <div class="notif-list">
+    {% for n in notifications %}
+      {% include 'accounts/partials/notification_item.html' with n=n %}
+    {% empty %}
+      <div class="empty-state-sm">Уведомлений пока нет</div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Недавно просмотренные -->
+{% if recent_products %}
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-clock-history"></i> Недавно просмотренные</h5>
+  </div>
+  <div class="recent-grid">
+    {% for rp in recent_products %}
+    <div class="recent-card">
+      <a href="{{ rp.product.get_absolute_url }}" class="recent-img">
+        {% if rp.img_url %}<img src="{{ rp.img_url }}" alt="{{ rp.product.name }}" loading="lazy">
+        {% else %}<i class="bi bi-image"></i>{% endif %}
+      </a>
+      <div class="recent-body">
+        <a href="{{ rp.product.get_absolute_url }}" class="recent-name">{{ rp.product.name }}</a>
+        <div class="recent-foot">
+          <span class="recent-price">{{ rp.product.current_price|floatformat:0 }} ₽</span>
+          <button class="recent-add btn-cart-add" data-product-id="{{ rp.product.id }}" title="В корзину">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

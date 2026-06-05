@@ -284,7 +284,7 @@ def order_create(request):
                     total=total,
                     comment=comment,
                     subscribe_news=bool(data.get('subscribe_news')),
-                    status=Order.STATUS_NEW,
+                    status=Order.STATUS_PENDING,
                 )
                 order.save()
 
@@ -384,7 +384,7 @@ def quick_order(request):
         full_name=name,
         phone=phone,
         email=request.user.email if request.user.is_authenticated and request.user.email else 'no-email@kameks.local',
-        status=Order.STATUS_NEW,
+        status=Order.STATUS_PENDING,
         comment='Быстрый заказ («Купить в 1 клик»)',
         items_total=product.current_price,
         total=product.current_price,

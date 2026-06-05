@@ -1,0 +1,15 @@
+{# Ожидает n = Notification #}
+<div class="notif-item{% if not n.is_read %} unread{% endif %}" data-id="{{ n.id }}">
+  <span class="notif-ico notif-{{ n.type }}">
+    {% if n.type == 'order' %}<i class="bi bi-box-seam"></i>
+    {% elif n.type == 'delivery' %}<i class="bi bi-truck"></i>
+    {% elif n.type == 'promo' %}<i class="bi bi-tag"></i>
+    {% else %}<i class="bi bi-info-circle"></i>{% endif %}
+  </span>
+  <div class="notif-body">
+    {% if n.link %}<a href="{{ n.link }}" class="notif-title">{{ n.title }}</a>
+    {% else %}<div class="notif-title">{{ n.title }}</div>{% endif %}
+    <div class="notif-text">{{ n.text }}</div>
+  </div>
+  <div class="notif-time">{{ n.created_at|date:"d.m H:i" }}</div>
+</div>

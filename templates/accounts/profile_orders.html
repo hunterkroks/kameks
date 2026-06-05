@@ -1,0 +1,45 @@
+{% extends 'accounts/profile_base.html' %}
+{% load static %}
+{% block profile_title %}Мои заказы{% endblock %}
+{% block profile_crumb %}Мои заказы{% endblock %}
+
+{% block profile_content %}
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-box-seam"></i> Мои заказы</h5>
+  </div>
+
+  <form method="get" class="filter-chips" id="orders-filter-form">
+    <a href="?filter=all" class="filter-chip{% if current_filter == 'all' %} active{% endif %}">Все <span class="fc-count">{{ count_all }}</span></a>
+    <a href="?filter=active" class="filter-chip{% if current_filter == 'active' %} active{% endif %}">⏳ Активные <span class="fc-count">{{ count_active }}</span></a>
+    <a href="?filter=completed" class="filter-chip{% if current_filter == 'completed' %} active{% endif %}">✓ Завершённые <span class="fc-count">{{ count_completed }}</span></a>
+    <a href="?filter=cancelled" class="filter-chip{% if current_filter == 'cancelled' %} active{% endif %}">✕ Отменённые <span class="fc-count">{{ count_cancelled }}</span></a>
+    <input type="text" name="q" class="order-search" placeholder="Поиск по заказам..." value="{{ search_q }}" id="orders-server-search">
+    <input type="hidden" name="filter" value="{{ current_filter }}">
+  </form>
+
+  <div class="orders-list">
+    {% for card in order_cards %}
+      {% include 'accounts/partials/order_card.html' %}
+    {% empty %}
+      <div class="empty-state">
+        <i class="bi bi-bag-x"></i>
+        <p>Заказов не найдено</p>
+        <a href="{% url 'catalog:catalog' %}" class="btn-kameks-outline text-decoration-none">Перейти в каталог</a>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="profile-pagination">
+    {% if page_obj.has_previous %}
+      <a href="?filter={{ current_filter }}&page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q }}{% endif %}" class="pp-btn"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    <span class="pp-info">Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?filter={{ current_filter }}&page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q }}{% endif %}" class="pp-btn"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

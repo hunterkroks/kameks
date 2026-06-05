@@ -1,0 +1,61 @@
+{% extends 'accounts/profile_base.html' %}
+{% block profile_title %}Настройки{% endblock %}
+{% block profile_crumb %}Настройки{% endblock %}
+
+{% block profile_content %}
+
+<!-- Личные данные -->
+<div class="profile-block">
+  <div class="pb-head"><h5 class="pb-title"><i class="bi bi-person"></i> Личные данные</h5></div>
+  <form method="post" class="settings-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="personal">
+    <div class="cf-grid">
+      <div class="cf-field cf-full"><label>ФИО</label><input type="text" name="full_name" value="{{ full_name_value }}"></div>
+      <div class="cf-field"><label>Телефон</label><input type="text" name="phone" value="{{ profile.phone }}"></div>
+      <div class="cf-field"><label>Email</label><input type="email" name="email" value="{{ user.email }}"></div>
+      <div class="cf-field cf-full">
+        <label>Тип покупателя</label>
+        <div class="buyer-toggle">
+          <label class="bt-opt{% if profile.buyer_type == 'fl' %} active{% endif %}">
+            <input type="radio" name="buyer_type" value="fl" {% if profile.buyer_type == 'fl' %}checked{% endif %}> Физическое лицо
+          </label>
+          <label class="bt-opt{% if profile.buyer_type == 'ul' %} active{% endif %}">
+            <input type="radio" name="buyer_type" value="ul" {% if profile.buyer_type == 'ul' %}checked{% endif %}> Юридическое лицо
+          </label>
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="oc-btn oc-btn-primary" style="margin-top:16px;"><i class="bi bi-check2"></i> Сохранить</button>
+  </form>
+</div>
+
+<!-- Смена пароля -->
+<div class="profile-block">
+  <div class="pb-head"><h5 class="pb-title"><i class="bi bi-shield-lock"></i> Смена пароля</h5></div>
+  <form method="post" class="settings-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="password">
+    <div class="cf-grid">
+      <div class="cf-field cf-full"><label>Текущий пароль</label><input type="password" name="old_password" required></div>
+      <div class="cf-field"><label>Новый пароль</label><input type="password" name="new_password1" required></div>
+      <div class="cf-field"><label>Повтор нового пароля</label><input type="password" name="new_password2" required></div>
+    </div>
+    <button type="submit" class="oc-btn oc-btn-primary" style="margin-top:16px;"><i class="bi bi-key"></i> Изменить пароль</button>
+  </form>
+</div>
+
+<!-- Уведомления -->
+<div class="profile-block">
+  <div class="pb-head"><h5 class="pb-title"><i class="bi bi-bell"></i> Уведомления</h5></div>
+  <form method="post" class="settings-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="notifications">
+    <label class="pm-check"><input type="checkbox" name="notify_order_email" {% if profile.notify_order_email %}checked{% endif %}> Email о статусе заказа</label>
+    <label class="pm-check"><input type="checkbox" name="notify_promo_email" {% if profile.notify_promo_email %}checked{% endif %}> Email об акциях</label>
+    <label class="pm-check"><input type="checkbox" name="notify_delivery_sms" {% if profile.notify_delivery_sms %}checked{% endif %}> SMS о доставке</label>
+    <button type="submit" class="oc-btn oc-btn-primary" style="margin-top:16px;"><i class="bi bi-check2"></i> Сохранить</button>
+  </form>
+</div>
+
+{% endblock %}

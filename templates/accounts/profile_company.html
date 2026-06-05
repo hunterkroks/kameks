@@ -1,0 +1,30 @@
+{% extends 'accounts/profile_base.html' %}
+{% block profile_title %}Реквизиты{% endblock %}
+{% block profile_crumb %}Реквизиты{% endblock %}
+
+{% block profile_content %}
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-building"></i> Реквизиты компании</h5>
+  </div>
+
+  <form method="post" class="company-form">
+    {% csrf_token %}
+    <div class="cf-grid">
+      <div class="cf-field cf-full">
+        <label>Название компании</label>
+        <input type="text" name="company_name" value="{{ company.company_name }}" required>
+      </div>
+      <div class="cf-field"><label>ИНН</label><input type="text" name="inn" value="{{ company.inn }}" required></div>
+      <div class="cf-field"><label>КПП</label><input type="text" name="kpp" value="{{ company.kpp }}"></div>
+      <div class="cf-field"><label>ОГРН</label><input type="text" name="ogrn" value="{{ company.ogrn }}"></div>
+      <div class="cf-field cf-full"><label>Юридический адрес</label><input type="text" name="legal_address" value="{{ company.legal_address }}"></div>
+      <div class="cf-field cf-full"><label>Банк</label><input type="text" name="bank_name" value="{{ company.bank_name }}"></div>
+      <div class="cf-field"><label>БИК</label><input type="text" name="bik" value="{{ company.bik }}"></div>
+      <div class="cf-field"><label>Расчётный счёт</label><input type="text" name="bank_account" value="{{ company.bank_account }}"></div>
+      <div class="cf-field cf-full"><label>Корреспондентский счёт</label><input type="text" name="correspondent_account" value="{{ company.correspondent_account }}"></div>
+    </div>
+    <button type="submit" class="oc-btn oc-btn-primary" style="margin-top:18px;"><i class="bi bi-check2"></i> Сохранить</button>
+  </form>
+</div>
+{% endblock %}

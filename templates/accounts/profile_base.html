@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% block profile_title %}Личный кабинет{% endblock %} | КАМЭКС{% endblock %}
+
+{% block content %}
+<!-- Хлебные крошки -->
+<div style="background:var(--color-bg-secondary);border-bottom:1px solid var(--color-border);padding:14px 0;">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0" style="font-size:0.85rem;">
+        <li class="breadcrumb-item"><a href="{% url 'main:index' %}" style="color:var(--color-accent-blue);">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'accounts:profile' %}" style="color:var(--color-accent-blue);">Личный кабинет</a></li>
+        <li class="breadcrumb-item active" style="color:var(--color-text-muted);">{% block profile_crumb %}Обзор{% endblock %}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="profile-layout">
+
+    <!-- ───── Сайдбар ───── -->
+    <aside class="profile-sidebar">
+      <!-- Карточка пользователя -->
+      <div class="user-card">
+        <div class="user-card-avatar">{{ user_initials }}</div>
+        <div class="user-card-name">{{ display_name }}</div>
+        <span class="user-card-badge">{% if is_ul %}ЮЛ{% else %}ФЛ{% endif %}</span>
+        <div class="user-card-stats">
+          <div class="ucs-item">
+            <div class="ucs-num">{{ sb_orders_count }}</div>
+            <div class="ucs-label">заказов</div>
+          </div>
+          <div class="ucs-item">
+            <div class="ucs-num">{{ sb_total_spent|floatformat:0 }} ₽</div>
+            <div class="ucs-label">на сумму</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Меню -->
+      <nav class="menu">
+        <a href="{% url 'accounts:profile' %}" class="menu-item{% if active_section == 'overview' %} active{% endif %}">
+          <i class="bi bi-grid-1x2 menu-ico"></i><span>Обзор</span>
+        </a>
+        <a href="{% url 'accounts:profile_orders' %}" class="menu-item{% if active_section == 'orders' %} active{% endif %}">
+          <i class="bi bi-box-seam menu-ico"></i><span>Мои заказы</span>
+          {% if sb_orders_count %}<span class="menu-count">{{ sb_orders_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'accounts:profile_notifications' %}" class="menu-item{% if active_section == 'notifications' %} active{% endif %}">
+          <i class="bi bi-bell menu-ico"></i><span>Уведомления</span>
+          {% if sb_unread_count %}<span class="menu-badge-red">{{ sb_unread_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'accounts:profile_addresses' %}" class="menu-item{% if active_section == 'addresses' %} active{% endif %}">
+          <i class="bi bi-geo-alt menu-ico"></i><span>Адреса доставки</span>
+          {% if sb_addresses_count %}<span class="menu-count">{{ sb_addresses_count }}</span>{% endif %}
+        </a>
+        {% if is_ul %}
+        <a href="{% url 'accounts:profile_company' %}" class="menu-item{% if active_section == 'company' %} active{% endif %}">
+          <i class="bi bi-building menu-ico"></i><span>Реквизиты</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'accounts:profile_settings' %}" class="menu-item{% if active_section == 'settings' %} active{% endif %}">
+          <i class="bi bi-gear menu-ico"></i><span>Настройки профиля</span>
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="menu-item menu-item-logout">
+          <i class="bi bi-box-arrow-right menu-ico"></i><span>Выйти</span>
+        </a>
+      </nav>
+
+      <!-- Блок менеджера -->
+      <div class="manager-card">
+        <div class="manager-avatar">{{ manager.initials }}</div>
+        <div class="manager-info">
+          <div class="manager-label">Ваш менеджер</div>
+          <div class="manager-name">{{ manager.name }}</div>
+          <a href="tel:{{ manager.phone }}" class="manager-phone">{{ manager.phone }}</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ───── Контент ───── -->
+    <div class="profile-main">
+      {% block profile_content %}{% endblock %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/profile.js' %}"></script>
+{% endblock %}

@@ -181,15 +181,6 @@
 
         <!-- Строка действий -->
         <div class="pd-actions-row">
-          {% if user.is_authenticated %}
-          <button class="pd-action-btn" id="pd-fav-btn" onclick="pdToggleFavorite(this, {{ product.id }})">
-            <i class="bi bi-heart me-1"></i>В избранное
-          </button>
-          {% else %}
-          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="pd-action-btn">
-            <i class="bi bi-heart me-1"></i>В избранное
-          </a>
-          {% endif %}
           <button class="pd-action-btn" onclick="pdShare()">
             <i class="bi bi-share me-1"></i>Поделиться
           </button>
@@ -826,21 +817,6 @@ function pdSetMainImage(url, thumb) {
   });
 })();
 
-// ── Избранное (sessionStorage, визуальное) ────────────────
-function pdToggleFavorite(btn, productId) {
-  var key  = 'fav_' + productId;
-  var icon = btn.querySelector('i');
-  if (sessionStorage.getItem(key)) {
-    sessionStorage.removeItem(key);
-    icon.className = 'bi bi-heart me-1';
-    btn.classList.remove('pd-action-btn--active');
-  } else {
-    sessionStorage.setItem(key, '1');
-    icon.className = 'bi bi-heart-fill me-1';
-    btn.classList.add('pd-action-btn--active');
-  }
-}
-
 // ── Поделиться ────────────────────────────────────────────
 function pdShare() {
   if (navigator.share) {
@@ -853,16 +829,5 @@ function pdShare() {
   }
 }
 
-// ── Восстановить избранное при загрузке ──────────────────
-(function() {
-  var favBtn = document.getElementById('pd-fav-btn');
-  if (!favBtn) return;
-  var pid = '{{ product.id }}';
-  if (sessionStorage.getItem('fav_' + pid)) {
-    var icon = favBtn.querySelector('i');
-    if (icon) icon.className = 'bi bi-heart-fill me-1';
-    favBtn.classList.add('pd-action-btn--active');
-  }
-})();
 </script>
 {% endblock %}

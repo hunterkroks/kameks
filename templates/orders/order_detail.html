@@ -30,13 +30,17 @@
       <!-- Статус -->
       <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:20px;margin-bottom:16px;">
         <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:12px;font-weight:600;">Статус заказа</div>
-        {% if order.status == 'new' %}
+        {% if order.status == 'pending' %}
           <span style="background:rgba(46,134,222,0.15);color:var(--color-accent-blue);padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
             <i class="bi bi-clock me-1"></i>{{ order.get_status_display }}
           </span>
         {% elif order.status == 'confirmed' %}
           <span style="background:rgba(230,126,34,0.15);color:var(--color-accent-orange);padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
             <i class="bi bi-check-circle me-1"></i>{{ order.get_status_display }}
+          </span>
+        {% elif order.status == 'paid' %}
+          <span style="background:rgba(39,174,96,0.15);color:#1A7035;padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">
+            <i class="bi bi-cash-coin me-1"></i>{{ order.get_status_display }}
           </span>
         {% elif order.status == 'shipped' %}
           <span style="background:rgba(142,68,173,0.15);color:#8e44ad;padding:5px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;">

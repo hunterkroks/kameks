@@ -257,41 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 3000);
   }
 
-  // --- Избранное (sessionStorage, визуальное) ---
-  window.toggleFavorite = function(btn, productId) {
-    if (!window.KAMEKS_USER) {
-      showToast('Войдите в аккаунт, чтобы добавить в избранное', 'danger');
-      return;
-    }
-    const icon = btn.querySelector('i');
-    const key = 'fav_' + productId;
-    const isFav = sessionStorage.getItem(key);
-    if (isFav) {
-      sessionStorage.removeItem(key);
-      icon.className = 'bi bi-heart';
-      btn.style.borderColor = '';
-      btn.style.color = '';
-      showToast('Удалено из избранного');
-    } else {
-      sessionStorage.setItem(key, '1');
-      icon.className = 'bi bi-heart-fill';
-      btn.style.borderColor = 'var(--color-accent-red)';
-      btn.style.color = 'var(--color-accent-red)';
-      showToast('Добавлено в избранное');
-    }
-  };
-
-  // Восстанавливаем состояние избранного при загрузке
-  document.querySelectorAll('[onclick^="toggleFavorite"]').forEach(btn => {
-    const match = btn.getAttribute('onclick').match(/toggleFavorite\(this,\s*(\d+)\)/);
-    if (match && sessionStorage.getItem('fav_' + match[1])) {
-      const icon = btn.querySelector('i');
-      if (icon) icon.className = 'bi bi-heart-fill';
-      btn.style.borderColor = 'var(--color-accent-red)';
-      btn.style.color = 'var(--color-accent-red)';
-    }
-  });
-
   // --- Поисковая форма Hero ---
   const heroSearchForm = document.getElementById('hero-search-form');
   if (heroSearchForm) {

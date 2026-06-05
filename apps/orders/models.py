@@ -7,7 +7,7 @@ User = get_user_model()
 
 
 class Order(models.Model):
-    STATUS_NEW = 'new'
+    STATUS_PENDING = 'pending'
     STATUS_CONFIRMED = 'confirmed'
     STATUS_PAID = 'paid'
     STATUS_SHIPPED = 'shipped'
@@ -15,13 +15,16 @@ class Order(models.Model):
     STATUS_CANCELLED = 'cancelled'
 
     STATUS_CHOICES = [
-        (STATUS_NEW, 'Новый'),
+        (STATUS_PENDING, 'Ожидает подтверждения'),
         (STATUS_CONFIRMED, 'Подтверждён'),
         (STATUS_PAID, 'Оплачен'),
-        (STATUS_SHIPPED, 'Отправлен'),
+        (STATUS_SHIPPED, 'В пути'),
         (STATUS_DELIVERED, 'Доставлен'),
         (STATUS_CANCELLED, 'Отменён'),
     ]
+
+    # Статусы, считающиеся «активными» (заказ в работе)
+    ACTIVE_STATUSES = [STATUS_PENDING, STATUS_CONFIRMED, STATUS_PAID, STATUS_SHIPPED]
 
     BUYER_TYPE_CHOICES = [
         ('fl', 'Физическое лицо'),
@@ -87,7 +90,8 @@ class Order(models.Model):
     total = models.DecimalField('Итого', max_digits=12, decimal_places=2, default=0)
 
     comment = models.TextField('Комментарий к заказу', blank=True)
-    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    tracking_number = models.CharField('Трек-номер', max_length=60, blank=True)
 
     order_number = models.CharField('Номер заказа', max_length=20, unique=True, blank=True)
     # Ключ идемпотентности: защищает от дублей при повторной отправке формы
@@ -110,6 +114,12 @@ class Order(models.Model):
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
         ordering = ['-created_at']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Запоминаем исходный статус, чтобы сигнал post_save мог понять,
+        # изменился ли он, и создать соответствующее уведомление.
+        self._original_status = self.status
 
     def __str__(self):
         return f'Заказ {self.order_number or self.pk} от {self.full_name}'

@@ -71,12 +71,17 @@
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
               <a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                <i class="bi bi-person me-2"></i>Мой профиль
+                <i class="bi bi-grid-1x2 me-2"></i>Личный кабинет
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="{% url 'accounts:profile' %}#orders">
+              <a class="dropdown-item" href="{% url 'accounts:profile_orders' %}">
                 <i class="bi bi-bag me-2"></i>Мои заказы
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'accounts:profile_notifications' %}">
+                <i class="bi bi-bell me-2"></i>Уведомления
               </a>
             </li>
             <li><hr class="dropdown-divider"></li>

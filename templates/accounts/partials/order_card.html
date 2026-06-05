@@ -1,0 +1,74 @@
+{% load static %}
+{# Ожидает переменную card из _prepare_order_cards #}
+<div class="order-card" data-status="{{ card.order.status }}" data-number="{{ card.order.order_number }}" data-desc="{{ card.description|lower }}">
+  <div class="order-card-head">
+    <div class="oc-head-left">
+      <span class="oc-number">{{ card.order.order_number }}</span>
+      <span class="oc-date">{{ card.order.created_at|date:"d.m.Y" }}</span>
+    </div>
+    <span class="status-badge {{ card.status_class }}">{{ card.status_label }}</span>
+  </div>
+
+  <div class="order-card-body">
+    <div class="oc-thumbs">
+      {% for t in card.thumbs %}
+        {% if t.url %}
+        <img src="{{ t.url }}" alt="{{ t.name }}" class="oc-thumb" loading="lazy">
+        {% else %}
+        <span class="oc-thumb oc-thumb-empty"><i class="bi bi-image"></i></span>
+        {% endif %}
+      {% endfor %}
+      {% if card.extra_count %}<span class="oc-thumb oc-thumb-more">+{{ card.extra_count }}</span>{% endif %}
+    </div>
+
+    <div class="oc-info">
+      <div class="oc-desc">{{ card.description }}</div>
+      <div class="oc-meta">
+        <span><i class="bi bi-box"></i> {{ card.total_qty }} шт.</span>
+        <span><i class="bi bi-truck"></i> {{ card.delivery_label }}</span>
+        <span><i class="bi bi-credit-card"></i> {{ card.payment_label }}</span>
+      </div>
+    </div>
+
+    <div class="oc-right">
+      <div class="oc-total">{{ card.order.total|floatformat:0 }} ₽</div>
+      <div class="oc-sublabel">{{ card.status_sublabel }}</div>
+    </div>
+  </div>
+
+  <div class="order-card-actions">
+    {% with st=card.order.status num=card.order.order_number %}
+    {% if st == 'pending' %}
+      <a href="tel:{{ manager.phone }}" class="oc-btn"><i class="bi bi-telephone"></i> Связаться</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn">Подробнее</a>
+    {% elif st == 'confirmed' %}
+      <a href="{% url 'orders:invoice' num %}" class="oc-btn"><i class="bi bi-file-earmark-text"></i> Счёт</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn oc-btn-primary"><i class="bi bi-credit-card"></i> Оплатить</a>
+    {% elif st == 'paid' %}
+      <a href="{% url 'orders:invoice' num %}" class="oc-btn"><i class="bi bi-file-earmark-text"></i> Счёт</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn">Подробнее</a>
+    {% elif st == 'shipped' %}
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn"><i class="bi bi-geo-alt"></i> Отследить</a>
+      <a href="{% url 'orders:invoice' num %}" class="oc-btn"><i class="bi bi-file-earmark-text"></i> Счёт</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn">Подробнее</a>
+    {% elif st == 'delivered' %}
+      <a href="{% url 'accounts:reorder' num %}" class="oc-btn"><i class="bi bi-arrow-repeat"></i> Повторить</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn"><i class="bi bi-file-earmark"></i> Документы</a>
+      <a href="{% url 'accounts:profile_order_detail' num %}" class="oc-btn">Подробнее</a>
+    {% elif st == 'cancelled' %}
+      <a href="{% url 'accounts:reorder' num %}" class="oc-btn"><i class="bi bi-arrow-repeat"></i> Повторить</a>
+    {% endif %}
+    {% endwith %}
+  </div>
+
+  {% if card.is_active and card.progress %}
+  <div class="oc-progress">
+    {% for step in card.progress %}
+    <div class="ocp-step {{ step.state }}">
+      <span class="ocp-dot"></span>
+      <span class="ocp-label">{{ step.label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

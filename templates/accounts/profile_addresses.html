@@ -1,0 +1,105 @@
+{% extends 'accounts/profile_base.html' %}
+{% block profile_title %}Адреса доставки{% endblock %}
+{% block profile_crumb %}Адреса доставки{% endblock %}
+
+{% block profile_content %}
+<div class="profile-block">
+  <div class="pb-head">
+    <h5 class="pb-title"><i class="bi bi-geo-alt"></i> Адреса доставки</h5>
+  </div>
+
+  <div class="address-grid">
+    {% for a in addresses %}
+    <div class="address-card">
+      {% if a.is_default %}<span class="addr-default-badge">По умолчанию</span>{% endif %}
+      <div class="addr-ico">
+        {% if 'офис' in a.title|lower or 'office' in a.title|lower %}<i class="bi bi-building"></i>
+        {% elif 'склад' in a.title|lower %}<i class="bi bi-box-seam"></i>
+        {% else %}<i class="bi bi-house-door"></i>{% endif %}
+      </div>
+      <div class="addr-title">{{ a.title }}</div>
+      <div class="addr-text">{{ a.city }}, {{ a.address }}</div>
+      <div class="addr-actions">
+        {% if not a.is_default %}
+        <form method="post" action="{% url 'accounts:address_set_default' a.id %}" style="display:inline;">{% csrf_token %}
+          <button type="submit" class="addr-link">Сделать основным</button>
+        </form>
+        {% endif %}
+        <button type="button" class="addr-link addr-edit-btn"
+                data-id="{{ a.id }}" data-title="{{ a.title }}" data-city="{{ a.city }}"
+                data-address="{{ a.address }}" data-default="{{ a.is_default|yesno:'1,' }}">Редактировать</button>
+        <form method="post" action="{% url 'accounts:address_delete' a.id %}" style="display:inline;"
+              onsubmit="return confirm('Удалить адрес «{{ a.title }}»?');">{% csrf_token %}
+          <button type="submit" class="addr-link addr-link-danger">Удалить</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Карточка добавления -->
+    <button type="button" class="address-card address-add-card" id="addr-add-btn">
+      <i class="bi bi-plus-circle"></i>
+      <span>Добавить адрес</span>
+    </button>
+  </div>
+</div>
+
+<!-- Модалка -->
+<div class="profile-modal" id="addr-modal">
+  <div class="profile-modal-inner">
+    <div class="pm-head">
+      <span id="addr-modal-title">Новый адрес</span>
+      <button type="button" class="pm-close" id="addr-modal-close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <form method="post" id="addr-form">
+      {% csrf_token %}
+      <div class="pm-field">
+        <label>Название</label>
+        <input type="text" name="title" id="addr-f-title" placeholder="Дом, Офис, Склад…" required>
+      </div>
+      <div class="pm-field">
+        <label>Город</label>
+        <input type="text" name="city" id="addr-f-city" required>
+      </div>
+      <div class="pm-field">
+        <label>Адрес</label>
+        <input type="text" name="address" id="addr-f-address" placeholder="Улица, дом, офис" required>
+      </div>
+      <label class="pm-check">
+        <input type="checkbox" name="is_default" id="addr-f-default"> Сделать адресом по умолчанию
+      </label>
+      <button type="submit" class="oc-btn oc-btn-primary pm-submit">Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modal = document.getElementById('addr-modal');
+  var form = document.getElementById('addr-form');
+  var addUrl = "{% url 'accounts:address_add' %}";
+  var editBase = "/accounts/profile/addresses/";
+  function open() { modal.classList.add('open'); }
+  function close() { modal.classList.remove('open'); }
+  document.getElementById('addr-add-btn').addEventListener('click', function () {
+    document.getElementById('addr-modal-title').textContent = 'Новый адрес';
+    form.action = addUrl;
+    form.reset();
+    open();
+  });
+  document.querySelectorAll('.addr-edit-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('addr-modal-title').textContent = 'Редактировать адрес';
+      form.action = editBase + btn.dataset.id + '/edit/';
+      document.getElementById('addr-f-title').value = btn.dataset.title;
+      document.getElementById('addr-f-city').value = btn.dataset.city;
+      document.getElementById('addr-f-address').value = btn.dataset.address;
+      document.getElementById('addr-f-default').checked = btn.dataset.default === '1';
+      open();
+    });
+  });
+  document.getElementById('addr-modal-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+})();
+</script>
+{% endblock %}
