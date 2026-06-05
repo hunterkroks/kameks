@@ -28,6 +28,7 @@
 
   <form method="POST" id="checkout-form" novalidate>
     {% csrf_token %}
+    <input type="hidden" name="form_token" value="{{ form_token }}">
     <div class="checkout-grid">
 
       <!-- ЛЕВО -->

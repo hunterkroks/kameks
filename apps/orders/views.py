@@ -1,9 +1,11 @@
 import logging
 import os
 import re
+import uuid
 from decimal import Decimal
 
 from django.conf import settings
+from django.db import transaction, IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -176,6 +178,16 @@ def _profile_initial(user):
 
 
 def order_create(request):
+    # --- Защита от дублирования: повторная отправка формы с тем же токеном
+    # (двойной клик, F5, зависший запрос) ведёт на уже созданный заказ, а не плодит дубль.
+    # Проверяем ДО проверки корзины: после успешного заказа корзина уже пуста.
+    if request.method == 'POST':
+        token = (request.POST.get('form_token') or '').strip()
+        if token:
+            existing = Order.objects.filter(idempotency_key=token).first()
+            if existing is not None:
+                return redirect('orders:success', order_number=existing.order_number)
+
     cart = Cart(request)
     if len(cart) == 0:
         return redirect('cart:detail')
@@ -191,6 +203,7 @@ def order_create(request):
     if request.method == 'POST':
         data = request.POST
         errors = {}
+        form_token = (data.get('form_token') or '').strip()
 
         buyer_type = data.get('buyer_type', 'fl')
         full_name = (data.get('full_name') or '').strip()
@@ -237,44 +250,64 @@ def order_create(request):
             context.update({
                 'errors': errors,
                 'form_data': data,
+                'form_token': form_token or uuid.uuid4().hex,
             })
             return render(request, 'orders/checkout.html', context)
 
-        order = Order(
-            user=request.user if request.user.is_authenticated else None,
-            session_key=request.session.session_key or '',
-            buyer_type=buyer_type,
-            full_name=full_name,
-            phone=phone,
-            email=email,
-            company_name=company_name,
-            inn=inn,
-            kpp=kpp,
-            delivery_method=delivery_method,
-            delivery_city=delivery_city,
-            delivery_address=delivery_address,
-            delivery_cost=delivery_cost,
-            payment_method=payment_method,
-            items_total=items_total,
-            discount=discount,
-            promo_code=applied_promo,
-            total=total,
-            comment=comment,
-            subscribe_news=bool(data.get('subscribe_news')),
-            status=Order.STATUS_NEW,
-        )
         if not request.session.session_key:
             request.session.save()
-            order.session_key = request.session.session_key
-        order.save()
 
-        for item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                product=item['product'],
-                price=item['price'],
-                quantity=item['quantity'],
-            )
+        # Ключ идемпотентности: токен из формы либо разовый (если форма без токена).
+        idem_key = form_token or uuid.uuid4().hex
+
+        try:
+            with transaction.atomic():
+                order = Order(
+                    user=request.user if request.user.is_authenticated else None,
+                    session_key=request.session.session_key or '',
+                    idempotency_key=idem_key,
+                    buyer_type=buyer_type,
+                    full_name=full_name,
+                    phone=phone,
+                    email=email,
+                    company_name=company_name,
+                    inn=inn,
+                    kpp=kpp,
+                    delivery_method=delivery_method,
+                    delivery_city=delivery_city,
+                    delivery_address=delivery_address,
+                    delivery_cost=delivery_cost,
+                    payment_method=payment_method,
+                    items_total=items_total,
+                    discount=discount,
+                    promo_code=applied_promo,
+                    total=total,
+                    comment=comment,
+                    subscribe_news=bool(data.get('subscribe_news')),
+                    status=Order.STATUS_NEW,
+                )
+                order.save()
+
+                order_items = [
+                    OrderItem(
+                        order=order,
+                        product=item['product'],
+                        price=item['price'],
+                        quantity=item['quantity'],
+                    )
+                    for item in cart_items
+                ]
+                OrderItem.objects.bulk_create(order_items)
+        except IntegrityError:
+            # Параллельный запрос с тем же токеном успел создать заказ первым —
+            # просто ведём пользователя на уже созданный заказ, без дубля.
+            existing = Order.objects.filter(idempotency_key=idem_key).first()
+            if existing is not None:
+                cart.clear()
+                request.session.pop('promo_code', None)
+                request.session.pop('promo_discount', None)
+                return redirect('orders:success', order_number=existing.order_number)
+            raise
 
         if payment_method == Order.PAYMENT_INVOICE:
             try:
@@ -307,6 +340,7 @@ def order_create(request):
         initial = _profile_initial(request.user)
     context['form_data'] = initial
     context['errors'] = {}
+    context['form_token'] = uuid.uuid4().hex
     return render(request, 'orders/checkout.html', context)
 
 

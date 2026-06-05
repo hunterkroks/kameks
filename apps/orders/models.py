@@ -90,6 +90,10 @@ class Order(models.Model):
     status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
 
     order_number = models.CharField('Номер заказа', max_length=20, unique=True, blank=True)
+    # Ключ идемпотентности: защищает от дублей при повторной отправке формы
+    # (двойной клик, F5, зависший запрос). NULL разрешён для старых/быстрых заказов.
+    idempotency_key = models.CharField('Ключ идемпотентности', max_length=36,
+                                       unique=True, null=True, blank=True, default=None)
     invoice_file = models.CharField('Файл счёта', max_length=300, blank=True)
 
     subscribe_news = models.BooleanField('Подписка на акции', default=False)

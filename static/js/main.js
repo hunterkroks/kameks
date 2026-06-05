@@ -550,6 +550,20 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
       }
+
+      // Защита от повторной отправки: блокируем кнопку после первого клика.
+      if (form.dataset.submitting === '1') {
+        e.preventDefault();
+        return;
+      }
+      form.dataset.submitting = '1';
+      var btn = form.querySelector('.checkout-btn-submit');
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'wait';
+        btn.innerHTML = 'Оформляем заказ…';
+      }
     });
   }
 
