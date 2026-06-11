@@ -2,65 +2,163 @@
 {% block title %}Регистрация | КАМЭКС{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
+<div class="auth-page-wrap">
+  <div class="auth-card">
 
-      <div style="background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:36px;">
-        <div class="text-center mb-4">
-          <div style="font-size:2rem;font-weight:800;color:#fff;">КАМ<span style="color:var(--color-accent-orange);">ЭКС</span></div>
-          <h2 style="font-size:1.3rem;font-weight:700;margin-top:10px;">Создать аккаунт</h2>
-          <p style="color:var(--color-text-muted);font-size:0.85rem;">История заказов, реквизиты, быстрое оформление</p>
-        </div>
+    <!-- ───── Левая тёмная панель ───── -->
+    <div class="auth-left">
+      <div class="auth-logo">КАМЭКС</div>
+      <div class="auth-logo-sub">Запчасти КАМАЗ · МАЗ · Урал · КрАЗ</div>
 
-        <form method="POST" novalidate>
-          {% csrf_token %}
-          <div class="row g-3">
+      <h2 class="auth-left-title">Создайте аккаунт и управляйте заказами</h2>
+      <p class="auth-left-sub">Регистрация занимает 1 минуту. Доступна история заказов, реквизиты и документы.</p>
 
-            <div class="col-12">
-              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Имя *</label>
-              {{ form.first_name }}
-              {% if form.first_name.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.first_name.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="col-12">
-              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Email *</label>
-              {{ form.email }}
-              {% if form.email.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.email.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="col-12">
-              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Номер телефона</label>
-              {{ form.phone }}
-              {% if form.phone.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.phone.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="col-12">
-              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Пароль *</label>
-              {{ form.password1 }}
-              {% if form.password1.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.password1.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="col-12">
-              <label class="form-label" style="font-size:0.88rem;color:var(--color-text-secondary);">Повторите пароль *</label>
-              {{ form.password2 }}
-              {% if form.password2.errors %}<div class="text-danger mt-1" style="font-size:0.8rem;">{{ form.password2.errors.0 }}</div>{% endif %}
-            </div>
-
+      <div class="auth-benefits">
+        <div class="auth-benefit">
+          <span class="ab-ico"><i class="bi bi-box-seam"></i></span>
+          <div class="ab-text">
+            <div class="ab-title">История заказов</div>
+            <div class="ab-desc">Все заказы и документы в одном месте</div>
           </div>
-
-          <button type="submit" class="btn-kameks-primary w-100 mt-4" style="padding:12px;font-size:1rem;">
-            <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
-          </button>
-        </form>
-
-        <div class="text-center mt-4" style="font-size:0.88rem;color:var(--color-text-muted);">
-          Уже есть аккаунт?
-          <a href="{% url 'accounts:login' %}" style="color:var(--color-accent-blue);">Войти</a>
+        </div>
+        <div class="auth-benefit">
+          <span class="ab-ico"><i class="bi bi-building"></i></span>
+          <div class="ab-text">
+            <div class="ab-title">Реквизиты для юрлиц</div>
+            <div class="ab-desc">Счета автоматически с вашим ИНН и КПП</div>
+          </div>
+        </div>
+        <div class="auth-benefit">
+          <span class="ab-ico"><i class="bi bi-geo-alt"></i></span>
+          <div class="ab-text">
+            <div class="ab-title">Сохранённые адреса</div>
+            <div class="ab-desc">Не вводите адрес доставки каждый раз</div>
+          </div>
+        </div>
+        <div class="auth-benefit">
+          <span class="ab-ico"><i class="bi bi-chat-dots"></i></span>
+          <div class="ab-text">
+            <div class="ab-title">Личный менеджер</div>
+            <div class="ab-desc">Прямой контакт для корпоративных клиентов</div>
+          </div>
         </div>
       </div>
 
+      <div class="auth-divider"></div>
+      <div class="auth-trust"><i class="bi bi-shield-lock"></i> SSL защита · <i class="bi bi-calendar3"></i> 25 лет на рынке · <i class="bi bi-check2-circle"></i> 658+ позиций</div>
     </div>
+
+    <!-- ───── Правая белая форма ───── -->
+    <div class="auth-right">
+      <h1 class="auth-form-title">Создать аккаунт</h1>
+      <p class="auth-form-sub">Укажите тип покупателя — поля подстроятся автоматически</p>
+
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        <!-- Переключатель ФЛ / ЮЛ -->
+        <div class="buyer-toggle">
+          <input type="hidden" name="buyer_type" id="buyer_type_input" value="fl">
+          <button type="button" class="bt-opt active" data-type="fl" onclick="switchBuyerType('fl')">
+            <i class="bi bi-person"></i> Физлицо
+          </button>
+          <button type="button" class="bt-opt" data-type="ul" onclick="switchBuyerType('ul')">
+            <i class="bi bi-building"></i> Юрлицо
+          </button>
+        </div>
+
+        <div class="auth-field">
+          <label>Имя</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<div class="auth-field-err">{{ form.first_name.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label>Email</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="auth-field-err">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label>Телефон</label>
+          {{ form.phone }}
+          {% if form.phone.errors %}<div class="auth-field-err">{{ form.phone.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Поля юрлица -->
+        <div class="ul-extra-fields" id="ul-extra-fields">
+          <div class="auth-field">
+            <label>Название компании</label>
+            <input type="text" name="company_name" placeholder="ООО «Название»" autocomplete="organization">
+          </div>
+          <div class="ul-grid-2">
+            <div class="auth-field">
+              <label>ИНН</label>
+              <input type="text" name="inn" placeholder="10 или 12 цифр" inputmode="numeric" maxlength="12">
+            </div>
+            <div class="auth-field">
+              <label>КПП</label>
+              <input type="text" name="kpp" placeholder="9 цифр" inputmode="numeric" maxlength="9">
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label>Пароль</label>
+          <div class="auth-pass-wrap">
+            {{ form.password1 }}
+            <button type="button" class="auth-pass-toggle" onclick="toggleAuthPass('{{ form.password1.id_for_label }}', this)" tabindex="-1">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          {% if form.password1.errors %}<div class="auth-field-err">{{ form.password1.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label>Повторите пароль</label>
+          <div class="auth-pass-wrap">
+            {{ form.password2 }}
+            <button type="button" class="auth-pass-toggle" onclick="toggleAuthPass('{{ form.password2.id_for_label }}', this)" tabindex="-1">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          {% if form.password2.errors %}<div class="auth-field-err">{{ form.password2.errors.0 }}</div>{% endif %}
+        </div>
+
+        <label class="auth-check">
+          <input type="checkbox" name="agree" required>
+          <span>Согласен с условиями <a href="{% url 'main:privacy' %}" target="_blank">обработки персональных данных</a> и <a href="{% url 'main:delivery' %}" target="_blank">публичной офертой</a></span>
+        </label>
+
+        <button type="submit" class="auth-btn"><i class="bi bi-person-plus me-2"></i>Зарегистрироваться</button>
+
+        {% if form.non_field_errors %}
+        <div class="auth-error">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+      </form>
+
+      <div class="auth-switch">
+        Уже есть аккаунт? <a href="{% url 'accounts:login' %}">Войти →</a>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<script>
+  (function () {
+    var p1 = document.getElementById('{{ form.password1.id_for_label }}');
+    if (p1) p1.placeholder = 'Минимум 8 символов';
+    var p2 = document.getElementById('{{ form.password2.id_for_label }}');
+    if (p2) p2.placeholder = 'Повторите пароль';
+    var em = document.getElementById('{{ form.email.id_for_label }}');
+    if (em) em.placeholder = 'example@mail.ru';
+    var nm = document.getElementById('{{ form.first_name.id_for_label }}');
+    if (nm) nm.placeholder = 'Ваше имя';
+    // Восстановить выбор ЮЛ после ошибки валидации
+    {% if form.data.buyer_type == 'ul' %}
+    if (window.switchBuyerType) window.switchBuyerType('ul');
+    {% endif %}
+  })();
+</script>
 {% endblock %}

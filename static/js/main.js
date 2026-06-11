@@ -564,3 +564,58 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 })();
+
+// ──────────────────────────────────────────────────────────
+// AUTH — вход / регистрация
+// ──────────────────────────────────────────────────────────
+// Показать/скрыть пароль
+window.toggleAuthPass = function (inputId, btn) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  var icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    if (icon) icon.className = 'bi bi-eye';
+  }
+};
+
+// Переключение типа покупателя ФЛ / ЮЛ
+window.switchBuyerType = function (type) {
+  var hidden = document.getElementById('buyer_type_input');
+  if (hidden) hidden.value = type;
+  document.querySelectorAll('.buyer-toggle .bt-opt').forEach(function (b) {
+    b.classList.toggle('active', b.getAttribute('data-type') === type);
+  });
+  var extra = document.getElementById('ul-extra-fields');
+  if (extra) extra.classList.toggle('open', type === 'ul');
+};
+
+// Маска телефона +7 (XXX) XXX-XX-XX
+(function () {
+  function formatPhone(value) {
+    var d = value.replace(/\D/g, '');
+    if (d.length && d[0] === '8') d = '7' + d.slice(1);
+    if (d.length && d[0] !== '7') d = '7' + d;
+    d = d.slice(0, 11);
+    var rest = d.slice(1);
+    var out = '+7';
+    if (rest.length > 0) out += ' (' + rest.slice(0, 3);
+    if (rest.length >= 3) out += ') ' + rest.slice(3, 6);
+    if (rest.length >= 6) out += '-' + rest.slice(6, 8);
+    if (rest.length >= 8) out += '-' + rest.slice(8, 10);
+    return out;
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var fields = document.querySelectorAll('input[name="phone"], input[type="tel"]');
+    fields.forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var pos = inp.selectionStart === inp.value.length;
+        inp.value = formatPhone(inp.value);
+        if (pos) inp.setSelectionRange(inp.value.length, inp.value.length);
+      });
+    });
+  });
+})();
