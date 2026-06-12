@@ -35,6 +35,14 @@ class RegisterForm(UserCreationForm):
         self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Минимум 8 символов'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Повторите пароль'})
 
+    def clean_email(self):
+        # Гарантируем уникальность email: дубли ломают вход по email
+        # (раньше приводили к MultipleObjectsReturned / 500).
+        email = self.cleaned_data['email'].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('Пользователь с таким email уже зарегистрирован.')
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
@@ -82,23 +90,22 @@ class FlexLoginForm(forms.Form):
 
         user = None
 
-        # 1. По email (case-insensitive)
-        try:
-            u = User.objects.get(email__iexact=login_val)
+        # 1. По email (case-insensitive).
+        # Используем filter, а не get: если несколько пользователей делят один email,
+        # get() бросает MultipleObjectsReturned и роняет вход (500). Перебираем всех
+        # подходящих и берём того, чей пароль совпал.
+        for u in User.objects.filter(email__iexact=login_val):
             if u.check_password(password):
                 user = u
-        except User.DoesNotExist:
-            pass
+                break
 
-        # 2. По телефону в UserProfile
+        # 2. По телефону в UserProfile (filter — на случай дублей телефонов)
         if user is None:
-            try:
-                from .models import UserProfile as UP
-                profile = UP.objects.select_related('user').get(phone=login_val)
+            from .models import UserProfile as UP
+            for profile in UP.objects.select_related('user').filter(phone=login_val):
                 if profile.user.check_password(password):
                     user = profile.user
-            except UP.DoesNotExist:
-                pass
+                    break
 
         if user is None:
             raise forms.ValidationError('Неверный логин или пароль. Проверьте данные и попробуйте снова.')

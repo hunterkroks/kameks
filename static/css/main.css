@@ -2959,7 +2959,7 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
 }
-.auth-left-sub { font-size: 13px; color: #9AA0A8; line-height: 1.55; margin-bottom: 24px; }
+.auth-left-sub { font-size: 13px; color: #7A7970; line-height: 1.55; margin-bottom: 24px; }
 
 .auth-benefits { display: flex; flex-direction: column; gap: 16px; }
 .auth-benefit { display: flex; gap: 12px; align-items: flex-start; }
@@ -2970,10 +2970,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #7AAAC8; font-size: 15px;
 }
 .ab-title { font-size: 13px; font-weight: 700; color: #C8CDD4; }
-.ab-desc { font-size: 11.5px; color: #4A4940; line-height: 1.45; margin-top: 1px; }
+.ab-desc { font-size: 11.5px; color: #7A7970; line-height: 1.45; margin-top: 1px; }
 
 .auth-divider { height: 1px; background: rgba(255,255,255,.06); margin: 26px 0 16px; }
-.auth-trust { font-size: 11px; color: #6E7681; }
+.auth-trust { font-size: 11px; color: #6A6960; }
 .auth-trust i { color: #7AAAC8; }
 
 /* ── Правая белая форма ── */

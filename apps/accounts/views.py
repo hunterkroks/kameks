@@ -63,6 +63,10 @@ def register(request):
         return redirect('accounts:profile')
     if request.method == 'POST':
         form = RegisterForm(request.POST)
+        # Серверная проверка согласия (JS можно обойти через DevTools)
+        if not request.POST.get('agree'):
+            form.add_error(None, 'Необходимо принять условия пользовательского соглашения')
+            return render(request, 'accounts/register.html', {'form': form})
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')

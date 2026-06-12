@@ -126,11 +126,12 @@
         </div>
 
         <label class="auth-check">
-          <input type="checkbox" name="agree" required>
+          <input type="checkbox" name="agree" id="agree" required>
           <span>Согласен с условиями <a href="{% url 'main:privacy' %}" target="_blank">обработки персональных данных</a> и <a href="{% url 'main:delivery' %}" target="_blank">публичной офертой</a></span>
         </label>
+        <div id="agree-error" style="color:#CC2B2B;font-size:11px;margin:-8px 0 12px;display:none;">Необходимо принять условия для продолжения</div>
 
-        <button type="submit" class="auth-btn"><i class="bi bi-person-plus me-2"></i>Зарегистрироваться</button>
+        <button type="submit" class="auth-btn" id="register-submit"><i class="bi bi-person-plus me-2"></i>Зарегистрироваться</button>
 
         {% if form.non_field_errors %}
         <div class="auth-error">{{ form.non_field_errors.0 }}</div>
@@ -159,6 +160,25 @@
     {% if form.data.buyer_type == 'ul' %}
     if (window.switchBuyerType) window.switchBuyerType('ul');
     {% endif %}
+
+    // Обязательное согласие — проверка перед отправкой формы
+    var agree = document.getElementById('agree');
+    var agreeErr = document.getElementById('agree-error');
+    var form = agree ? agree.closest('form') : null;
+    if (form && agree) {
+      form.addEventListener('submit', function (e) {
+        if (!agree.checked) {
+          e.preventDefault();
+          if (agreeErr) agreeErr.style.display = 'block';
+          agree.focus();
+          return;
+        }
+        if (agreeErr) agreeErr.style.display = 'none';
+      });
+      agree.addEventListener('change', function () {
+        if (agree.checked && agreeErr) agreeErr.style.display = 'none';
+      });
+    }
   })();
 </script>
 {% endblock %}
