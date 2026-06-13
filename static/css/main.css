@@ -2953,7 +2953,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .auth-logo-sub { font-size: 11px; color: #6E7681; margin-top: 2px; }
 
-.auth-left-title { font-size: 22px; font-weight: 800; line-height: 1.3; margin: 26px 0 10px; }
+.auth-left-title { font-size: 22px; font-weight: 800; line-height: 1.3; margin: 26px 0 10px; color: #fff; }
 .auth-accent {
   background: linear-gradient(135deg, #7AAAC8, #4A8FC4, #2A6090);
   -webkit-background-clip: text; background-clip: text;
@@ -3065,3 +3065,34 @@ h1, h2, h3, h4, h5, h6 {
 .auth-check input { margin-top: 2px; flex-shrink: 0; }
 .auth-check a { color: #1B3A5C; text-decoration: none; }
 .auth-check a:hover { text-decoration: underline; }
+
+/* ── AUTH: realtime-валидация полей ── */
+.auth-validate-wrap { position: relative; }
+.auth-validate-wrap input { padding-right: 38px; }
+.auth-validate-ico {
+  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
+  display: flex; align-items: center; font-size: 15px; pointer-events: none;
+}
+.auth-validate-wrap input.vf-free   { border-color: #1A7035; }
+.auth-validate-wrap input.vf-free   ~ .auth-validate-ico { color: #1A7035; }
+.auth-validate-wrap input.vf-taken  { border-color: #CC2B2B; }
+.auth-validate-wrap input.vf-taken  ~ .auth-validate-ico { color: #CC2B2B; }
+.auth-validate-wrap input.vf-invalid { border-color: #C89C24; }
+.auth-validate-wrap input.vf-invalid ~ .auth-validate-ico { color: #C89C24; }
+.auth-validate-wrap input.vf-checking { border-color: #C0BDBA; }
+.auth-validate-wrap input.vf-checking ~ .auth-validate-ico { color: #9AA0A8; }
+
+.auth-validate-msg { font-size: 11px; margin-top: 4px; min-height: 0; }
+.auth-validate-msg.vm-free    { color: #1A7035; }
+.auth-validate-msg.vm-taken   { color: #CC2B2B; }
+.auth-validate-msg.vm-invalid { color: #C89C24; }
+.auth-validate-msg a { color: #1B3A5C; font-weight: 600; text-decoration: underline; }
+
+.auth-validate-ico .spin { animation: authSpin 0.7s linear infinite; display: inline-block; }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+
+/* Заблокированная кнопка регистрации */
+.auth-btn:disabled {
+  background: #C0BDBA; cursor: not-allowed; filter: none;
+}
+.auth-btn:disabled::after { display: none; }

@@ -11,9 +11,14 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from django.contrib.auth import get_user_model
+
 from .forms import RegisterForm, FlexLoginForm
 from .models import UserProfile, DeliveryAddress, CompanyProfile, Notification, RecentlyViewed
+from .utils import normalize_phone
 from apps.orders.models import Order
+
+User = get_user_model()
 
 MANAGER = {
     'name': 'Максим Корчагин',
@@ -67,8 +72,27 @@ def register(request):
         if not request.POST.get('agree'):
             form.add_error(None, 'Необходимо принять условия пользовательского соглашения')
             return render(request, 'accounts/register.html', {'form': form})
+
+        # Проверка дублей email
+        email = request.POST.get('email', '').strip().lower()
+        if email and User.objects.filter(email__iexact=email).exists():
+            form.add_error('email', 'Пользователь с таким email уже зарегистрирован')
+            return render(request, 'accounts/register.html', {'form': form})
+
+        # Проверка дублей телефона (после нормализации)
+        normalized_phone = normalize_phone(request.POST.get('phone', ''))
+        if normalized_phone and UserProfile.objects.filter(phone=normalized_phone).exists():
+            form.add_error('phone', 'Пользователь с таким номером уже зарегистрирован')
+            return render(request, 'accounts/register.html', {'form': form})
+
         if form.is_valid():
             user = form.save()
+            # Сохраняем телефон в нормализованном виде
+            if normalized_phone:
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                if profile.phone != normalized_phone:
+                    profile.phone = normalized_phone
+                    profile.save(update_fields=['phone'])
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, 'Регистрация прошла успешно! Добро пожаловать.')
             return redirect('accounts:profile')
@@ -81,7 +105,15 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect('accounts:profile')
     if request.method == 'POST':
-        form = FlexLoginForm(request, data=request.POST)
+        data = request.POST
+        # Если вводят телефон — нормализуем его перед поиском пользователя.
+        # Email не трогаем (в нём нет 10–11 цифр подряд после очистки).
+        login_val = (data.get('login') or '').strip()
+        normalized = normalize_phone(login_val)
+        if normalized:
+            data = request.POST.copy()
+            data['login'] = normalized
+        form = FlexLoginForm(request, data=data)
         if form.is_valid():
             user = form.get_user()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -95,6 +127,25 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('main:index')
+
+
+# ──────────────────────────────────────────────────────────
+# AJAX-валидация полей регистрации (доступны без авторизации)
+# ──────────────────────────────────────────────────────────
+def check_email(request):
+    email = request.GET.get('email', '').strip().lower()
+    if not email or len(email) < 5:
+        return JsonResponse({'status': 'empty'})
+    exists = User.objects.filter(email__iexact=email).exists()
+    return JsonResponse({'status': 'taken' if exists else 'free'})
+
+
+def check_phone(request):
+    phone = normalize_phone(request.GET.get('phone', ''))
+    if not phone:
+        return JsonResponse({'status': 'invalid'})
+    exists = UserProfile.objects.filter(phone=phone).exists()
+    return JsonResponse({'status': 'taken' if exists else 'free'})
 
 
 # ──────────────────────────────────────────────────────────

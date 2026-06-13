@@ -7,6 +7,8 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
+    path('check-email/', views.check_email, name='check_email'),
+    path('check-phone/', views.check_phone, name='check_phone'),
 
     # Личный кабинет
     path('profile/', views.profile_overview, name='profile'),

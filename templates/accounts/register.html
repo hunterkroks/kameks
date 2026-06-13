@@ -53,7 +53,7 @@
       <h1 class="auth-form-title">Создать аккаунт</h1>
       <p class="auth-form-sub">Укажите тип покупателя — поля подстроятся автоматически</p>
 
-      <form method="POST" novalidate>
+      <form method="POST" novalidate id="register-form">
         {% csrf_token %}
 
         <!-- Переключатель ФЛ / ЮЛ -->
@@ -75,13 +75,21 @@
 
         <div class="auth-field">
           <label>Email</label>
-          {{ form.email }}
+          <div class="auth-validate-wrap">
+            {{ form.email }}
+            <span class="auth-validate-ico" data-for="email"></span>
+          </div>
+          <div class="auth-validate-msg" data-for="email"></div>
           {% if form.email.errors %}<div class="auth-field-err">{{ form.email.errors.0 }}</div>{% endif %}
         </div>
 
         <div class="auth-field">
           <label>Телефон</label>
-          {{ form.phone }}
+          <div class="auth-validate-wrap">
+            {{ form.phone }}
+            <span class="auth-validate-ico" data-for="phone"></span>
+          </div>
+          <div class="auth-validate-msg" data-for="phone"></div>
           {% if form.phone.errors %}<div class="auth-field-err">{{ form.phone.errors.0 }}</div>{% endif %}
         </div>
 
@@ -148,37 +156,161 @@
 
 <script>
   (function () {
+    var form = document.getElementById('register-form');
+    if (!form) return;
+
+    var nameInput  = form.querySelector('input[name="first_name"]');
+    var emailInput = form.querySelector('input[name="email"]');
+    var phoneInput = form.querySelector('input[name="phone"]');
     var p1 = document.getElementById('{{ form.password1.id_for_label }}');
-    if (p1) p1.placeholder = 'Минимум 8 символов';
     var p2 = document.getElementById('{{ form.password2.id_for_label }}');
+    var agree = document.getElementById('agree');
+    var agreeErr = document.getElementById('agree-error');
+    var submitBtn = document.getElementById('register-submit');
+
+    // Плейсхолдеры
+    if (p1) p1.placeholder = 'Минимум 8 символов';
     if (p2) p2.placeholder = 'Повторите пароль';
-    var em = document.getElementById('{{ form.email.id_for_label }}');
-    if (em) em.placeholder = 'example@mail.ru';
-    var nm = document.getElementById('{{ form.first_name.id_for_label }}');
-    if (nm) nm.placeholder = 'Ваше имя';
+    if (emailInput) emailInput.placeholder = 'example@mail.ru';
+    if (nameInput) nameInput.placeholder = 'Ваше имя';
+
     // Восстановить выбор ЮЛ после ошибки валидации
     {% if form.data.buyer_type == 'ul' %}
     if (window.switchBuyerType) window.switchBuyerType('ul');
     {% endif %}
 
-    // Обязательное согласие — проверка перед отправкой формы
-    var agree = document.getElementById('agree');
-    var agreeErr = document.getElementById('agree-error');
-    var form = agree ? agree.closest('form') : null;
-    if (form && agree) {
-      form.addEventListener('submit', function (e) {
-        if (!agree.checked) {
-          e.preventDefault();
-          if (agreeErr) agreeErr.style.display = 'block';
-          agree.focus();
-          return;
-        }
-        if (agreeErr) agreeErr.style.display = 'none';
+    // Статусы AJAX-проверки
+    var emailStatus = '';  // '', 'free', 'taken', 'invalid', 'checking'
+    var phoneStatus = '';
+
+    var LOGIN_URL = "{% url 'accounts:login' %}";
+
+    function digitsCount(v) { return (v || '').replace(/\D/g, '').length; }
+
+    function showFieldStatus(input, kind, status) {
+      var ico = form.querySelector('.auth-validate-ico[data-for="' + kind + '"]');
+      var msg = form.querySelector('.auth-validate-msg[data-for="' + kind + '"]');
+      input.classList.remove('vf-free', 'vf-taken', 'vf-invalid', 'vf-checking');
+      if (!ico || !msg) return;
+      if (status === 'checking') {
+        input.classList.add('vf-checking');
+        ico.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+        msg.innerHTML = ''; msg.className = 'auth-validate-msg';
+      } else if (status === 'free') {
+        input.classList.add('vf-free');
+        ico.innerHTML = '<i class="bi bi-check-lg"></i>';
+        msg.textContent = '✓ Доступен';
+        msg.className = 'auth-validate-msg vm-free';
+      } else if (status === 'taken') {
+        input.classList.add('vf-taken');
+        ico.innerHTML = '<i class="bi bi-x-lg"></i>';
+        msg.innerHTML = '✗ Уже зарегистрирован, <a href="' + LOGIN_URL + '">войдите в аккаунт</a>';
+        msg.className = 'auth-validate-msg vm-taken';
+      } else if (status === 'invalid') {
+        input.classList.add('vf-invalid');
+        ico.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+        msg.textContent = 'Неверный формат';
+        msg.className = 'auth-validate-msg vm-invalid';
+      } else {
+        ico.innerHTML = '';
+        msg.innerHTML = ''; msg.className = 'auth-validate-msg';
+      }
+    }
+
+    function debounce(fn, delay) {
+      var timer;
+      return function () {
+        var ctx = this, args = arguments;
+        clearTimeout(timer);
+        timer = setTimeout(function () { fn.apply(ctx, args); }, delay);
+      };
+    }
+
+    // Email
+    if (emailInput) {
+      emailInput.addEventListener('input', function () {
+        emailStatus = '';
+        updateButton();
       });
+      emailInput.addEventListener('input', debounce(function () {
+        var val = this.value.trim();
+        if (val.length < 5) { showFieldStatus(this, 'email', ''); emailStatus = ''; updateButton(); return; }
+        var self = this;
+        emailStatus = 'checking'; showFieldStatus(self, 'email', 'checking'); updateButton();
+        fetch('/accounts/check-email/?email=' + encodeURIComponent(val))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            emailStatus = data.status;
+            showFieldStatus(self, 'email', data.status);
+            updateButton();
+          })
+          .catch(function () { emailStatus = ''; showFieldStatus(self, 'email', ''); updateButton(); });
+      }, 600));
+    }
+
+    // Телефон
+    if (phoneInput) {
+      phoneInput.addEventListener('input', function () {
+        phoneStatus = '';
+        updateButton();
+      });
+      phoneInput.addEventListener('input', debounce(function () {
+        var val = this.value.trim();
+        if (digitsCount(val) < 10) { showFieldStatus(this, 'phone', ''); phoneStatus = ''; updateButton(); return; }
+        var self = this;
+        phoneStatus = 'checking'; showFieldStatus(self, 'phone', 'checking'); updateButton();
+        fetch('/accounts/check-phone/?phone=' + encodeURIComponent(val))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            phoneStatus = data.status;
+            showFieldStatus(self, 'phone', data.status);
+            updateButton();
+          })
+          .catch(function () { phoneStatus = ''; showFieldStatus(self, 'phone', ''); updateButton(); });
+      }, 600));
+    }
+
+    // Блокировка кнопки регистрации
+    function formReady() {
+      if (!nameInput || nameInput.value.trim().length <= 1) return false;
+      if (!emailInput || emailStatus !== 'free') return false;
+      if (!phoneInput) return false;
+      var pd = digitsCount(phoneInput.value);
+      if (pd < 10 || pd > 11) return false;
+      if (phoneStatus !== 'free') return false;
+      if (!p1 || p1.value.length < 8) return false;
+      if (!p2 || p2.value !== p1.value) return false;
+      if (!agree || !agree.checked) return false;
+      return true;
+    }
+
+    function updateButton() {
+      if (!submitBtn) return;
+      submitBtn.disabled = !formReady();
+    }
+
+    ['input', 'change'].forEach(function (ev) {
+      [nameInput, p1, p2].forEach(function (el) { if (el) el.addEventListener(ev, updateButton); });
+      if (agree) agree.addEventListener(ev, updateButton);
+    });
+
+    // Обязательное согласие — финальная проверка перед отправкой
+    form.addEventListener('submit', function (e) {
+      if (!agree || !agree.checked) {
+        e.preventDefault();
+        if (agreeErr) agreeErr.style.display = 'block';
+        if (agree) agree.focus();
+        return;
+      }
+      if (agreeErr) agreeErr.style.display = 'none';
+    });
+    if (agree) {
       agree.addEventListener('change', function () {
         if (agree.checked && agreeErr) agreeErr.style.display = 'none';
       });
     }
+
+    updateButton();
   })();
 </script>
 {% endblock %}
